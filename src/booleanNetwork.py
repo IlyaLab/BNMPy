@@ -65,45 +65,35 @@ class BooleanNetwork(object):
         file.close()
 
     def update(self, iterations=1):
-        states = []
+        y = np.zeros( (iterations + 1, self.N ) , dtype=np.int8  )
+        temp = np.array(  [2**i for i in range(self.N-1, -1, -1) ] ) 
+        
+        y[0] = self.nodes
+        
         for iterationNumber in range(iterations):
-            newNodes = []
+            newNodes = self.nodes
+            
             for i in range(self.N):
-                # print('N = %d, K[%d] = %d' % (i, i, self.K[i]))
-                if (self.K[i] > 0):
-                    fInput = 0
-                    for j in range(self.K[i]):
-                        # print('j = %d, self.varF[%d][%d] = %d' % (j, i, j, self.varF[i,j]))
-                        # print('self.nodes[self.varF[%d][%d]] = %d' % (i, j, self.nodes[self.varF[i][j]]))
-                        assert self.varF[i,j] >= 0
+                fInput = 0
+                for j in range(self.K[i]):
+                    fInput += self.nodes[ self.varF[i,j]] * temp[ j - self.K[i]  ]
+                newNodes[i] = self.F[i,fInput]
 
-                        fInput += self.nodes[self.varF[i,j]] * (2 **  # check varF
-                                                                 (self.K[i]
-                                                                  - 1 - j))
-                    newNodes.append(self.F[i,fInput])
-                else:
-                    newNodes.append(self.nodes[i])
-                # print('newNodes = ', newNodes)
+            self.nodes = newNodes
+            y[ iterationNumber + 1] = newNodes
 
-            self.nodes = np.array(newNodes, dtype=np.int8)
-
-            history = self.networkHistory.tolist()
-            history.append([self.nodes[index] for index in range(self.N)])
-            self.networkHistory = np.array(history, dtype=np.int8)
-            # print('network nodes: ', [self.nodes[i] for i in range(N)], '\n')
-            # print(self.networkHistory, '\n\n\n')
-
-            # note that these four lines take about 90% of the computing time
-            # file = open(self.outputFilePath,'a')
-            # str = self.stateToWrite()
-            # file.write(str)
-            # file.close()
+        return y
 
     # update the Boolean network with noise, derived from update functions (Boris)
     def update_noise(self, p, iterations=1 ): 
-        states = []
+        
+        y = np.zeros( (iterations + 1, self.N ) , dtype=np.int8  )
+        temp = np.array(  [2**i for i in range(self.N-1, -1, -1) ] ) 
+        
+        y[0] = self.nodes
+        
         for iterationNumber in range(iterations):
-            newNodes = []
+            newNodes = self.nodes
             
             # check if there is a better way to do this [[ Boris ]] 
             gam = np.array( [ False if self.isConstanNode[i] else np.random.rand() < p  for i in range(self.N)  ])
@@ -114,27 +104,16 @@ class BooleanNetwork(object):
                 
             else :
                 for i in range(self.N):
-                    # print('N = %d, K[%d] = %d' % (i, i, self.K[i]))
-                    if (self.K[i] > 0):
-                       fInput = 0
-                       for j in range(self.K[i]):
-                           # print('j = %d, self.varF[%d][%d] = %d' % (j, i, j, self.varF[i,j]))
-                           # print('self.nodes[self.varF[%d][%d]] = %d' % (i, j, self.nodes[self.varF[i][j]]))
-                           assert self.varF[i,j] >= 0
-        
-                           fInput += self.nodes[self.varF[i,j]] * (2 **  # check varF
-                                                                    (self.K[i]
-                                                                     - 1 - j))
-                       newNodes.append(self.F[i,fInput])
-                    else:
-                       newNodes.append(self.nodes[i])
-                       # print('newNodes = ', newNodes)
+ 
+                    fInput = 0
+                    for j in range(self.K[i]):
+                        fInput += self.nodes[ self.varF[i,j]] * temp[ j - self.K[i]  ]
+                    newNodes[i] = self.F[i,fInput]
 
-            self.nodes = np.array(newNodes, dtype=np.int8)
+            self.nodes = newNodes
+            y[ iterationNumber + 1] = newNodes
 
-            history = self.networkHistory.tolist()
-            history.append([self.nodes[index] for index in range(self.N)])
-            self.networkHistory = np.array(history, dtype=np.int8)
+        return y 
 
  	
 
