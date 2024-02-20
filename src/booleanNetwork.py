@@ -74,6 +74,8 @@ class BooleanNetwork(object):
             newNodes = self.nodes
             
             for i in range(self.N):
+                
+              if ( not self.isConstanNode[i] ) :
                 fInput = 0
                 for j in range(self.K[i]):
                     fInput += self.nodes[ self.varF[i,j]] * temp[ j - self.K[i]  ]
@@ -104,10 +106,12 @@ class BooleanNetwork(object):
                 
             else :
                 for i in range(self.N):
- 
+                    
+                  if ( not self.isConstanNode[i] ) :
                     fInput = 0
                     for j in range(self.K[i]):
                         fInput += self.nodes[ self.varF[i,j]] * temp[ j - self.K[i]  ]
+                
                     newNodes[i] = self.F[i,fInput]
 
             self.nodes = newNodes
