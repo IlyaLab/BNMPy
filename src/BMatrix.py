@@ -1,5 +1,6 @@
 ### Created by Tazein on 1/29/24
-## Goal is to create the truth tables from the DNMT3A subgroup equations
+## Two sets of equations: the simulation equations (which are the genes in the network that get updated) 
+## and the calculating equations (which would be proliferation, differentiation, apoptosis)
 
 #pip install truth-table-generator
 import numpy as np
@@ -8,7 +9,9 @@ import re
 from itertools import product
 
 #import the equations
-file = 'C:/Users/15167/OneDrive/Documents/ISB/dnmt3a_equations.txt'
+#file = ''
+
+################## for simulation equations ##################
 
 def getting_equations(file):
     with open(file, 'r') as file:
@@ -33,7 +36,7 @@ def gene_dictionary(equations):
     gene_dict = {gene: i for i, gene in enumerate(genes)}
     return(gene_dict)
 
-def only_function_genes(equations): 
+def getting_only_genes(equations): 
     #get only the right side of the equations
     right_side = []
     for equation in equations:
@@ -70,7 +73,7 @@ def connectivity_matrix(equations,only_genes,gene_dict):
     
     return(varF)
 
-def truth_table(equations,only_genes):
+def extracting_truth_table(equations,only_genes):
 
     #get only the right side of the equations
     right_side = []
@@ -120,3 +123,96 @@ def truth_table(equations,only_genes):
     truth_table = np.array(truth_table)
     
     return(truth_table)
+
+################## for calculating equations ##################
+
+#getting the equations uses the same function (getting_equations(file))
+#makes calculating functions (which are used with eval() later) and only_genes for the functions
+
+def calculating_functions(equations):
+    
+    right_side = []
+    for equation in equations:
+        parts = equation.split('=')
+        value = parts[1].strip()
+        right_side.append(value)
+    cal_functions = right_side
+
+    cal_functions = [function.replace('!', 'not').replace('|', 'or').replace('&','and') for function in cal_functions]
+    
+    return cal_functions
+
+def calculating_only_genes(equations):
+
+    right_side = []
+    for equation in equations:
+        parts = equation.split('=')
+        value = parts[1].strip()
+        right_side.append(value)
+    functions = right_side
+
+    #getting rid of the Boolean characters ! | & and ()
+    characters_to_remove = "!|&()"
+    values = []
+    for function in functions:
+        translation_table = str.maketrans("", "", characters_to_remove)
+        cleaned_expression = function.translate(translation_table)  
+        values.append(cleaned_expression)
+    cal_only_genes = values
+    
+    for i in range(len(cal_only_genes)):
+        cal_only_genes[i] = cal_only_genes[i].split()
+    
+    return cal_only_genes
+
+#assumes that cal_functions == len(scores_dict)
+def calculating_scores(y, cal_functions, cal_only_genes, gene_dict, y_range=None, scores_dict=None):
+    if scores_dict is None:
+        scores_dict = {"Apoptosis": [], "Differentiation": [], "Proliferation": [], "Network": []}
+        
+    if y_range is None:
+        y_range = y[-100000:]
+    
+    title = ["Apoptosis", "Differentiation", "Proliferation", "Network"]
+    
+    for i in range(len(cal_functions)):
+        score_function = cal_functions[i]
+        variables = cal_only_genes[i]
+        scores = []  # List to store scores for this iteration
+
+        for row in y_range:
+            gene_values = []  # Clear gene_values for each row
+            for gene in variables:
+                value = row[gene_dict[gene]]
+                gene_values.append(value)
+
+            values = dict(zip(variables, gene_values))
+            output = int(eval(score_function, values))
+
+            scores.append(output)  # Append the score to the list for this iteration
+
+        scores_dict[title[i]] = scores
+        
+    # Calculate the 'Network' scores
+    scores = []
+    Apoptosis = scores_dict['Apoptosis']
+    Differentiation = scores_dict['Differentiation']
+    Proliferation = scores_dict['Proliferation']
+    
+    for i in range(len(y_range)): 
+        output = Proliferation[i] - (Differentiation[i] - Apoptosis[i])
+        scores.append(output)
+        
+    scores_dict['Network'] = scores
+    
+    return (scores_dict)
+
+#def final_scores(scores_dict):
+ #   Apoptosis = np.mean(scores_dict['Apoptosis'])
+  #  Proliferation = np.mean(scores_dict['Proliferation'])
+  #  Differentiation = np.mean(scores_dict['Differentiation'])
+  #  Network = np.mean(scores_dict['Network'])
+    
+  #  scores = [Apoptosis, Proliferation, Differentiation, Network ]
+    
+  #  return scores
