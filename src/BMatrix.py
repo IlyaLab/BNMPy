@@ -129,41 +129,6 @@ def extracting_truth_table(equations,only_genes):
 #getting the equations uses the same function (getting_equations(file))
 #makes calculating functions (which are used with eval() later) and only_genes for the functions
 
-def calculating_functions(equations):
-    
-    right_side = []
-    for equation in equations:
-        parts = equation.split('=')
-        value = parts[1].strip()
-        right_side.append(value)
-    cal_functions = right_side
-
-    cal_functions = [function.replace('!', 'not').replace('|', 'or').replace('&','and') for function in cal_functions]
-    
-    return cal_functions
-
-def calculating_only_genes(equations):
-
-    right_side = []
-    for equation in equations:
-        parts = equation.split('=')
-        value = parts[1].strip()
-        right_side.append(value)
-    functions = right_side
-
-    #getting rid of the Boolean characters ! | & and ()
-    characters_to_remove = "!|&()"
-    values = []
-    for function in functions:
-        translation_table = str.maketrans("", "", characters_to_remove)
-        cleaned_expression = function.translate(translation_table)  
-        values.append(cleaned_expression)
-    cal_only_genes = values
-    
-    for i in range(len(cal_only_genes)):
-        cal_only_genes[i] = cal_only_genes[i].split()
-    
-    return cal_only_genes
 
 #assumes that cal_functions == len(scores_dict)
 def calculating_scores(y, cal_functions, cal_only_genes, gene_dict, y_range=None, scores_dict=None):
@@ -200,12 +165,69 @@ def calculating_scores(y, cal_functions, cal_only_genes, gene_dict, y_range=None
     Proliferation = scores_dict['Proliferation']
     
     for i in range(len(y_range)): 
-        output = Proliferation[i] - (Differentiation[i] - Apoptosis[i])
+        output = Proliferation[i] - (Differentiation[i] + Apoptosis[i])
         scores.append(output)
         
     scores_dict['Network'] = scores
     
     return (scores_dict)
+  
+
+def calculating_only_genes(equations):
+
+    right_side = []
+    for equation in equations:
+        parts = equation.split('=')
+        value = parts[1].strip()
+        right_side.append(value)
+    functions = right_side
+
+    #getting rid of the Boolean characters ! | & and ()
+    characters_to_remove = "!|&()"
+    values = []
+    for function in functions:
+        translation_table = str.maketrans("", "", characters_to_remove)
+        cleaned_expression = function.translate(translation_table)  
+        values.append(cleaned_expression)
+    cal_only_genes = values
+    
+    for i in range(len(cal_only_genes)):
+        cal_only_genes[i] = cal_only_genes[i].split()
+    
+    return cal_only_genes
+
+
+def cal_functions(equations):
+    right_side = []
+    for equation in equations:
+        parts = equation.split('=')
+        value = parts[1].strip()
+        right_side.append(value)
+    cal_functions = right_side
+
+    cal_functions = [function.replace('!', '-').replace('|', '+').replace('&','+') for function in cal_functions]
+
+    characters_to_remove = "()"
+    values = []
+    for function in cal_functions:
+        translation_table = str.maketrans("", "", characters_to_remove)
+        cleaned_expression = function.translate(translation_table)  
+        values.append(cleaned_expression)
+        cal_functions = values
+    
+    #cleaning up the cal_functions format so it can be eval()
+    cal_functions = [function.replace(' - ', ' -') for function in cal_functions]
+    cal_functions = [function.replace('- ', '-') for function in cal_functions]
+    cal_functions = [function.replace('- ', '-') for function in cal_functions]
+    cal_functions = [function.replace('  ', ' ') for function in cal_functions]
+
+    values = []
+    for function in cal_functions:
+        new_func = re.sub(r'(-\w+)', r'(\1)', function)
+        values.append(new_func)
+        cal_functions = values
+        
+    return(cal_functions)
 
 #def final_scores(scores_dict):
  #   Apoptosis = np.mean(scores_dict['Apoptosis'])
@@ -216,3 +238,17 @@ def calculating_scores(y, cal_functions, cal_only_genes, gene_dict, y_range=None
   #  scores = [Apoptosis, Proliferation, Differentiation, Network ]
     
   #  return scores
+  
+  
+  #def calculating_functions(equations):
+    
+   # right_side = []
+   # for equation in equations:
+   #    parts = equation.split('=')
+   #    value = parts[1].strip()
+   #    right_side.append(value)
+   # cal_functions = right_side
+
+  #  cal_functions = [function.replace('!', 'not').replace('|', 'or').replace('&','and') for function in cal_functions]
+    
+  #  return cal_functions
