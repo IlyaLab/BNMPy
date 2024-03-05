@@ -169,8 +169,9 @@ def calculating_scores(y, cal_functions, cal_only_genes, gene_dict, y_range=None
         scores.append(output)
         
     scores_dict['Network'] = scores
+    final_score = np.mean(scores_dict['Network'])
     
-    return (scores_dict)
+    return (scores_dict,final_score)
   
 
 def calculating_only_genes(equations):
@@ -197,7 +198,7 @@ def calculating_only_genes(equations):
     return cal_only_genes
 
 
-def cal_functions(equations):
+def calculating_functions(equations):
     right_side = []
     for equation in equations:
         parts = equation.split('=')
@@ -229,16 +230,29 @@ def cal_functions(equations):
         
     return(cal_functions)
 
-#def final_scores(scores_dict):
- #   Apoptosis = np.mean(scores_dict['Apoptosis'])
-  #  Proliferation = np.mean(scores_dict['Proliferation'])
-  #  Differentiation = np.mean(scores_dict['Differentiation'])
-  #  Network = np.mean(scores_dict['Network'])
+
+################## knocking in/out genes ##################
+def knocking_genes(profile, varF, gene_dict, mutations):
+    ngenes = len(gene_dict)
     
-  #  scores = [Apoptosis, Proliferation, Differentiation, Network ]
+    if mutations is None:
+        mutations = {}
+            
+    mutation_varF = varF.copy()  # Create a copy of varF for each iteration    
+    mutation_profile = list(set(profile.split(',')))  # Removes any repeat values 
+    #print(mutation_profile)             
     
-  #  return scores
-  
+    x0 = np.random.randint(2, size=ngenes)  # Random initial state resets with every profile
+        
+    # Make the mutation_varF rows in mutation_profile all -1 
+    for gene in mutation_profile:
+        if len(gene) == 0:
+            print('no_mutation')
+        else:
+            mutation_varF[[gene_dict[gene]], :] = -1  # Knock the varF to -1
+            x0[gene_dict[gene]] = mutations.get(gene, 0)  # Setting that gene's value to mutation value
+            
+    return(mutation_varF,x0)
   
   #def calculating_functions(equations):
     
