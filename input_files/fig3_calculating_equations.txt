@@ -1,0 +1,3 @@
+Apoptosis = ! ( BCL2 | PIM ) & ( FOXO | TP53 | BAX )
+Differentiation = ! ( SOX4 | CBFbeta_MYH11 ) & ( SPI1 | RUNX1 | ETV6 | EP300 )
+Proliferation = ! ( CDKN2A | WT1 | BCOR ) & ( STAT5A | CTNNB1 | MYC | AP1 | CCNA1 | MEIS1 | CCND1 | UBTF )
