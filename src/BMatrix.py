@@ -1,27 +1,31 @@
-### Created by Tazein on 1/29/24
-## Two sets of equations: the simulation equations (which are the genes in the network that get updated) 
-## and the calculating equations (which would be proliferation, differentiation, apoptosis)
+## Created by Tazein on 1/29/24
 
-#pip install truth-table-generator
 import numpy as np
 import pandas as pd
 import re
 from itertools import product
 
-#import the equations
-#file = ''
+################## equations for simulation variables ##################
 
-################## for simulation equations ##################
-
-def getting_equations(file):
+def get_equations(file):
     with open(file, 'r') as file:
         equations = file.readlines()
-
-    #strips the file down to just the equations
     equations = [equation.strip() for equation in equations]
+    
+    for equation in equations: 
+        if '!' in equation: #if we have an !
+            if not bool(re.search(r'!\s', equation)) == True: #and there is no space b/w ! and the gene
+                print('There is a formatting error: ' + str(equation) + '\nMake sure that they are spaces between any ! & or (). \nFor example: HOXA9 = ! ( AEZH2 | DNMT3A | ASXL1 ) & DOT1L\n')
+                return
+                
+        if '&' in equation: #if we have an !
+            if not bool(re.search(r'&\s', equation)) == True: #and there is no space b/w & and the gene
+                print('There is a formatting error: ' + str(equation) + '\nMake sure that they are spaces between any ! & or (). \nFor example: HOXA9 = ! ( AEZH2 | DNMT3A | ASXL1 ) & DOT1L\n')
+                return
+        
     return(equations)
 
-def gene_dictionary(equations):
+def get_gene_dict(equations):
     left_side = []
     
     for equation in equations:
@@ -36,7 +40,7 @@ def gene_dictionary(equations):
     gene_dict = {gene: i for i, gene in enumerate(genes)}
     return(gene_dict)
 
-def getting_only_genes(equations): 
+def get_upstream_genes(equations): 
     #get only the right side of the equations
     right_side = []
     for equation in equations:
@@ -52,15 +56,15 @@ def getting_only_genes(equations):
         translation_table = str.maketrans("", "", characters_to_remove)
         cleaned_expression = function.translate(translation_table)  
         values.append(cleaned_expression)
-    only_genes = values
+    upstream_genes = values
     
-    return(only_genes)
+    return(upstream_genes)
     
-def connectivity_matrix(equations,only_genes,gene_dict):    
+def get_connectivity_matrix(equations,upstream_genes,gene_dict):    
     #now we actually make the connectivity matrix
     result_list = []
 
-    for function in only_genes:
+    for function in upstream_genes:
         genes = function.split()
         values = tuple([gene_dict[gene] for gene in genes])
         result_list.append(values)
@@ -68,12 +72,12 @@ def connectivity_matrix(equations,only_genes,gene_dict):
     
     #now we fix the length by adding the -1 (aka the padding) 
     max_length = max(len(t) for t in result_array)
-    varF = [tuple(np.pad(t, (0, max_length - len(t)), constant_values=-1)) for t in result_array]
-    varF = np.array(varF)
+    connectivity_matrix = [tuple(np.pad(t, (0, max_length - len(t)), constant_values=-1)) for t in result_array]
+    connectivity_matrix = np.array(connectivity_matrix)
     
-    return(varF)
+    return(connectivity_matrix)
 
-def extracting_truth_table(equations,only_genes):
+def get_truth_table(equations,upstream_genes):
 
     #get only the right side of the equations
     right_side = []
@@ -93,7 +97,7 @@ def extracting_truth_table(equations,only_genes):
         function = functions[i]
         #print(function)
     
-        variables = [only_genes[i]] #get the genes in the expression (ex: FLT3)
+        variables = [upstream_genes[i]] #get the genes in the expression (ex: FLT3)
         variables = variables[0].split()
         combinations = product([0, 1], repeat=len(variables)) #gets all possiblities
         i += 1
@@ -112,10 +116,7 @@ def extracting_truth_table(equations,only_genes):
         truth.append(tuple(var1))
         var1 = []
 
-    #print(truth)
-
     truth_table = np.array(truth, dtype=object) #they are not all the same length
-    #print(truth_table)
 
     #now we fix the length by adding the -1 (aka the padding) 
     max_length = max(len(t) for t in truth_table)
@@ -124,58 +125,59 @@ def extracting_truth_table(equations,only_genes):
     
     return(truth_table)
 
-################## for calculating equations ##################
+################## knocking in/out genes after creating variables but before simulation ##################
 
-#getting the equations uses the same function (getting_equations(file))
-#makes calculating functions (which are used with eval() later) and only_genes for the functions
+##can also use mutation_dict for perturbed_dict, just replace the file 
+def get_mutation_dict(file):
+    mutation_dict = {}
+    
+    with open(file) as f:
+        for line in f:
+            if bool(re.search('=', line)) == False: #there is no = sign
+                print('There is a formatting error: ' + str(line) + '\nMake sure that it is formatted with an equal sign. For example: FLT3 = 1')
+                return
+            
+            key, val = line.split("=")
+            mutation_dict[key.strip()] = int(val.strip())
+    
+    return(mutation_dict)
 
+def get_knocking_genes(profile, mutation_dict, perturbed_genes, perturbed_dict, connectivity_matrix, gene_dict):
+    ngenes = len(gene_dict)
+    
+    if perturbed_genes is None: 
+        perturbed_genes = {}
+            
+    mutated_connectivity_matrix = connectivity_matrix.copy()  # Create a copy of connectivity_matrix for each iteration    
+    mutation_profile = list(set(profile.split(',')))  # Removes any repeat values 
+    perturbed_genes = list(set(perturbed_genes.split(',')))  # Removes any repeat values 
 
-#assumes that cal_functions == len(scores_dict)
-def calculating_scores(y, cal_functions, cal_only_genes, gene_dict, y_range=None, scores_dict=None):
-    if scores_dict is None:
-        scores_dict = {"Apoptosis": [], "Differentiation": [], "Proliferation": [], "Network": []}
+    #print(mutation_profile)             
+    
+    x0 = np.random.randint(2, size=ngenes)  # Random initial state resets with every profile
         
-    if y_range is None:
-        y_range = y[-100000:]
-    
-    title = ["Apoptosis", "Differentiation", "Proliferation", "Network"]
-    
-    for i in range(len(cal_functions)):
-        score_function = cal_functions[i]
-        variables = cal_only_genes[i]
-        scores = []  # List to store scores for this iteration
+    # Make the mutated_connectivity_matrix rows in mutation_profile all -1 
+    for gene in mutation_profile:
+        if len(gene) == 0:
+            print('no_mutation')
+        else:
+            mutated_connectivity_matrix[[gene_dict[gene]], :] = -1  # Knock the connectivity_matrix to -1
+            x0[gene_dict[gene]] = mutation_dict.get(gene, 0)  # Setting that gene's value to mutation value
+            
+    for gene in perturbed_genes:
+        if len(gene) == 0:
+            print('no perturbed genes in the simulation')
+        else:
+            mutated_connectivity_matrix[[gene_dict[gene]], :] = -1  # Knock the connectivity_matrix to -1
+            x0[gene_dict[gene]] = perturbed_dict.get(gene, 0)  # Setting that gene's value to mutation value
+            
+    return(mutated_connectivity_matrix,x0)
 
-        for row in y_range:
-            gene_values = []  # Clear gene_values for each row
-            for gene in variables:
-                value = row[gene_dict[gene]]
-                gene_values.append(value)
+################## equations for calculating phenotype and network ##################
 
-            values = dict(zip(variables, gene_values))
-            output = int(eval(score_function, values))
+#getting the equations uses the same function (equations(file))
 
-            scores.append(output)  # Append the score to the list for this iteration
-
-        scores_dict[title[i]] = scores
-        
-    # Calculate the 'Network' scores
-    scores = []
-    Apoptosis = scores_dict['Apoptosis']
-    Differentiation = scores_dict['Differentiation']
-    Proliferation = scores_dict['Proliferation']
-    
-    for i in range(len(y_range)): 
-        output = Proliferation[i] - (Differentiation[i] + Apoptosis[i])
-        scores.append(output)
-        
-    scores_dict['Network'] = scores
-    final_score = np.mean(scores_dict['Network'])
-    
-    return (scores_dict,final_score)
-  
-
-def calculating_only_genes(equations):
-
+def get_cal_upstream_genes(equations):
     right_side = []
     for equation in equations:
         parts = equation.split('=')
@@ -190,15 +192,14 @@ def calculating_only_genes(equations):
         translation_table = str.maketrans("", "", characters_to_remove)
         cleaned_expression = function.translate(translation_table)  
         values.append(cleaned_expression)
-    cal_only_genes = values
+    cal_upstream_genes = values
     
-    for i in range(len(cal_only_genes)):
-        cal_only_genes[i] = cal_only_genes[i].split()
+    for i in range(len(cal_upstream_genes)):
+        cal_upstream_genes[i] = cal_upstream_genes[i].split()
     
-    return cal_only_genes
+    return cal_upstream_genes
 
-
-def calculating_functions(equations):
+def get_cal_functions(equations):
     right_side = []
     for equation in equations:
         parts = equation.split('=')
@@ -230,39 +231,45 @@ def calculating_functions(equations):
         
     return(cal_functions)
 
-
-################## knocking in/out genes ##################
-def knocking_genes(profile, varF, gene_dict, mutations):
-    ngenes = len(gene_dict)
-    
-    if mutations is None:
-        mutations = {}
-            
-    mutation_varF = varF.copy()  # Create a copy of varF for each iteration    
-    mutation_profile = list(set(profile.split(',')))  # Removes any repeat values 
-    #print(mutation_profile)             
-    
-    x0 = np.random.randint(2, size=ngenes)  # Random initial state resets with every profile
+#assumes that cal_functions == len(scores_dict)
+def get_calculating_scores(network_traj, cal_functions, cal_upstream_genes, gene_dict, cal_range=None, scores_dict=None):
+    if scores_dict is None:
+        scores_dict = {"Apoptosis": [], "Differentiation": [], "Proliferation": [], "Network": []}
         
-    # Make the mutation_varF rows in mutation_profile all -1 
-    for gene in mutation_profile:
-        if len(gene) == 0:
-            print('no_mutation')
-        else:
-            mutation_varF[[gene_dict[gene]], :] = -1  # Knock the varF to -1
-            x0[gene_dict[gene]] = mutations.get(gene, 0)  # Setting that gene's value to mutation value
-            
-    return(mutation_varF,x0)
-  
-  #def calculating_functions(equations):
+    if cal_range is None:
+        cal_range = network_traj[-100000:]
     
-   # right_side = []
-   # for equation in equations:
-   #    parts = equation.split('=')
-   #    value = parts[1].strip()
-   #    right_side.append(value)
-   # cal_functions = right_side
+    title = ["Apoptosis", "Differentiation", "Proliferation", "Network"]
+    
+    for i in range(len(cal_functions)):
+        score_function = cal_functions[i]
+        variables = cal_upstream_genes[i]
+        scores = []  # List to store scores for this iteration
 
-  #  cal_functions = [function.replace('!', 'not').replace('|', 'or').replace('&','and') for function in cal_functions]
+        for row in cal_range:
+            gene_values = []  # Clear gene_values for each row
+            for gene in variables:
+                value = row[gene_dict[gene]]
+                gene_values.append(value)
+
+            values = dict(zip(variables, gene_values))
+            output = int(eval(score_function, values))
+
+            scores.append(output)  # Append the score to the list for this iteration
+
+        scores_dict[title[i]] = scores
+        
+    # Calculate the 'Network' scores
+    scores = []
+    Apoptosis = scores_dict['Apoptosis']
+    Differentiation = scores_dict['Differentiation']
+    Proliferation = scores_dict['Proliferation']
     
-  #  return cal_functions
+    for i in range(len(cal_range)): 
+        output = Proliferation[i] - (Differentiation[i] + Apoptosis[i])
+        scores.append(output)
+        
+    scores_dict['Network'] = scores
+    final_score = np.mean(scores_dict['Network'])
+    
+    return (scores_dict,final_score)
