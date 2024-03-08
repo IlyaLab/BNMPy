@@ -142,7 +142,7 @@ def get_mutation_dict(file):
     
     return(mutation_dict)
 
-def get_knocking_genes(profile, mutation_dict, perturbed_genes, perturbed_dict, connectivity_matrix, gene_dict):
+def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict, perturbed_genes=None, perturbed_dict=None):
     ngenes = len(gene_dict)
     
     if perturbed_genes is None: 
