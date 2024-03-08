@@ -146,7 +146,11 @@ def get_knocking_genes(profile, mutation_dict, perturbed_genes, perturbed_dict, 
     ngenes = len(gene_dict)
     
     if perturbed_genes is None: 
-        perturbed_genes = {}
+        perturbed_genes = []
+        
+    if perturbed_dict is None:
+        perturbed_dict = {}
+        
             
     mutated_connectivity_matrix = connectivity_matrix.copy()  # Create a copy of connectivity_matrix for each iteration    
     mutation_profile = list(set(profile.split(',')))  # Removes any repeat values 
