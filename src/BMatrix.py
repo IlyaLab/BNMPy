@@ -54,10 +54,11 @@ def get_upstream_genes(equations):
     values = []
     for function in functions:
         translation_table = str.maketrans("", "", characters_to_remove)
-        cleaned_expression = function.translate(translation_table)  
+        cleaned_expression = function.translate(translation_table) 
+        cleaned_expression = ' '.join(list(set(cleaned_expression.split())))
         values.append(cleaned_expression)
     upstream_genes = values
-    
+
     return(upstream_genes)
     
 def get_connectivity_matrix(equations,upstream_genes,gene_dict):    
@@ -142,27 +143,27 @@ def get_mutation_dict(file):
     
     return(mutation_dict)
 
-def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict, perturbed_genes=None, perturbed_dict=None):
+def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict,perturbed_genes=None, perturbed_dict=None):
     ngenes = len(gene_dict)
-    
+    mutated_connectivity_matrix = connectivity_matrix.copy()  # Create a copy of connectivity_matrix for each iteration 
+    x0 = np.random.randint(2, size=ngenes)  # Random initial state resets with every profile
+
     if perturbed_genes is None: 
         perturbed_genes = []
         
     if perturbed_dict is None:
         perturbed_dict = {}
         
+    if profile is not None: #if there is a profile
+        mutation_profile = list(set(profile.split(',')))  # Removes any repeat values 
             
-    mutated_connectivity_matrix = connectivity_matrix.copy()  # Create a copy of connectivity_matrix for each iteration    
-    mutation_profile = list(set(profile.split(',')))  # Removes any repeat values 
-    perturbed_genes = list(set(perturbed_genes.split(',')))  # Removes any repeat values 
-
-    #print(mutation_profile)             
-    
-    x0 = np.random.randint(2, size=ngenes)  # Random initial state resets with every profile
-        
+    if perturbed_genes is not None: #if there are perturbed genes
+        perturbed_genes = perturbed_genes if isinstance(perturbed_genes, list) else perturbed_genes.split(',')
+        perturbed_genes = list(set(perturbed_genes))  # Removes any repeat values
+                    
     # Make the mutated_connectivity_matrix rows in mutation_profile all -1 
     for gene in mutation_profile:
-        if len(gene) == 0:
+        if gene == '' or gene == 'NA':
             print('no_mutation')
         else:
             mutated_connectivity_matrix[[gene_dict[gene]], :] = -1  # Knock the connectivity_matrix to -1
@@ -195,6 +196,7 @@ def get_cal_upstream_genes(equations):
     for function in functions:
         translation_table = str.maketrans("", "", characters_to_remove)
         cleaned_expression = function.translate(translation_table)  
+        cleaned_expression = ' '.join(list(set(cleaned_expression.split())))
         values.append(cleaned_expression)
     cal_upstream_genes = values
     
@@ -236,14 +238,15 @@ def get_cal_functions(equations):
     return(cal_functions)
 
 #assumes that cal_functions == len(scores_dict)
-def get_calculating_scores(network_traj, cal_functions, cal_upstream_genes, gene_dict, cal_range=None, scores_dict=None):
+def get_calculating_scores(network_traj, cal_functions, cal_upstream_genes, gene_dict, cal_range=None, scores_dict=None, title=None):
     if scores_dict is None:
         scores_dict = {"Apoptosis": [], "Differentiation": [], "Proliferation": [], "Network": []}
         
     if cal_range is None:
         cal_range = network_traj[-100000:]
     
-    title = ["Apoptosis", "Differentiation", "Proliferation", "Network"]
+    if title is None:
+        title = ["Apoptosis", "Differentiation", "Proliferation", "Network"]
     
     for i in range(len(cal_functions)):
         score_function = cal_functions[i]
