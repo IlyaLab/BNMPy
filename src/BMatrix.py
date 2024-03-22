@@ -78,7 +78,10 @@ def get_connectivity_matrix(equations,upstream_genes,gene_dict):
     
     return(connectivity_matrix)
 
-def get_truth_table(equations,upstream_genes):
+def get_truth_table(equations,upstream_genes,show_functions=None):
+    
+    if show_functions is None: 
+        show_functions = False
 
     #get only the right side of the equations
     right_side = []
@@ -89,15 +92,18 @@ def get_truth_table(equations,upstream_genes):
     functions = right_side
 
     functions = [function.replace('!', 'not').replace('|', 'or').replace('&','and') for function in functions]
-
+        
     truth = []
     var1 = []
     i = 1
 
     for i in range(len(equations)):
-        function = functions[i]
-        #print(function)
-    
+        function = functions[i]   
+        if show_functions is False:
+            pass
+        else:
+            print(function)
+            
         variables = [upstream_genes[i]] #get the genes in the expression (ex: FLT3)
         variables = variables[0].split()
         combinations = product([0, 1], repeat=len(variables)) #gets all possiblities
@@ -143,7 +149,7 @@ def get_mutation_dict(file):
     
     return(mutation_dict)
 
-def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict,perturbed_genes=None, perturbed_dict=None):
+def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict, perturbed_genes=None, perturbed_dict=None):
     ngenes = len(gene_dict)
     mutated_connectivity_matrix = connectivity_matrix.copy()  # Create a copy of connectivity_matrix for each iteration 
     x0 = np.random.randint(2, size=ngenes)  # Random initial state resets with every profile
@@ -156,6 +162,9 @@ def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict,pe
         
     if profile is not None: #if there is a profile
         mutation_profile = list(set(profile.split(',')))  # Removes any repeat values 
+        
+    if profile is not None and mutation_dict is None: #there are no mutation_dict (aka no mutations) 
+        mutation_profile = ''
             
     if perturbed_genes is not None: #if there are perturbed genes
         perturbed_genes = perturbed_genes if isinstance(perturbed_genes, list) else perturbed_genes.split(',')
