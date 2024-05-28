@@ -154,6 +154,7 @@ def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict, p
     mutated_connectivity_matrix = connectivity_matrix.copy()  # Create a copy of connectivity_matrix for each iteration 
     x0 = np.random.randint(2, size=ngenes)  # Random initial state resets with every profile
 
+    
     if perturbed_genes is None: 
         perturbed_genes = []
         
@@ -169,7 +170,18 @@ def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict, p
     if perturbed_genes is not None: #if there are perturbed genes
         perturbed_genes = perturbed_genes if isinstance(perturbed_genes, list) else perturbed_genes.split(',')
         perturbed_genes = list(set(perturbed_genes))  # Removes any repeat values
-                    
+
+        
+    # Setting that gene's value to wild value
+    for gene in mutation_dict:
+        if gene == '' or gene == 'NA':
+            print('no_mutation')
+        else:
+            if ( mutation_dict[gene] > 0  ) :
+                x0[gene_dict[gene]] = 0 
+            else :
+                x0[gene_dict[gene]] = 1
+
     # Make the mutated_connectivity_matrix rows in mutation_profile all -1 
     for gene in mutation_profile:
         if gene == '' or gene == 'NA':
@@ -277,15 +289,21 @@ def get_calculating_scores(network_traj, cal_functions, cal_upstream_genes, gene
         
     # Calculate the 'Network' scores
     scores = []
-    Apoptosis = scores_dict['Apoptosis']
-    Differentiation = scores_dict['Differentiation']
-    Proliferation = scores_dict['Proliferation']
+    Apoptosis = np.mean( scores_dict['Apoptosis'] )
+    Differentiation = np.mean( scores_dict['Differentiation'] )
+    Proliferation = np.mean( scores_dict['Proliferation'] )
     
-    for i in range(len(cal_range)): 
-        output = Proliferation[i] - (Differentiation[i] + Apoptosis[i])
-        scores.append(output)
-        
-    scores_dict['Network'] = scores
-    final_score = np.mean(scores_dict['Network'])
+    final_scores_dict = {} 
     
-    return (scores_dict,final_score)
+    final_scores_dict['Apoptosis']  = Apoptosis
+    final_scores_dict['Differentiation'] = Differentiation
+    final_scores_dict['Proliferation'] = Proliferation
+    #for i in range(len(cal_range)): 
+    #output = Proliferation[i] - (Differentiation[i] + Apoptosis[i])
+    #scores.append(output)
+    
+    final_score = Proliferation - Differentiation - Apoptosis
+    final_scores_dict['Network'] = final_score #scores
+    #final_score = np.mean(scores_dict['Network'])
+    
+    return (final_scores_dict,final_score)
