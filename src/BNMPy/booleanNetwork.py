@@ -4,9 +4,13 @@ import pandas as pd
 
 
 class BooleanNetwork(object):
+    """
+    Boolean network object...
+    """
 
-    def __init__(self, numberOfNodes, linkages, functions, initialNodeValues,
-                 outputFilePath=''):
+    def __init__(self, numberOfNodes, linkages, functions, initialNodeValues=None,
+                 outputFilePath='', nodeDict=None):
+        # nodeDict is a dict of gene name to index.
         self.N = numberOfNodes
         self.varF = np.array(linkages)
         self.F = np.array(functions, dtype=np.int8)
@@ -34,6 +38,12 @@ class BooleanNetwork(object):
 
         if ( outputFilePath != '' ) :
             self.initializeOutput()
+
+        self.nodeDict = nodeDict
+
+    def setInitialValues(self, initialNodeValues):
+        "Sets the initial values of the boolean network."
+        self.nodes = np.array(initialNodeValues, dtype=np.int8)
 
     def initializeOutput(self):
         file = open(self.outputFilePath, 'w')

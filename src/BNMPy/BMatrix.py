@@ -199,6 +199,26 @@ def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict, p
             
     return(mutated_connectivity_matrix,x0)
 
+def make_boolean_network(filename, initial_state=None):
+    """
+    Given a file representing a boolean network, this generates a BooleanNetwork object.
+    """
+    from .booleanNetwork import BooleanNetwork
+    equations = get_equations(filename)
+    ngenes = len(equations)
+    gene_dict = get_gene_dict(equations)
+    upstream_genes = get_upstream_genes(equations)
+    connectivity_matrix = get_connectivity_matrix(equations, upstream_genes, gene_dict)
+    truth_table = get_truth_table(equations, upstream_genes)
+    if initial_state is None:
+        x0 = np.random.randint(2, size=ngenes) #random inital state 
+    else:
+        x0 = np.array(initial_state)
+    network = BooleanNetwork( ngenes , connectivity_matrix, truth_table, x0,
+            nodeDict=gene_dict)
+    # create a Boolean network object
+    return network
+
 ################## equations for calculating phenotype and network ##################
 
 #getting the equations uses the same function (equations(file))
