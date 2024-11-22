@@ -12,7 +12,7 @@ description = "Boolean network models in python"
 readme = "README.md"
 requires-python = ">=3.7"
 dependencies = [
-    "numpy < 2",
+    "numpy",
     "pandas",
 ]
 classifiers = [
