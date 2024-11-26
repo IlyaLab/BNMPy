@@ -1,4 +1,7 @@
 ## Created by Tazein on 1/29/24
+"""
+Resources for loading boolean networks from files (strings)
+"""
 
 import numpy as np
 import pandas as pd
@@ -202,6 +205,11 @@ def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict, p
 def make_boolean_network(filename, initial_state=None):
     """
     Given a file representing a boolean network, this generates a BooleanNetwork object.
+
+    Formatting:
+
+    - all genes must have their own equation (sometimes the equation is just A = A)
+    - all 
     """
     from .booleanNetwork import BooleanNetwork
     equations = get_equations(filename)
