@@ -51,14 +51,15 @@ class BNTest(unittest.TestCase):
         "Tests loading equations - network with feedback"
         boolean_network = BMatrix.load_network_from_file(self.network3)
         # test loading boolean_network
-        self.assertEqual(boolean_network.N, 5)
+        self.assertEqual(boolean_network.N, 7)
         # test runs
-        #boolean_network.setInitialValues([1, 0, 0, 0, 0, 0, 0])
-        #results = boolean_network.update(10)
-        #self.assertEqual(results[1, :].tolist(), [1, 0, 0, 1, 1, 0, 1])
-        #boolean_network.setInitialValues([0, 0, 1, 0, 0, 0, 0])
-        #results = boolean_network.update(10)
-        #self.assertEqual(results[1, :].tolist(), [0, 1, 1, 0, 1, 1, 0])
+        boolean_network.setInitialValues([1, 0, 0, 0, 0, 0, 0])
+        results = boolean_network.update(10)
+        self.assertEqual(results[1, :].tolist(), [1, 0, 0, 0, 0, 1, 1])
+        self.assertEqual(results[2, :].tolist(), [1, 0, 0, 0, 0, 1, 1])
+        boolean_network.setInitialValues([1, 1, 1, 0, 0, 0, 0])
+        results = boolean_network.update(10)
+        self.assertEqual(results[1, :].tolist(), [1, 1, 1, 0, 1, 1, 0])
 
 
 
