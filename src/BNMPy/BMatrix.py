@@ -216,6 +216,7 @@ def load_network_from_file(filename, initial_state=None):
     # create a Boolean network object
     return network
 
+# TODO: implement constant values
 def load_network_from_string(network_string, initial_state=None):
     """
     Given a file representing a boolean network, this generates a BooleanNetwork object.
