@@ -10,6 +10,8 @@ from itertools import product
 
 ################## equations for simulation variables ##################
 
+BUILT_INS = {'0', '1', 'True', 'False'}
+
 def get_equations(file):
     with open(file, 'r') as file:
         equations = file.readlines()
@@ -32,6 +34,7 @@ def get_gene_dict(equations):
     return(gene_dict)
 
 def get_upstream_genes(equations): 
+    "Returns a string of gene names, space-separated, for each of the equations."
     #get only the right side of the equations
     right_side = []
     for equation in equations:
@@ -46,7 +49,9 @@ def get_upstream_genes(equations):
     for function in functions:
         translation_table = str.maketrans({c: ' ' for c in characters_to_remove})
         cleaned_expression = function.translate(translation_table) 
-        cleaned_expression = ' '.join(list(set(cleaned_expression.split())))
+        tokens = list(set(cleaned_expression.split()))
+        tokens = [x for x in tokens if x not in BUILT_INS]
+        cleaned_expression = ' '.join(tokens)
         values.append(cleaned_expression)
     upstream_genes = values
 
