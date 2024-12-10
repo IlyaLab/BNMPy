@@ -70,7 +70,7 @@ def get_connectivity_matrix(equations,upstream_genes,gene_dict):
     #now we fix the length by adding the -1 (aka the padding) 
     max_length = max(len(t) for t in result_array)
     connectivity_matrix = [tuple(np.pad(t, (0, max_length - len(t)), constant_values=-1)) for t in result_array]
-    connectivity_matrix = np.array(connectivity_matrix)
+    connectivity_matrix = np.array(connectivity_matrix, dtype=int)
     
     return(connectivity_matrix)
 
@@ -194,6 +194,7 @@ def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict, p
             x0[gene_dict[gene]] = perturbed_dict.get(gene, 0)  # Setting that gene's value to mutation value
             
     return(mutated_connectivity_matrix,x0)
+
 
 def load_network_from_file(filename, initial_state=None):
     """

@@ -46,6 +46,9 @@ class BNTest(unittest.TestCase):
         boolean_network.setInitialValues([0, 0, 1, 0, 0, 0, 0])
         results = boolean_network.update(10)
         self.assertEqual(results[1, :].tolist(), [0, 1, 1, 0, 1, 1, 0])
+        boolean_network.setInitialValues([0, 0, 1, 0, 1, 1, 1])
+        results = boolean_network.update(10)
+        self.assertEqual(results[1, :].tolist(), [0, 1, 1, 0, 1, 1, 0])
 
     def test_load_equation_3(self):
         "Tests loading equations - network with feedback"
@@ -53,11 +56,11 @@ class BNTest(unittest.TestCase):
         # test loading boolean_network
         self.assertEqual(boolean_network.N, 7)
         # test runs
-        boolean_network.setInitialValues([1, 0, 0, 0, 0, 0, 0])
+        boolean_network.setInitialValues([1, 0, 0, 0, 0, 0, 1])
         results = boolean_network.update(10)
         self.assertEqual(results[1, :].tolist(), [1, 0, 0, 0, 0, 1, 1])
         self.assertEqual(results[2, :].tolist(), [1, 0, 0, 0, 0, 1, 1])
-        boolean_network.setInitialValues([1, 1, 1, 0, 0, 0, 0])
+        boolean_network.setInitialValues([1, 1, 1, 0, 0, 0, 1])
         results = boolean_network.update(10)
         self.assertEqual(results[1, :].tolist(), [1, 1, 1, 0, 1, 1, 0])
 
