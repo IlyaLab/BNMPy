@@ -62,3 +62,5 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&'):
         output_string = f'{gene_name} = {input_nodes_string}'
         bn_lines.append(output_string)
     return '\n'.join(bn_lines)
+
+# TODO: add new genes to an existing boolean network

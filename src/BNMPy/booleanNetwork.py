@@ -223,6 +223,10 @@ class BooleanNetwork(object):
     def getTrajectory( self ) : 
         return  self.networkHistory
 
+    def toGraph(self):
+        # TODO: convert the network to an igraph representation.
+        pass
+
 
 
 def getRandomParameters(numberOfNodes, connectivity,
