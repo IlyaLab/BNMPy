@@ -63,4 +63,34 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&'):
         bn_lines.append(output_string)
     return '\n'.join(bn_lines)
 
-# TODO: add new genes to an existing boolean network
+# TODO: add new genes to an existing boolean network using signor
+def add_genes_to_network(bn, gene_list, input_format='symbol', joiner='|'):
+    """
+    Creates an augmented boolean network from SigNOR using all of the genes along with the genes already present in bn. Tries to build a connected Steiner subgraph...
+
+    Args:
+        bn - a BooleanNetwork object
+        gene_list - list of gene symbols, gene ids, or uniprot ids.
+        input_format - "symbol", "id", or "uniprot"
+        joiner - "&" or "|"
+    """
+    if ' ' not in joiner:
+        joiner = ' ' + joiner + ' '
+    input_format = input_format.lower()
+    filename = 'SIGNOR_formated.tsv'
+    graph_table = graph_info.load_graph(filename)
+    graph = graph_info.df_to_graph(graph_table, False)
+    digraph = graph_info.df_to_graph(graph_table, True)
+    # get a graph subset
+    # signor names are uniprot, of the format UNIPROT::[uniprot ID]
+    # feature_name is the gene name
+    uniprot_list = []
+    if input_format == 'symbol':
+        id_list = gene_names.get_ids(gene_list)
+        uniprot_list = gene_names.gene_ids_to_uniprot(id_list)
+    elif input_format == 'id' or input_format == 'gene_id':
+        uniprot_list = gene_names.gene_ids_to_uniprot(gene_list)
+    else:
+        uniprot_list = gene_list
+    uniprot_list = ['UNIPROT::'+x for x in uniprot_list]
+    print(uniprot_list)
