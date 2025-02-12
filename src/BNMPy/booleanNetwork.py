@@ -4,11 +4,17 @@ import pandas as pd
 
 
 class BooleanNetwork(object):
+    """
+    Boolean network object...
+    """
 
-    def __init__(self, numberOfNodes, linkages, functions, initialNodeValues,
-                 outputFilePath=''):
+    def __init__(self, numberOfNodes, linkages, functions, initialNodeValues=None,
+                 outputFilePath='', nodeDict=None):
+        # nodeDict is a dict of gene name to index.
         self.N = numberOfNodes
+        # varF is the connectivity matrix.
         self.varF = np.array(linkages)
+        # F is the truth table.
         self.F = np.array(functions, dtype=np.int8)
         self.nodes = np.array(initialNodeValues, dtype=np.int8)
         self.networkHistory = np.array([[node for node in self.nodes]])
@@ -35,6 +41,38 @@ class BooleanNetwork(object):
         if ( outputFilePath != '' ) :
             self.initializeOutput()
 
+        self.nodeDict = nodeDict
+        # old connectivity matrices - for mutations
+        self.old_varF = None
+        self.old_F = None
+
+    def buildK(self):
+        "This rebuilds the K array."
+        self.K = []
+        self.isConstantConnectivity = True
+        self.isConstanNode = np.full( self.N , False)
+        for i in range(len(self.varF)):
+            self.K.append(0)
+            for linkage in self.varF[i]:
+                if (linkage == -1):
+                    self.isConstantConnectivity = False
+                    break
+                self.K[i] += 1
+        
+            if self.K[i] == 0 :
+                self.isConstanNode[i] = True
+                
+        self.K = np.array(self.K)
+
+    def setInitialValues(self, initialNodeValues):
+        "Sets the initial values of the boolean network."
+        self.nodes = np.array(initialNodeValues, dtype=np.int8)
+
+    def setInitialValue(self, key, value):
+        "Sets a particular node to a given initial value, where the key is indexed in nodeDict."
+        ind = self.nodeDict[key]
+        self.nodes[ind] = value
+
     def initializeOutput(self):
         file = open(self.outputFilePath, 'w')
         stringToWrite = ''
@@ -45,6 +83,31 @@ class BooleanNetwork(object):
         file.write(stringToWrite)
         file.write(self.stateToWrite())
         file.close()
+
+    def knockout(self, key, value):
+        "Sets a specific node to be permanently fixed to a given value."
+        # varF = connectivity matrix
+        if self.old_varF is None:
+            self.old_varF = self.varF.copy()
+            self.old_F = self.F.copy()
+        # knock the connectivity value for all downstream genes to -1, and set the initial value to value
+        self.setInitialValue(key, value)
+        self.varF[self.nodeDict[key], :] = -1
+        self.varF.dtype = int
+        # changing the truth table...
+        self.F[self.nodeDict[key], 0] = value
+        self.F[self.nodeDict[key], 1:] = -1
+        self.F.dtype = np.int8
+        self.buildK()
+
+    def undoKnockouts(self):
+        "Undoes all knockouts. Does not change initial values, however."
+        if self.old_varF is not None:
+            self.varF = self.old_varF
+            self.old_varF = None
+            self.F = self.old_F
+            self.old_F = None
+            self.buildK()
 
     def stateToWrite(self):
         stringToWrite = ''
@@ -159,6 +222,10 @@ class BooleanNetwork(object):
    
     def getTrajectory( self ) : 
         return  self.networkHistory
+
+    def toGraph(self):
+        # TODO: convert the network to an igraph representation.
+        pass
 
 
 

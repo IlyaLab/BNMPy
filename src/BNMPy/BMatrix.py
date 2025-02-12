@@ -1,4 +1,7 @@
 ## Created by Tazein on 1/29/24
+"""
+Resources for loading boolean networks from files (strings)
+"""
 
 import numpy as np
 import pandas as pd
@@ -7,23 +10,13 @@ from itertools import product
 
 ################## equations for simulation variables ##################
 
+BUILT_INS = {'0', '1', 'True', 'False'}
+
 def get_equations(file):
     with open(file, 'r') as file:
         equations = file.readlines()
-    equations = [equation.strip() for equation in equations]
-    
-    for equation in equations: 
-        if '!' in equation: #if we have an !
-            if not bool(re.search(r'!\s', equation)) == True: #and there is no space b/w ! and the gene
-                print('There is a formatting error: ' + str(equation) + '\nMake sure that they are spaces between any ! & or (). \nFor example: HOXA9 = ! ( AEZH2 | DNMT3A | ASXL1 ) & DOT1L\n')
-                return
-                
-        if '&' in equation: #if we have an !
-            if not bool(re.search(r'&\s', equation)) == True: #and there is no space b/w & and the gene
-                print('There is a formatting error: ' + str(equation) + '\nMake sure that they are spaces between any ! & or (). \nFor example: HOXA9 = ! ( AEZH2 | DNMT3A | ASXL1 ) & DOT1L\n')
-                return
-        
-    return(equations)
+    equations = [equation.strip() for equation in equations if len(equation.strip()) > 0]
+    return equations
 
 def get_gene_dict(equations):
     left_side = []
@@ -41,6 +34,7 @@ def get_gene_dict(equations):
     return(gene_dict)
 
 def get_upstream_genes(equations): 
+    "Returns a string of gene names, space-separated, for each of the equations."
     #get only the right side of the equations
     right_side = []
     for equation in equations:
@@ -53,9 +47,11 @@ def get_upstream_genes(equations):
     characters_to_remove = "!|&()"
     values = []
     for function in functions:
-        translation_table = str.maketrans("", "", characters_to_remove)
+        translation_table = str.maketrans({c: ' ' for c in characters_to_remove})
         cleaned_expression = function.translate(translation_table) 
-        cleaned_expression = ' '.join(list(set(cleaned_expression.split())))
+        tokens = list(set(cleaned_expression.split()))
+        tokens = [x for x in tokens if x not in BUILT_INS]
+        cleaned_expression = ' '.join(tokens)
         values.append(cleaned_expression)
     upstream_genes = values
 
@@ -74,7 +70,7 @@ def get_connectivity_matrix(equations,upstream_genes,gene_dict):
     #now we fix the length by adding the -1 (aka the padding) 
     max_length = max(len(t) for t in result_array)
     connectivity_matrix = [tuple(np.pad(t, (0, max_length - len(t)), constant_values=-1)) for t in result_array]
-    connectivity_matrix = np.array(connectivity_matrix)
+    connectivity_matrix = np.array(connectivity_matrix, dtype=int)
     
     return(connectivity_matrix)
 
@@ -91,7 +87,7 @@ def get_truth_table(equations,upstream_genes,show_functions=None):
         right_side.append(value)
     functions = right_side
 
-    functions = [function.replace('!', 'not').replace('|', 'or').replace('&','and') for function in functions]
+    functions = [function.replace('!', ' not ').replace('|', ' or ').replace('&',' and ') for function in functions]
         
     truth = []
     var1 = []
@@ -198,6 +194,60 @@ def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict, p
             x0[gene_dict[gene]] = perturbed_dict.get(gene, 0)  # Setting that gene's value to mutation value
             
     return(mutated_connectivity_matrix,x0)
+
+
+def load_network_from_file(filename, initial_state=None):
+    """
+    Given a file representing a boolean network, this generates a BooleanNetwork object.
+
+    Formatting:
+
+    - all genes must have their own equation (sometimes the equation is just A = A)
+    - all 
+    """
+    from .booleanNetwork import BooleanNetwork
+    equations = get_equations(filename)
+    ngenes = len(equations)
+    gene_dict = get_gene_dict(equations)
+    upstream_genes = get_upstream_genes(equations)
+    connectivity_matrix = get_connectivity_matrix(equations, upstream_genes, gene_dict)
+    truth_table = get_truth_table(equations, upstream_genes)
+    if initial_state is None:
+        print('No initial state provided, using a random initial state')
+        x0 = np.random.randint(2, size=ngenes) #random inital state 
+    else:
+        x0 = np.array(initial_state)
+    network = BooleanNetwork( ngenes , connectivity_matrix, truth_table, x0,
+            nodeDict=gene_dict)
+    # create a Boolean network object
+    return network
+
+# TODO: implement constant values
+def load_network_from_string(network_string, initial_state=None):
+    """
+    Given a file representing a boolean network, this generates a BooleanNetwork object.
+
+    Formatting:
+
+    - all genes must have their own equation (sometimes the equation is just A = A)
+    - all 
+    """
+    from .booleanNetwork import BooleanNetwork
+    equations = [x.strip() for x in network_string.strip().split('\n')]
+    ngenes = len(equations)
+    gene_dict = get_gene_dict(equations)
+    upstream_genes = get_upstream_genes(equations)
+    connectivity_matrix = get_connectivity_matrix(equations, upstream_genes, gene_dict)
+    truth_table = get_truth_table(equations, upstream_genes)
+    if initial_state is None:
+        print('No initial state provided, using a random initial state')
+        x0 = np.random.randint(2, size=ngenes) #random inital state 
+    else:
+        x0 = np.array(initial_state)
+    network = BooleanNetwork( ngenes , connectivity_matrix, truth_table, x0,
+            nodeDict=gene_dict)
+    # create a Boolean network object
+    return network
 
 ################## equations for calculating phenotype and network ##################
 

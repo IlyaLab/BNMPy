@@ -1,0 +1,7 @@
+cdk7 = cdk7
+cyclinH = cyclinH
+cyclinE = cyclinE
+p21 = p21
+cdk2 = cdk7 & cyclinH
+p21_WAF1_n = !p21
+Rb = !(cdk2 & cyclinE & p21_WAF1_n)
