@@ -92,5 +92,36 @@ def add_genes_to_network(bn, gene_list, input_format='symbol', joiner='|'):
         uniprot_list = gene_names.gene_ids_to_uniprot(gene_list)
     else:
         uniprot_list = gene_list
+    # get existing genes
+    bn_genes = bn.nodeDict.keys()
+    if isinstance(bn_genes[0], str):
+        id_list = gene_names.get_ids(bn_genes)
+        uniprot_list += gene_names.gene_ids_to_uniprot(id_list)
     uniprot_list = ['UNIPROT::'+x for x in uniprot_list]
     print(uniprot_list)
+    # TODO: get a subgraph using the new genes + existing genes
+    tree = explanations.steiner_tree(graph, uniprot_list)
+    subgraph = digraph.induced_subgraph([n['name'] for n in tree.vs])
+    bn_lines = []
+    # for each node...
+    for n in subgraph.vs:
+        incoming_genes = set()
+        gene_name = n.attributes()['feature_name']
+        in_edges = subgraph.incident(n, mode='in')
+        input_nodes = []
+        for e in in_edges:
+            e = subgraph.es[e]
+            in_node = subgraph.vs[e.source].attributes()['feature_name']
+            if in_node in incoming_genes:
+                continue
+            incoming_genes.add(in_node)
+            predicate = e.attributes()['predicate']
+            if 'down-regulates' in predicate:
+                input_nodes.append(f'(! {in_node})')
+            elif 'up-regulates' in predicate:
+                input_nodes.append(f'({in_node})')
+        input_nodes_string = joiner.join(input_nodes)
+        if len(input_nodes) == 0:
+            input_nodes_string = gene_name
+        output_string = f'{gene_name} = {input_nodes_string}'
+        bn_lines.append(output_string)
