@@ -1,0 +1,7 @@
+TNF = TNF
+EGF = EGF
+EGFR = EGF
+TNFRs = TNF | NFkB
+complexI = TNFRs
+SOS = EGFR | (!ERK)
+RAS = SOS
