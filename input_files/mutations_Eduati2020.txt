@@ -1,0 +1,7 @@
+Fbxw7 = 0
+RAS = 1
+Rnf43 = 0
+Smad4 = 0
+p53 = 0
+Ep300 = 0
+JNKK = 0
