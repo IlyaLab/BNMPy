@@ -1,0 +1,9 @@
+EGFR = 0
+JAK = 0
+Akt = 0
+PDPK1 = 0
+MEK = 0
+IKKs = 0
+PI3K = 0
+EGF = 1
+TNF = 1
