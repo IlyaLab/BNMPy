@@ -225,6 +225,8 @@ class BooleanNetwork(object):
 
     def toGraph(self):
         # TODO: convert the network to an igraph representation.
+        nodes = []
+        edges = []
         pass
 
 
