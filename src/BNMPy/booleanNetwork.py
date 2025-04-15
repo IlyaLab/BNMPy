@@ -41,6 +41,8 @@ class BooleanNetwork(object):
         if ( outputFilePath != '' ) :
             self.initializeOutput()
 
+        if nodeDict is None:
+            nodeDict = {i: i for i in range(self.N)}
         self.nodeDict = nodeDict
         # old connectivity matrices - for mutations
         self.old_varF = None
