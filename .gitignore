@@ -1,0 +1,6 @@
+# Ignore Python bytecode
+*.pyc
+__pycache__/
+
+# Ignore files in the .DS_Store file
+.DS_Store
