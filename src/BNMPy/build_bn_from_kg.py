@@ -11,9 +11,9 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&'):
     Args:
         gene_list - list of gene symbols, gene ids, or uniprot ids.
         input_format - "symbol", "id", or "uniprot"
-        joiner - "&" or "|"
+        joiner - "&", "|", or "inhibitor_wins" (or, joiner can be "inhibitor wins")
     """
-    if ' ' not in joiner:
+    if ' ' not in joiner and (joiner == '&' or joiner == '|'):
         joiner = ' ' + joiner + ' '
     input_format = input_format.lower()
     filename = 'SIGNOR_formated.tsv'
@@ -39,8 +39,12 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&'):
     # use the subgraph to build a connected thing
     # TODO: figure out the rule for combining inputs
     bn_lines = []
+    # inhibitors
     # get all input edges
+    all_relations = []
     for n in subgraph.vs:
+        inhibitors = []
+        upregulators = []
         incoming_genes = set()
         gene_name = n.attributes()['feature_name']
         in_edges = subgraph.incident(n, mode='in')
@@ -54,14 +58,29 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&'):
             predicate = e.attributes()['predicate']
             if 'down-regulates' in predicate:
                 input_nodes.append(f'(! {in_node})')
+                inhibitors.append(in_node)
+                all_relations.append((in_node, gene_name, 'inhibit'))
             elif 'up-regulates' in predicate:
                 input_nodes.append(f'({in_node})')
-        input_nodes_string = joiner.join(input_nodes)
+                upregulators.append(in_node)
+                all_relations.append((in_node, gene_name, 'activate'))
+        if joiner == 'inhibitor_wins':
+            input_nodes_string = ''
+            inhibitor_string = ' & '.join(f'!{x}' for x in inhibitors)
+            upregulator_string = ' | '.join(f'{x}' for x in upregulators)
+            if inhibitor_string and upregulator_string:
+                input_nodes_string = f'({inhibitor_string}) & ({upregulator_string})'
+            elif inhibitor_string:
+                input_nodes_string = f'{inhibitor_string}'
+            elif upregulator_string:
+                input_nodes_string = f'{upregulator_string}'
+        else:
+            input_nodes_string = joiner.join(input_nodes)
         if len(input_nodes) == 0:
             input_nodes_string = gene_name
         output_string = f'{gene_name} = {input_nodes_string}'
         bn_lines.append(output_string)
-    return '\n'.join(bn_lines)
+    return '\n'.join(bn_lines), all_relations
 
 # TODO: add new genes to an existing boolean network using signor
 def add_genes_to_network(bn, gene_list, input_format='symbol', joiner='|'):
