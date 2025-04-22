@@ -218,7 +218,7 @@ def load_network_from_file(filename, initial_state=None):
     else:
         x0 = np.array(initial_state)
     network = BooleanNetwork( ngenes , connectivity_matrix, truth_table, x0,
-            nodeDict=gene_dict)
+            nodeDict=gene_dict, equations=equations)
     # create a Boolean network object
     return network
 
@@ -245,7 +245,7 @@ def load_network_from_string(network_string, initial_state=None):
     else:
         x0 = np.array(initial_state)
     network = BooleanNetwork( ngenes , connectivity_matrix, truth_table, x0,
-            nodeDict=gene_dict)
+            nodeDict=gene_dict, equations=equations)
     # create a Boolean network object
     return network
 
