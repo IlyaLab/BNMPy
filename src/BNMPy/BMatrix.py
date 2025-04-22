@@ -357,3 +357,195 @@ def get_calculating_scores(network_traj, cal_functions, cal_upstream_genes, gene
     #final_score = np.mean(scores_dict['Network'])
     
     return (final_scores_dict,final_score)
+
+################## load PBNs ##################
+
+def load_pbn_from_file(filename, initial_state=None):
+    """
+    Given a file representing a probabilistic boolean network, this generates a ProbabilisticBN object.
+
+    File format example:
+    x1 = (x1 | x2 | x3) & (!x1 | x2 | x3), 0.6
+    x1 = (x1 | x2 | x3) & (x1 | !x2 | !x3) & (!x1 | x2 | x3), 0.4
+    x2 = (x1 | x2 | x3) & (x1 | !x2 | !x3) & (!x1 | !x2 | x3), 1
+    x3 = (!x1 & x2 & x3) | (x1 & !x2 & x3) | (x1 & x2 & !x3) | (x1 & x2 & x3), 0.5
+    x3 = (x1 & x2 & x3), 0.5
+
+    Each line has format: node = boolean_function, probability
+    
+    Parameters:
+    -----------
+    filename : str
+        Path to the file containing the PBN definition
+    initial_state : array-like, optional
+        Initial values for each node. If None, random initial values are used.
+        
+    Returns:
+    --------
+    ProbabilisticBN
+        A probabilistic boolean network object
+    """
+    from .PBN import ProbabilisticBN
+    with open(filename, 'r') as file:
+        lines = file.readlines()
+    lines = [line.strip() for line in lines if len(line.strip()) > 0]
+
+    gene_funcs = {}
+    gene_probs = {}
+    
+    for line in lines:
+        # Split by the last comma to separate function and probability
+        if ',' not in line:
+            continue
+        
+        func_part, prob_part = line.rsplit(',', 1)
+        probability = float(prob_part.strip())
+        
+        if '=' not in func_part:
+            continue
+            
+        gene, equation = func_part.split('=', 1)
+        gene = gene.strip()
+        equation = equation.strip()
+        
+        if gene not in gene_funcs:
+            gene_funcs[gene] = []
+            gene_probs[gene] = []
+            
+        gene_funcs[gene].append(equation)
+        gene_probs[gene].append(probability)
+    
+    # Create a mapping of gene names to indices
+    gene_dict = {gene: i for i, gene in enumerate(gene_funcs.keys())}
+    ngenes = len(gene_dict)
+    
+    # Create array for number of functions per node
+    nf = np.zeros(ngenes, dtype=int)
+    for gene, funcs in gene_funcs.items():
+        idx = gene_dict[gene]
+        nf[idx] = len(funcs)
+    
+    # Create probability matrix
+    max_funcs = max(nf)
+    cij = np.full((ngenes, max_funcs), -1.0)
+    for gene, probs in gene_probs.items():
+        idx = gene_dict[gene]
+        for j, prob in enumerate(probs):
+            cij[idx, j] = prob
+    
+    # Process each function to get connectivity and truth tables
+    all_equations = []
+    for gene in gene_funcs:
+        for func in gene_funcs[gene]:
+            all_equations.append(f"{gene} = {func}")
+    
+    upstream_genes = get_upstream_genes(all_equations)
+    
+    # Create connectivity matrix and truth table
+    connectivity_matrix = get_connectivity_matrix(all_equations, upstream_genes, gene_dict)
+    truth_table = get_truth_table(all_equations, upstream_genes)
+    
+    # Set initial state
+    if initial_state is None:
+        print('No initial state provided, using a random initial state')
+        x0 = np.random.randint(2, size=ngenes)
+    else:
+        x0 = np.array(initial_state)
+    
+    # Create and return the PBN
+    network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0)
+    return network
+
+def load_pbn_from_string(network_string, initial_state=None):
+    """
+    Given a string representing a probabilistic boolean network, this generates a ProbabilisticBN object.
+    
+    String format should match the file format expected by load_pbn_from_file.
+    
+    Parameters:
+    -----------
+    network_string : str
+        String containing the PBN definition
+    initial_state : array-like, optional
+        Initial values for each node. If None, random initial values are used.
+        
+    Returns:
+    --------
+    ProbabilisticBN
+        A probabilistic boolean network object
+    """
+    from .PBN import ProbabilisticBN
+    
+    # Split the string into lines
+    lines = [x.strip() for x in network_string.strip().split('\n')]
+    
+    # Parse gene names and organize functions by gene
+    gene_funcs = {}
+    gene_probs = {}
+    
+    for line in lines:
+        # Skip empty lines
+        if not line:
+            continue
+            
+        # Split by the last comma to separate function and probability
+        if ',' not in line:
+            continue
+        
+        func_part, prob_part = line.rsplit(',', 1)
+        probability = float(prob_part.strip())
+        
+        if '=' not in func_part:
+            continue
+            
+        gene, equation = func_part.split('=', 1)
+        gene = gene.strip()
+        equation = equation.strip()
+        
+        if gene not in gene_funcs:
+            gene_funcs[gene] = []
+            gene_probs[gene] = []
+            
+        gene_funcs[gene].append(equation)
+        gene_probs[gene].append(probability)
+    
+    # Create a mapping of gene names to indices
+    gene_dict = {gene: i for i, gene in enumerate(gene_funcs.keys())}
+    ngenes = len(gene_dict)
+    
+    # Create array for number of functions per node
+    nf = np.zeros(ngenes, dtype=int)
+    for gene, funcs in gene_funcs.items():
+        idx = gene_dict[gene]
+        nf[idx] = len(funcs)
+    
+    # Create probability matrix
+    max_funcs = max(nf)
+    cij = np.full((ngenes, max_funcs), -1.0)
+    for gene, probs in gene_probs.items():
+        idx = gene_dict[gene]
+        for j, prob in enumerate(probs):
+            cij[idx, j] = prob
+    
+    # Process each function to get connectivity and truth tables
+    all_equations = []
+    for gene in gene_funcs:
+        for func in gene_funcs[gene]:
+            all_equations.append(f"{gene} = {func}")
+    
+    upstream_genes = get_upstream_genes(all_equations)
+    
+    # Create connectivity matrix and truth table
+    connectivity_matrix = get_connectivity_matrix(all_equations, upstream_genes, gene_dict)
+    truth_table = get_truth_table(all_equations, upstream_genes)
+    
+    # Set initial state
+    if initial_state is None:
+        print('No initial state provided, using a random initial state')
+        x0 = np.random.randint(2, size=ngenes)
+    else:
+        x0 = np.array(initial_state)
+    
+    # Create and return the PBN
+    network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0)
+    return network
