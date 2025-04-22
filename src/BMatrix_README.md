@@ -10,6 +10,11 @@ To install the BMatrix code, download it and import within Python file as 'BMatr
 ***
 
 ## Function Descriptions
+### load_network_from_file(filename, initial_state=None)
+__Input__: Requires `filename` which is the name of the .txt file that contains the equations. `initial_state` is a list of integers that represent the initial state of the network. If no initial state is provided, the code will generate a random initial state. \
+__Functionality__: The code reads the .txt file and creates a BooleanNetwork object. If an equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed. \
+__Output__: A BooleanNetwork object
+
 ### get_equations(file)
 __Input__: A .txt file with the equations formatted `GENE = ! ( INHIBITOR | INHIBITOR ) & ( ACTIVATOR | ACTIVIATOR )` \
 __Functionality__: Reads the .txt file by line, if the format is incorrect, it returns an error. \

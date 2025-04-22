@@ -196,59 +196,6 @@ def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict, p
     return(mutated_connectivity_matrix,x0)
 
 
-def load_network_from_file(filename, initial_state=None):
-    """
-    Given a file representing a boolean network, this generates a BooleanNetwork object.
-
-    Formatting:
-
-    - all genes must have their own equation (sometimes the equation is just A = A)
-    - all 
-    """
-    from .booleanNetwork import BooleanNetwork
-    equations = get_equations(filename)
-    ngenes = len(equations)
-    gene_dict = get_gene_dict(equations)
-    upstream_genes = get_upstream_genes(equations)
-    connectivity_matrix = get_connectivity_matrix(equations, upstream_genes, gene_dict)
-    truth_table = get_truth_table(equations, upstream_genes)
-    if initial_state is None:
-        print('No initial state provided, using a random initial state')
-        x0 = np.random.randint(2, size=ngenes) #random inital state 
-    else:
-        x0 = np.array(initial_state)
-    network = BooleanNetwork( ngenes , connectivity_matrix, truth_table, x0,
-            nodeDict=gene_dict, equations=equations)
-    # create a Boolean network object
-    return network
-
-# TODO: implement constant values
-def load_network_from_string(network_string, initial_state=None):
-    """
-    Given a file representing a boolean network, this generates a BooleanNetwork object.
-
-    Formatting:
-
-    - all genes must have their own equation (sometimes the equation is just A = A)
-    - all 
-    """
-    from .booleanNetwork import BooleanNetwork
-    equations = [x.strip() for x in network_string.strip().split('\n')]
-    ngenes = len(equations)
-    gene_dict = get_gene_dict(equations)
-    upstream_genes = get_upstream_genes(equations)
-    connectivity_matrix = get_connectivity_matrix(equations, upstream_genes, gene_dict)
-    truth_table = get_truth_table(equations, upstream_genes)
-    if initial_state is None:
-        print('No initial state provided, using a random initial state')
-        x0 = np.random.randint(2, size=ngenes) #random inital state 
-    else:
-        x0 = np.array(initial_state)
-    network = BooleanNetwork( ngenes , connectivity_matrix, truth_table, x0,
-            nodeDict=gene_dict, equations=equations)
-    # create a Boolean network object
-    return network
-
 ################## equations for calculating phenotype and network ##################
 
 #getting the equations uses the same function (equations(file))
@@ -358,7 +305,89 @@ def get_calculating_scores(network_traj, cal_functions, cal_upstream_genes, gene
     
     return (final_scores_dict,final_score)
 
-################## load PBNs ##################
+################## load BN/PBN from files/strings ##################
+def load_network_from_file(filename, initial_state=None):
+    """
+    Given a file representing a boolean network, this generates a BooleanNetwork object.
+
+    Formatting:
+   gene = equation
+    - all genes must have their own equation in a line (sometimes the equation is just A = A)
+    - each equation must have an equal sign and a space before and after it
+    - If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed
+    """
+    from .booleanNetwork import BooleanNetwork
+    equations = get_equations(filename)
+    ngenes = len(equations)
+    gene_dict = get_gene_dict(equations)
+    upstream_genes = get_upstream_genes(equations)
+    connectivity_matrix = get_connectivity_matrix(equations, upstream_genes, gene_dict)
+    truth_table = get_truth_table(equations, upstream_genes)
+    
+    # Initialize x0 array
+    if initial_state is None:
+        print('No initial state provided, using a random initial state')
+        x0 = np.random.randint(2, size=ngenes) #random inital state 
+    else:
+        x0 = np.array(initial_state)
+    
+    # Handle constant values (0 or 1) in equations
+    for equation in equations:
+        parts = equation.split('=')
+        gene = parts[0].strip()
+        value = parts[1].strip()
+        
+        # Check if the equation is a constant value (0 or 1)
+        if value == '0' or value == '1':
+            gene_index = gene_dict[gene]
+            # Set the gene's initial state to the constant value
+            x0[gene_index] = int(value)
+            # Set the connectivity matrix row to -1 to indicate it's a constant/perturbed gene
+            connectivity_matrix[gene_index, :] = -1
+        
+    # create a Boolean network object
+    network = BooleanNetwork(ngenes, connectivity_matrix, truth_table, x0,
+            nodeDict=gene_dict)
+    return network
+
+def load_network_from_string(network_string, initial_state=None):
+    """
+    Given a string representing a boolean network, this generates a BooleanNetwork object.
+
+    Formatting:
+
+    - all genes must have their own equation (sometimes the equation is just A = A)
+    - each equation must have an equal sign and a space before and after it
+    - If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed
+    """
+    from .booleanNetwork import BooleanNetwork
+    equations = [x.strip() for x in network_string.strip().split('\n')]
+    ngenes = len(equations)
+    gene_dict = get_gene_dict(equations)
+    upstream_genes = get_upstream_genes(equations)
+    connectivity_matrix = get_connectivity_matrix(equations, upstream_genes, gene_dict)
+    truth_table = get_truth_table(equations, upstream_genes)
+    if initial_state is None:
+        print('No initial state provided, using a random initial state')
+        x0 = np.random.randint(2, size=ngenes) #random inital state 
+    else:
+        x0 = np.array(initial_state)
+    
+    # Handle constant values (0 or 1) in equations
+    for equation in equations:
+        parts = equation.split('=')
+        gene = parts[0].strip()
+        value = parts[1].strip()
+        
+        # Check if the equation is a constant value (0 or 1)
+        if value == '0' or value == '1':
+            gene_index = gene_dict[gene]
+            x0[gene_index] = int(value)
+            connectivity_matrix[gene_index, :] = -1
+    
+    network = BooleanNetwork( ngenes , connectivity_matrix, truth_table, x0,
+            nodeDict=gene_dict)
+    return network
 
 def load_pbn_from_file(filename, initial_state=None):
     """
@@ -367,11 +396,13 @@ def load_pbn_from_file(filename, initial_state=None):
     File format example:
     x1 = (x1 | x2 | x3) & (!x1 | x2 | x3), 0.6
     x1 = (x1 | x2 | x3) & (x1 | !x2 | !x3) & (!x1 | x2 | x3), 0.4
-    x2 = (x1 | x2 | x3) & (x1 | !x2 | !x3) & (!x1 | !x2 | x3), 1
+    x2 = (x1 | x2 | x3) & (x1 | !x2 | !x3) & (!x1 | !x2 | x3)
     x3 = (!x1 & x2 & x3) | (x1 & !x2 & x3) | (x1 & x2 & !x3) | (x1 & x2 & x3), 0.5
     x3 = (x1 & x2 & x3), 0.5
 
     Each line has format: node = boolean_function, probability
+    The probability part can be omitted if there is only one function for that gene.
+    The boolean_function can also be a constant value (0 or 1), meaning that the gene is set as mutated/perturbed
     
     Parameters:
     -----------
@@ -394,12 +425,13 @@ def load_pbn_from_file(filename, initial_state=None):
     gene_probs = {}
     
     for line in lines:
-        # Split by the last comma to separate function and probability
-        if ',' not in line:
-            continue
-        
-        func_part, prob_part = line.rsplit(',', 1)
-        probability = float(prob_part.strip())
+        # Check if line contains probability
+        if ',' in line:
+            func_part, prob_part = line.rsplit(',', 1)
+            probability = float(prob_part.strip())
+        else:
+            func_part = line
+            probability = None  # Will be set to 1.0 later if it's the only function
         
         if '=' not in func_part:
             continue
@@ -414,6 +446,22 @@ def load_pbn_from_file(filename, initial_state=None):
             
         gene_funcs[gene].append(equation)
         gene_probs[gene].append(probability)
+    
+    # Validate and set probabilities
+    for gene in gene_funcs:
+        if len(gene_funcs[gene]) == 1:
+            # If there's only one function, set probability to 1.0 if not specified
+            if gene_probs[gene][0] is None:
+                gene_probs[gene][0] = 1.0
+        else:
+            # Check if all probabilities are specified
+            if None in gene_probs[gene]:
+                raise ValueError(f"Gene {gene} has multiple functions but not all have probabilities specified")
+            
+            # Check if probabilities sum to 1
+            prob_sum = sum(gene_probs[gene])
+            if not np.isclose(prob_sum, 1.0, atol=1e-6):
+                raise ValueError(f"Probabilities for gene {gene} sum to {prob_sum}, not 1.0")
     
     # Create a mapping of gene names to indices
     gene_dict = {gene: i for i, gene in enumerate(gene_funcs.keys())}
@@ -451,6 +499,20 @@ def load_pbn_from_file(filename, initial_state=None):
         x0 = np.random.randint(2, size=ngenes)
     else:
         x0 = np.array(initial_state)
+    
+    # Handle constant values (0 or 1) in equations
+    for equation in all_equations:
+        parts = equation.split('=')
+        gene = parts[0].strip()
+        value = parts[1].strip()
+        
+        # Check if the equation is a constant value (0 or 1)
+        if value == '0' or value == '1':
+            gene_index = gene_dict[gene]
+            # Set the gene's initial state to the constant value
+            x0[gene_index] = int(value)
+            # Set the connectivity matrix row to -1 to indicate it's a constant
+            connectivity_matrix[gene_index, :] = -1
     
     # Create and return the PBN
     network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0)
@@ -489,11 +551,13 @@ def load_pbn_from_string(network_string, initial_state=None):
             continue
             
         # Split by the last comma to separate function and probability
-        if ',' not in line:
-            continue
-        
-        func_part, prob_part = line.rsplit(',', 1)
-        probability = float(prob_part.strip())
+        # Check if line contains probability
+        if ',' in line:
+            func_part, prob_part = line.rsplit(',', 1)
+            probability = float(prob_part.strip())
+        else:
+            func_part = line
+            probability = None  # Will be set to 1.0 later if it's the only function
         
         if '=' not in func_part:
             continue
@@ -508,7 +572,23 @@ def load_pbn_from_string(network_string, initial_state=None):
             
         gene_funcs[gene].append(equation)
         gene_probs[gene].append(probability)
-    
+
+    # Validate and set probabilities
+    for gene in gene_funcs:
+        if len(gene_funcs[gene]) == 1:
+            # If there's only one function, set probability to 1.0 if not specified
+            if gene_probs[gene][0] is None:
+                gene_probs[gene][0] = 1.0
+        else:
+            # Check if all probabilities are specified
+            if None in gene_probs[gene]:
+                raise ValueError(f"Gene {gene} has multiple functions but not all have probabilities specified")
+            
+            # Check if probabilities sum to 1
+            prob_sum = sum(gene_probs[gene])
+            if not np.isclose(prob_sum, 1.0, atol=1e-6):
+                raise ValueError(f"Probabilities for gene {gene} sum to {prob_sum}, not 1.0")
+
     # Create a mapping of gene names to indices
     gene_dict = {gene: i for i, gene in enumerate(gene_funcs.keys())}
     ngenes = len(gene_dict)
@@ -545,6 +625,18 @@ def load_pbn_from_string(network_string, initial_state=None):
         x0 = np.random.randint(2, size=ngenes)
     else:
         x0 = np.array(initial_state)
+    
+    # Handle constant values (0 or 1) in equations
+    for equation in all_equations:
+        parts = equation.split('=')
+        gene = parts[0].strip()
+        value = parts[1].strip()
+        
+        # Check if the equation is a constant value (0 or 1)
+        if value == '0' or value == '1':
+            gene_index = gene_dict[gene]
+            x0[gene_index] = int(value)
+            connectivity_matrix[gene_index, :] = -1
     
     # Create and return the PBN
     network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0)
