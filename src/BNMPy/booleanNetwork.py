@@ -9,7 +9,7 @@ class BooleanNetwork(object):
     """
 
     def __init__(self, numberOfNodes, linkages, functions, initialNodeValues=None,
-                 outputFilePath='', nodeDict=None):
+                 outputFilePath='', nodeDict=None, equations=None):
         # nodeDict is a dict of gene name to index.
         self.N = numberOfNodes
         # varF is the connectivity matrix.
@@ -19,6 +19,8 @@ class BooleanNetwork(object):
         self.nodes = np.array(initialNodeValues, dtype=np.int8)
         self.networkHistory = np.array([[node for node in self.nodes]])
         # print('after nodes are added to networkHistory')
+        # equations is a list of strings
+        self.equations = equations
 
         self.K = []
         self.isConstantConnectivity = True
@@ -41,6 +43,8 @@ class BooleanNetwork(object):
         if ( outputFilePath != '' ) :
             self.initializeOutput()
 
+        if nodeDict is None:
+            nodeDict = {i: i for i in range(self.N)}
         self.nodeDict = nodeDict
         # old connectivity matrices - for mutations
         self.old_varF = None
@@ -225,6 +229,8 @@ class BooleanNetwork(object):
 
     def toGraph(self):
         # TODO: convert the network to an igraph representation.
+        nodes = []
+        edges = []
         pass
 
 
