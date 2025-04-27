@@ -515,7 +515,7 @@ def load_pbn_from_file(filename, initial_state=None):
             connectivity_matrix[gene_index, :] = -1
     
     # Create and return the PBN
-    network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0)
+    network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0, nodeDict=gene_dict)
     return network
 
 def load_pbn_from_string(network_string, initial_state=None):
@@ -639,5 +639,5 @@ def load_pbn_from_string(network_string, initial_state=None):
             connectivity_matrix[gene_index, :] = -1
     
     # Create and return the PBN
-    network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0)
+    network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0, nodeDict=gene_dict)
     return network
