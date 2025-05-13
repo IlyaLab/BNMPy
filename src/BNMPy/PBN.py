@@ -57,6 +57,14 @@ class ProbabilisticBN(object):
         self.old_cij = None
         self.old_cumsum = None
 
+        # determine if a node is constant (for efficient lookup)
+        self.isConstantNode = np.zeros(self.N, dtype=bool)
+        for i in range(self.N):
+            if self.nf[i] == 1:
+                func_idx = self.cumsum[i]
+                if np.all(self.varF[func_idx] == -1):
+                    self.isConstantNode[i] = True
+
     def buildK(self):
         "This rebuilds the K array and related attributes."
         self.K = []
@@ -75,7 +83,15 @@ class ProbabilisticBN(object):
         for i in range(self.Nf):
             if (self.K[i] == 0):
                 self.isConstanNode[i] = True
-    
+        
+        # Update isConstantNode
+        self.isConstantNode = np.zeros(self.N, dtype=bool)
+        for i in range(self.N):
+            if self.nf[i] == 1:
+                func_idx = self.cumsum[i]
+                if np.all(self.varF[func_idx] == -1):
+                    self.isConstantNode[i] = True
+
     def setInitialValues(self, initialNodeValues):
         "Sets the initial values of the probabilistic boolean network."
         self.nodes = np.array(initialNodeValues, dtype=np.int8)
@@ -130,6 +146,9 @@ class ProbabilisticBN(object):
             
         # Rebuild K array and related attributes
         self.buildK()
+
+        # Set this node as constant
+        self.isConstantNode[node_idx] = True
 
     def undoKnockouts(self):
         "Undoes all knockouts. Does not change initial values, however."
@@ -205,57 +224,66 @@ class ProbabilisticBN(object):
         return y
     
     # update the Boolean network with noise, derived from update functions (Boris)
-    def update_noise(self, p, iterations=1 ): 
+    def update_noise(self, p, iterations=1):
+        """
+        Update the network with noise parameter p over a given number of iterations.
         
-        y = np.zeros( (iterations + 1, self.N ) , dtype=np.int8  )
-        temp = np.array(  [2**i for i in range(self.N-1, -1, -1) ] ) 
+        This method simulates the network's evolution over time with added noise.
+        Noise randomly flips node states with probability p, but is never applied
+        to constant nodes (knockouts).
+        
+        Parameters:
+        -----------
+        p : float between 0 and 1
+            Probability of applying noise to each non-constant node at each iteration
+        iterations : int, optional (default=1)
+            Number of iterations to simulate
+            
+        Returns:
+        --------
+        y : numpy.ndarray
+            Matrix of node states for each iteration (shape: iterations+1 × N)
+        """
+        y = np.zeros((iterations + 1, self.N), dtype=np.int8)
+        temp = np.array([2**i for i in range(self.N-1, -1, -1)])
         
         y[0] = self.nodes
-    
-        # Create a mask for nodes that can be affected by noise
-        # Nodes that have been knocked out should not be affected by noise
-        knocked_out_nodes = np.zeros(self.N, dtype=bool)
-        
-        # Identify knocked out nodes by checking if they have exactly 1 function
-        # and if that function has no inputs (K=0)
-        for i in range(self.N):
-            if self.nf[i] == 1:
-                func_idx = self.cumsum[i]
-                if np.all(self.varF[func_idx] == -1):
-                    knocked_out_nodes[i] = True
-        
+
         for itr in range(iterations):
-             # Only apply noise to nodes that haven't been knocked out
-            noise_mask = np.logical_not(knocked_out_nodes)
-            gam = np.zeros(self.N, dtype=bool)
-            for i in range(self.N):
-                if noise_mask[i] and np.random.rand() < p:
-                    gam[i] = True
+            # Create noise vector based on the stored constant node information
+            gam = np.array([False if self.isConstantNode[i] else np.random.rand() < p for i in range(self.N)])
             
             if np.any(gam):
-                y[itr+1] = np.bitwise_xor(y[itr], gam)  
-                
-            else :
+                # If any noise is applied, flip the affected bits
+                y[itr+1] = np.bitwise_xor(y[itr], gam)
+            else:
+                # Normal update without noise
                 for i in range(self.N):
-                    if knocked_out_nodes[i]:
-                        # For knocked out nodes, just copy their value
+                    if self.isConstantNode[i]:
+                        # For constant nodes (knockouts), just copy their value
                         y[itr+1][i] = y[itr][i]
-                    else:                
-                        cnf = self.cij[i,0:self.nf[i]]               
-                        idx = self.cumsum[i] + np.random.choice( self.nf[i], 1, p=cnf)[0] 
+                    else:
+                        # For normal nodes, select a function based on probabilities
+                        # Handle deterministic case (nf[i]=1) directly
+                        if self.nf[i] == 1:
+                            idx = self.cumsum[i]
+                        else:
+                            cnf = self.cij[i,0:self.nf[i]]
+                            # Skip random draw if first probability is 1.0
+                            if cnf[0] == 1.0:
+                                idx = self.cumsum[i] 
+                            else:
+                                idx = self.cumsum[i] + np.random.choice(self.nf[i], 1, p=cnf)[0]
                         
+                        # Apply the selected function to update the node
                         fInput = 0
-                        for j in range(self.K[idx]):    
-                            fInput += (y[itr][ self.varF[idx,j]]) * temp[ j - self.K[idx]  ]
+                        for j in range(self.K[idx]):
+                            fInput += (y[itr][self.varF[idx,j]]) * temp[j - self.K[idx]]
                         
                         y[itr+1][i] = self.F[idx,fInput]
-                    
-
-
-        self.nodes = y[-1] # newNodes
-
-        return y 
-
+        
+        self.nodes = y[-1]  # Update the network state to the final iteration
+        return y
 
     def getRealization(self):
         return (self.F, self.varF)
