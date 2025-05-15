@@ -5,6 +5,9 @@ BNMPy
 
 To install, run `pip install -e .` in this directory.
 
+## Example usage
+For a detailed example, check out the [Simple Example Notebook](./Examples/Simple_example.ipynb).
+
 ## Usage
 
 ```python
