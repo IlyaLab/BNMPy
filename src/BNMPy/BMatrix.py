@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import re
 from itertools import product
+import os
 
 ################## equations for simulation variables ##################
 
@@ -641,3 +642,118 @@ def load_pbn_from_string(network_string, initial_state=None):
     # Create and return the PBN
     network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0, nodeDict=gene_dict)
     return network
+
+def rename_nodes(network, mapping):
+    """
+    Rename nodes in a boolean network based on a mapping.
+
+    Parameters:
+    -----------
+    network : str
+        Network definition as file path or string
+    mapping : str or dict
+        Excel file path with 'Node' and 'NewName' columns, or dictionary with
+        original names as keys and new names as values
+
+    Returns:
+    --------
+    str
+        Updated network string with renamed nodes and expanded complexes
+    """
+    # Load network from file if needed
+    if os.path.isfile(network):
+        with open(network, 'r') as f:
+            network_string = f.read()
+    else:
+        network_string = network
+
+    # Process mapping input - either file or dictionary
+    node_mapping = {}
+    complex_nodes = {}
+    single_node_mapping = {}
+
+    if isinstance(mapping, str):
+        mapping_df = pd.read_excel(mapping)
+        for _, row in mapping_df.iterrows():
+            original_node = row['Node'].strip()
+            new_name = row['NewName'].strip()
+            if not original_node or not new_name:
+                continue
+            if ',' in new_name:
+                components = [comp.strip() for comp in new_name.split(',') if comp.strip()]
+                if not components:
+                    continue
+                node_mapping[original_node] = components
+                complex_nodes[original_node] = components
+            else:
+                node_mapping[original_node] = [new_name]
+                single_node_mapping[original_node] = new_name
+    elif isinstance(mapping, dict):
+        for original_node, new_name in mapping.items():
+            original_node = str(original_node).strip()
+            if not original_node:
+                continue
+            if isinstance(new_name, list):
+                components = [str(comp).strip() for comp in new_name if str(comp).strip()]
+                if not components:
+                    continue
+                node_mapping[original_node] = components
+                complex_nodes[original_node] = components
+            else:
+                new_name = str(new_name).strip()
+                if not new_name:
+                    continue
+                if ',' in new_name:
+                    components = [comp.strip() for comp in new_name.split(',') if comp.strip()]
+                    if not components:
+                        continue
+                    node_mapping[original_node] = components
+                    complex_nodes[original_node] = components
+                else:
+                    node_mapping[original_node] = [new_name]
+                    single_node_mapping[original_node] = new_name
+    else:
+        raise TypeError("mapping must be either a file path or a dictionary")
+
+    # Parse original network string into equations, ignore blank lines
+    original_equations = [line.strip() for line in network_string.strip().split('\n') if line.strip()]
+    equation_dict = {}
+
+    for eq in original_equations:
+        if '=' in eq:
+            left, right = eq.split('=', 1)
+            node = left.strip()
+            rule = right.strip()
+            if not node or not rule:
+                continue
+            equation_dict[node] = rule
+
+    new_equations = []
+
+    for original_node, rule in equation_dict.items():
+        new_rule = rule
+        # Replace complexes
+        for complex_node, components in complex_nodes.items():
+            if not complex_node or not components:
+                continue
+            pattern = r'\b' + re.escape(complex_node) + r'\b'
+            replacement = '(' + ' & '.join(components) + ')'
+            new_rule = re.sub(pattern, replacement, new_rule)
+        # Replace single nodes
+        for old_node, new_node in single_node_mapping.items():
+            if not old_node or not new_node:
+                continue
+            pattern = r'\b' + re.escape(old_node) + r'\b'
+            new_rule = re.sub(pattern, new_node, new_rule)
+        # Left side
+        if original_node in node_mapping:
+            new_nodes = node_mapping[original_node]
+            for new_node in new_nodes:
+                if not new_node:
+                    continue
+                new_equations.append(f"{new_node} = {new_rule}")
+        else:
+            new_equations.append(f"{original_node} = {new_rule}")
+
+    return '\n'.join(new_equations)
+
