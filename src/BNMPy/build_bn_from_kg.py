@@ -26,13 +26,15 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&'):
     uniprot_list = []
     if input_format == 'symbol':
         id_list = gene_names.get_ids(gene_list)
+        print(f"number of genes found: {len(id_list)}")
+        print(id_list)
         uniprot_list = gene_names.gene_ids_to_uniprot(id_list)
     elif input_format == 'id' or input_format == 'gene_id':
         uniprot_list = gene_names.gene_ids_to_uniprot(gene_list)
     else:
         uniprot_list = gene_list
     uniprot_list = ['UNIPROT::'+x for x in uniprot_list]
-    print(uniprot_list)
+    # print(uniprot_list)
     # filter uniprot list based on existence in the graph
     new_uniprot_list = []
     for u in uniprot_list:
@@ -41,7 +43,7 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&'):
             new_uniprot_list.append(u)
         except:
             continue
-    print(new_uniprot_list)
+    # print(new_uniprot_list)
     # Steiner subgraph - get a tree using a connected thing...
     tree = explanations.steiner_tree(graph, new_uniprot_list)
     subgraph = digraph.induced_subgraph([n['name'] for n in tree.vs])

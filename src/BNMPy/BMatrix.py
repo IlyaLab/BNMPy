@@ -676,7 +676,11 @@ def rename_nodes(network, mapping):
         mapping_df = pd.read_excel(mapping)
         for _, row in mapping_df.iterrows():
             original_node = row['Node'].strip()
-            new_name = row['NewName'].strip()
+            new_name = row['NewName']
+            if pd.isnull(new_name):
+                new_name = ''
+            else:
+                new_name = str(new_name).strip()
             if not original_node or not new_name:
                 continue
             if ',' in new_name:
