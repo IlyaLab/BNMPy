@@ -3,15 +3,31 @@ import igraph as ig
 from pyvis.network import Network
 import re
 
-def read_logic_rules(file):
+def read_logic_rules(source):
+    """
+    Reads logic rules from a file path or from a string containing rules.
+
+    Args:
+        source (str): Path to the file or the string containing logic rules.
+
+    Returns:
+        dict: Mapping from variable names to their logic rules.
+    """
     logic_rules = {}
-    with open(file, 'r') as f:
-        for line in f:
-            if line.startswith('#'):
-                continue
-            parts = line.strip().split('=')
-            if len(parts) == 2:
-                logic_rules[parts[0].strip()] = parts[1].strip()
+    try:
+        # Try to open as a file
+        with open(source, 'r') as f:
+            lines = f.readlines()
+    except (OSError, TypeError):
+        # If not a file, treat as string
+        lines = source.splitlines()
+
+    for line in lines:
+        if line.startswith('#'):
+            continue
+        parts = line.strip().split('=')
+        if len(parts) == 2:
+            logic_rules[parts[0].strip()] = parts[1].strip()
     return logic_rules
 
 
