@@ -1,0 +1,13 @@
+TGFa = 1
+TNFa = 1
+Raf = TGFa, 1
+PI3K = TGFa, 1
+Akt = PI3K
+C8 = TNFa
+NFkB = PI3K, 0.5
+NFkB = TNFa, 0.5
+ERK = Raf, 0.5
+ERK = NFkB, 0.5
+
+
+
