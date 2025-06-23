@@ -64,7 +64,38 @@ class ProbabilisticBN(object):
                 func_idx = self.cumsum[i]
                 if np.all(self.varF[func_idx] == -1):
                     self.isConstantNode[i] = True
+                    
+        # Initialize cumulative probabilities
+        self.update_cumulative_probabilities()
 
+    def update_cumulative_probabilities(self):
+        """
+        Update cumulative probabilities for each node's functions.
+        This is used for efficient function selection during simulation.
+        
+        The method:
+        1. Validates probability distributions
+        2. Computes cumulative probabilities
+        3. Stores them for efficient sampling
+        """
+        self.cij_cumsum = []
+        
+        for i in range(self.N):
+            # Get probabilities for this node's functions
+            probs = self.cij[i, :self.nf[i]]
+            
+            # Validate probabilities
+            if not np.isclose(np.sum(probs), 1.0, rtol=1e-5):
+                # If probabilities don't sum to 1, normalize them
+                probs = probs / np.sum(probs)
+                self.cij[i, :self.nf[i]] = probs
+            
+            # Compute cumulative probabilities
+            cumsum = np.cumsum(probs)
+            # Ensure last value is exactly 1.0
+            cumsum[-1] = 1.0
+            self.cij_cumsum.append(cumsum)
+            
     def buildK(self):
         "This rebuilds the K array and related attributes."
         self.K = []
@@ -199,6 +230,28 @@ class ProbabilisticBN(object):
         file.write(string)
         file.close()
 
+    def _select_function(self, node_idx: int) -> int:
+        """
+        Select a function for a node based on its probability distribution.
+        Uses pre-computed cumulative probabilities for efficiency.
+        
+        Parameters:
+        -----------
+        node_idx : int
+            Index of the node
+            
+        Returns:
+        --------
+        int
+            Selected function index relative to node's function block
+        """
+        if self.nf[node_idx] == 1:
+            return 0
+            
+        r = np.random.random()
+        cumsum = self.cij_cumsum[node_idx]
+        return np.searchsorted(cumsum, r)
+
     def update(self, iterations=1):
         
         y = np.zeros( (iterations + 1, self.N ) , dtype=np.int8  )
@@ -207,12 +260,14 @@ class ProbabilisticBN(object):
         y[0] = self.nodes
         
         for itr in range(iterations):
-
             for i in range(self.N):
+                if self.isConstantNode[i]:
+                    y[itr+1][i] = y[itr][i]
+                    continue
                 
-                cnf = self.cij[i,0:self.nf[i]]               
-                idx = self.cumsum[i] + np.random.choice( self.nf[i], 1, p=cnf)[0] 
-                    
+                func_offset = self._select_function(i)
+                idx = self.cumsum[i] + func_offset
+                
                 fInput = 0
                 for j in range(self.K[idx]):    
                     fInput += (y[itr][ self.varF[idx,j]]) * temp[ j - self.K[idx]  ]
@@ -264,17 +319,9 @@ class ProbabilisticBN(object):
                         y[itr+1][i] = y[itr][i]
                     else:
                         # For normal nodes, select a function based on probabilities
-                        # Handle deterministic case (nf[i]=1) directly
-                        if self.nf[i] == 1:
-                            idx = self.cumsum[i]
-                        else:
-                            cnf = self.cij[i,0:self.nf[i]]
-                            # Skip random draw if first probability is 1.0
-                            if cnf[0] == 1.0:
-                                idx = self.cumsum[i] 
-                            else:
-                                idx = self.cumsum[i] + np.random.choice(self.nf[i], 1, p=cnf)[0]
-                        
+                        func_offset = self._select_function(i)
+                        idx = self.cumsum[i] + func_offset
+
                         # Apply the selected function to update the node
                         fInput = 0
                         for j in range(self.K[idx]):
@@ -308,13 +355,29 @@ class ProbabilisticBN(object):
     def getTrajectory( self ) : 
         return  self.networkHistory
 
-
-
-
-def getRandomInitialNodeValues(numberOfNodes):
-    initialNodeValues = []
-    for _ in range(numberOfNodes):
-        initialNodeValues.append(np.random.randint(2))
-
-    return initialNodeValues
-
+    def copy(self) -> 'ProbabilisticBN':
+        """
+        Create a deep copy of the PBN.
+        Required for optimization to avoid modifying original network.
+        
+        Returns:
+        --------
+        ProbabilisticBN
+            A deep copy of this network
+        """
+        new_pbn = ProbabilisticBN(
+            self.N,
+            self.varF.copy(),
+            self.nf.copy(),
+            self.F.copy(),
+            self.cij.copy(),
+            self.nodes.copy(),
+            nodeDict=self.nodeDict.copy()
+        )
+        
+        # Copy additional attributes
+        new_pbn.isConstantNode = self.isConstantNode.copy()
+        new_pbn.K = self.K.copy()
+        new_pbn.cumsum = self.cumsum.copy()
+        
+        return new_pbn

@@ -33,9 +33,7 @@ class ExperimentData:
             {
                 'id': str,
                 'stimuli': list,
-                'inhibitors': list,
-                'measured_nodes': list,
-                'measured_values': list,
+                'inhibitors': list,ßß
                 'measurements': dict (node: value)
             }
         """
@@ -43,31 +41,28 @@ class ExperimentData:
         experiments = []
         
         for _, row in df.iterrows():
+            # Create measurements dictionary for easy access
+            measured_nodes = ExperimentData._parse_node_list(row['Measured_nodes'])
+            measured_values = ExperimentData._parse_value_list(row['Measured_values'])
+
+            # Validate that we have the same number of nodes and values
+            if len(measured_nodes) != len(measured_values):
+                raise ValueError(f"Experiment {row['Experiments']}: Number of measured nodes "
+                               f"({len(measured_nodes)}) does not match "
+                               f"number of measured values ({len(measured_values)})")
+
+            # Normalize values if necessary
+            if measured_values and max(measured_values) > 1:
+                max_val = max(measured_values)
+                measured_values = [v / max_val for v in measured_values]
+
             experiment = {
                 'id': row['Experiments'],
                 'stimuli': ExperimentData._parse_node_list(row.get('Stimuli', '')),
                 'inhibitors': ExperimentData._parse_node_list(row.get('Inhibitors', '')),
-                'measured_nodes': ExperimentData._parse_node_list(row['Measured_nodes']),
-                'measured_values': ExperimentData._parse_value_list(row['Measured_values'])
+                'measurements': dict(zip(measured_nodes, measured_values))
             }
             
-            # Create measurements dictionary for easy access
-            experiment['measurements'] = dict(zip(
-                experiment['measured_nodes'], 
-                experiment['measured_values']
-            ))
-            
-            # Validate that we have the same number of nodes and values
-            if len(experiment['measured_nodes']) != len(experiment['measured_values']):
-                raise ValueError(f"Experiment {experiment['id']}: Number of measured nodes "
-                               f"({len(experiment['measured_nodes'])}) does not match "
-                               f"number of measured values ({len(experiment['measured_values'])})")
-            
-            # Normalize the measured values to be between 0 and 1 if not already
-            if max(experiment['measured_values']) > 1:
-                experiment['measured_values'] = [value / max(experiment['measured_values']) for value in experiment['measured_values']]
-            else:
-                experiment['measured_values'] = experiment['measured_values']
             experiments.append(experiment)
         
         return experiments
