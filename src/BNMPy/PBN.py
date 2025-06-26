@@ -67,6 +67,9 @@ class ProbabilisticBN(object):
                     
         # Initialize cumulative probabilities
         self.update_cumulative_probabilities()
+        
+        # Track knockdown nodes 
+        self.knockdown_nodes = {}  # {node_idx: (target_value, efficacy)}
 
     def update_cumulative_probabilities(self):
         """
@@ -181,8 +184,39 @@ class ProbabilisticBN(object):
         # Set this node as constant
         self.isConstantNode[node_idx] = True
 
+    def knockdown(self, key, value, efficacy=1.0):
+        """
+        Sets a specific node with partial efficacy for experimental perturbation.
+        
+        Parameters:
+        -----------
+        key : str
+            Node name (must be in nodeDict)
+        value : int
+            Target value (0 or 1)
+        efficacy : float, optional (default=1.0)
+            Efficacy of the perturbation (0-1). 
+            - For inhibitors (value=0): probability of achieving 0 = efficacy
+            - For stimuli (value=1): probability of achieving 1 = efficacy
+        """
+        if efficacy >= 1.0:
+            # Full efficacy - use regular knockout
+            self.knockout(key, value)
+        else:
+            # Partial efficacy - track as knockdown
+            node_idx = self.nodeDict[key]
+            
+            # Set initial value to target
+            self.setInitialValue(key, value)
+            
+            # Store knockdown information
+            self.knockdown_nodes[node_idx] = (value, efficacy)
+            
+            # Mark node as not constant (it has probabilistic behavior)
+            self.isConstantNode[node_idx] = False
+
     def undoKnockouts(self):
-        "Undoes all knockouts. Does not change initial values, however."
+        "Undoes all knockouts and knockdowns. Does not change initial values, however."
         if self.old_varF is not None:
             self.varF = self.old_varF
             self.F = self.old_F
@@ -200,6 +234,12 @@ class ProbabilisticBN(object):
             
             # Rebuild K array and related attributes
             self.buildK()
+            
+            # Update cumulative probabilities
+            self.update_cumulative_probabilities()
+        
+        # Clear knockdown nodes
+        self.knockdown_nodes = {}
 
     def initializeOutput(self):
         file = open(self.outputFilePath, 'w')
@@ -265,14 +305,24 @@ class ProbabilisticBN(object):
                     y[itr+1][i] = y[itr][i]
                     continue
                 
-                func_offset = self._select_function(i)
-                idx = self.cumsum[i] + func_offset
-                
-                fInput = 0
-                for j in range(self.K[idx]):    
-                    fInput += (y[itr][ self.varF[idx,j]]) * temp[ j - self.K[idx]  ]
+                # Check if this is a knockdown node
+                if i in self.knockdown_nodes:
+                    target_value, efficacy = self.knockdown_nodes[i]
+                    # Apply probabilistic knockdown
+                    if np.random.random() < efficacy:
+                        y[itr+1][i] = target_value
+                    else:
+                        y[itr+1][i] = 1 - target_value
+                else:
+                    # Normal function-based update
+                    func_offset = self._select_function(i)
+                    idx = self.cumsum[i] + func_offset
                     
-                y[itr+1][i] = self.F[idx,fInput]
+                    fInput = 0
+                    for j in range(self.K[idx]):    
+                        fInput += (y[itr][ self.varF[idx,j]]) * temp[ j - self.K[idx]  ]
+                        
+                    y[itr+1][i] = self.F[idx,fInput]
 
         self.nodes = y[-1] # newNodes
 
@@ -284,8 +334,8 @@ class ProbabilisticBN(object):
         Update the network with noise parameter p over a given number of iterations.
         
         This method simulates the network's evolution over time with added noise.
-        Noise randomly flips node states with probability p, but is never applied
-        to constant nodes (knockouts).
+        Noise randomly flips node states with probability p after normal network update,
+        but is never applied to constant nodes (knockouts).
         
         Parameters:
         -----------
@@ -305,29 +355,36 @@ class ProbabilisticBN(object):
         y[0] = self.nodes
 
         for itr in range(iterations):
-            # Create noise vector based on the stored constant node information
-            gam = np.array([False if self.isConstantNode[i] else np.random.rand() < p for i in range(self.N)])
-            
-            if np.any(gam):
-                # If any noise is applied, flip the affected bits
-                y[itr+1] = np.bitwise_xor(y[itr], gam)
-            else:
-                # Normal update without noise
-                for i in range(self.N):
-                    if self.isConstantNode[i]:
-                        # For constant nodes (knockouts), just copy their value
-                        y[itr+1][i] = y[itr][i]
+            # First, perform normal network update
+            for i in range(self.N):
+                if self.isConstantNode[i]:
+                    # For constant nodes (knockouts), just copy their value
+                    y[itr+1][i] = y[itr][i]
+                elif i in self.knockdown_nodes:
+                    # For knockdown nodes, apply probabilistic behavior
+                    target_value, efficacy = self.knockdown_nodes[i]
+                    if np.random.random() < efficacy:
+                        y[itr+1][i] = target_value
                     else:
-                        # For normal nodes, select a function based on probabilities
-                        func_offset = self._select_function(i)
-                        idx = self.cumsum[i] + func_offset
+                        y[itr+1][i] = 1 - target_value
+                else:
+                    # For normal nodes, select a function based on probabilities
+                    func_offset = self._select_function(i)
+                    idx = self.cumsum[i] + func_offset
 
-                        # Apply the selected function to update the node
-                        fInput = 0
-                        for j in range(self.K[idx]):
-                            fInput += (y[itr][self.varF[idx,j]]) * temp[j - self.K[idx]]
-                        
-                        y[itr+1][i] = self.F[idx,fInput]
+                    # Apply the selected function to update the node
+                    fInput = 0
+                    for j in range(self.K[idx]):
+                        fInput += (y[itr][self.varF[idx,j]]) * temp[j - self.K[idx]]
+                    
+                    y[itr+1][i] = self.F[idx,fInput]
+            
+            # Then, optionally apply noise (only to non-constant nodes)
+            if p > 0:
+                for i in range(self.N):
+                    if not self.isConstantNode[i] and np.random.rand() < p:
+                        # Flip the bit for this node
+                        y[itr+1][i] = 1 - y[itr+1][i]
         
         self.nodes = y[-1]  # Update the network state to the final iteration
         return y

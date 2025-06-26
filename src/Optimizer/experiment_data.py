@@ -12,14 +12,18 @@ class ExperimentData:
         Load experiments from CSV file
         
         CSV Format:
-        Experiments,Stimuli,Inhibitors,Measured_nodes,Measured_values
-        1,TGFa,TNFa,"NFkB,ERK,C8,Akt","0.7,0.88,0,1"
-        2,TNFa,TGFa,"NFkB,ERK,C8,Akt","0.3,0.12,1,0"
-        3,"TGFa,TNFa",,"NFkB,ERK,C8,Akt","1,1,1,1"
+        Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values
+        1,TGFa,1,TNFa,1,"NFkB,ERK,C8,Akt","0.7,0.88,0,1"
+        2,TNFa,1,TGFa,1,"NFkB,ERK,C8,Akt","0.3,0.12,1,0"
+        3,"TGFa,TNFa","1,1",,,"NFkB,ERK,C8,Akt","1,1,1,1"
+        4,"TGFa,TNFa","1,1",PI3K,0.7,"NFkB,ERK,C8,Akt","0.3,0.12,1,0"
 
         Note:
         - The measured values are normalized to be between 0 and 1 if not already.
         - Simply divide the measured values by the maximum value of the measured values.
+        - Stimuli_efficacy and Inhibitors_efficacy are optional columns.
+        - If efficacy is not specified, defaults to 1.0 (full efficacy).
+        - Efficacy < 1 means the probability of achieving the target state is reduced.
         
         Parameters:
         -----------
@@ -33,7 +37,9 @@ class ExperimentData:
             {
                 'id': str,
                 'stimuli': list,
-                'inhibitors': list,ßß
+                'stimuli_efficacy': list,
+                'inhibitors': list,
+                'inhibitors_efficacy': list,
                 'measurements': dict (node: value)
             }
         """
@@ -56,10 +62,28 @@ class ExperimentData:
                 max_val = max(measured_values)
                 measured_values = [v / max_val for v in measured_values]
 
+            # Parse stimuli and their efficacies
+            stimuli = ExperimentData._parse_node_list(row.get('Stimuli', ''))
+            stimuli_efficacy = ExperimentData._parse_value_list(row.get('Stimuli_efficacy', ''))
+            
+            # If no efficacy specified, default to 1.0 for all stimuli
+            if not stimuli_efficacy and stimuli:
+                stimuli_efficacy = [1.0] * len(stimuli)
+            
+            # Parse inhibitors and their efficacies
+            inhibitors = ExperimentData._parse_node_list(row.get('Inhibitors', ''))
+            inhibitors_efficacy = ExperimentData._parse_value_list(row.get('Inhibitors_efficacy', ''))
+            
+            # If no efficacy specified, default to 1.0 for all inhibitors
+            if not inhibitors_efficacy and inhibitors:
+                inhibitors_efficacy = [1.0] * len(inhibitors)
+
             experiment = {
                 'id': row['Experiments'],
-                'stimuli': ExperimentData._parse_node_list(row.get('Stimuli', '')),
-                'inhibitors': ExperimentData._parse_node_list(row.get('Inhibitors', '')),
+                'stimuli': stimuli,
+                'stimuli_efficacy': stimuli_efficacy,
+                'inhibitors': inhibitors,
+                'inhibitors_efficacy': inhibitors_efficacy,
                 'measurements': dict(zip(measured_nodes, measured_values))
             }
             
@@ -138,7 +162,7 @@ class ExperimentData:
         Raises:
         -------
         ValueError
-            If any experiment contains invalid node names
+            If any experiment contains invalid node names or efficacy values
         """
         nodes = set(node_dict.keys())
         
@@ -156,16 +180,38 @@ class ExperimentData:
                                f"not found in the network")
             
             # Check measured nodes
-            invalid_measured = set(exp['measured_nodes']) - nodes
+            invalid_measured = set(exp['measurements'].keys()) - nodes
             if invalid_measured:
                 raise ValueError(f"Experiment {exp['id']}: Measured nodes {invalid_measured} "
                                f"not found in the network")
             
-            # Check value ranges
+            # Check value ranges for measurements
             for node, value in exp['measurements'].items():
                 if not (0 <= value <= 1):
                     raise ValueError(f"Experiment {exp['id']}: Measured value {value} for node "
                                    f"{node} must be between 0 and 1")
+            
+            # Check stimuli efficacy values
+            if len(exp['stimuli_efficacy']) != len(exp['stimuli']):
+                raise ValueError(f"Experiment {exp['id']}: Number of stimuli efficacy values "
+                               f"({len(exp['stimuli_efficacy'])}) does not match "
+                               f"number of stimuli ({len(exp['stimuli'])})")
+            
+            for i, efficacy in enumerate(exp['stimuli_efficacy']):
+                if not (0 <= efficacy <= 1):
+                    raise ValueError(f"Experiment {exp['id']}: Stimuli efficacy {efficacy} for "
+                                   f"node {exp['stimuli'][i]} must be between 0 and 1")
+            
+            # Check inhibitor efficacy values
+            if len(exp['inhibitors_efficacy']) != len(exp['inhibitors']):
+                raise ValueError(f"Experiment {exp['id']}: Number of inhibitor efficacy values "
+                               f"({len(exp['inhibitors_efficacy'])}) does not match "
+                               f"number of inhibitors ({len(exp['inhibitors'])})")
+            
+            for i, efficacy in enumerate(exp['inhibitors_efficacy']):
+                if not (0 <= efficacy <= 1):
+                    raise ValueError(f"Experiment {exp['id']}: Inhibitor efficacy {efficacy} for "
+                                   f"node {exp['inhibitors'][i]} must be between 0 and 1")
         
         return True
     
@@ -193,13 +239,15 @@ class ExperimentData:
             "unique_stimuli": set(),
             "unique_inhibitors": set(),
             "unique_measured_nodes": set(),
-            "value_ranges": {}
+            "value_ranges": {},
+            "stimuli_efficacy_ranges": {},
+            "inhibitors_efficacy_ranges": {}
         }
         
         for exp in experiments:
             summary["unique_stimuli"].update(exp['stimuli'])
             summary["unique_inhibitors"].update(exp['inhibitors'])
-            summary["unique_measured_nodes"].update(exp['measured_nodes'])
+            summary["unique_measured_nodes"].update(exp['measurements'].keys())
             
             for node, value in exp['measurements'].items():
                 if node not in summary["value_ranges"]:
@@ -207,6 +255,24 @@ class ExperimentData:
                 else:
                     summary["value_ranges"][node]["min"] = min(summary["value_ranges"][node]["min"], value)
                     summary["value_ranges"][node]["max"] = max(summary["value_ranges"][node]["max"], value)
+            
+            # Track efficacy ranges for stimuli
+            for i, node in enumerate(exp['stimuli']):
+                efficacy = exp['stimuli_efficacy'][i]
+                if node not in summary["stimuli_efficacy_ranges"]:
+                    summary["stimuli_efficacy_ranges"][node] = {"min": efficacy, "max": efficacy}
+                else:
+                    summary["stimuli_efficacy_ranges"][node]["min"] = min(summary["stimuli_efficacy_ranges"][node]["min"], efficacy)
+                    summary["stimuli_efficacy_ranges"][node]["max"] = max(summary["stimuli_efficacy_ranges"][node]["max"], efficacy)
+            
+            # Track efficacy ranges for inhibitors
+            for i, node in enumerate(exp['inhibitors']):
+                efficacy = exp['inhibitors_efficacy'][i]
+                if node not in summary["inhibitors_efficacy_ranges"]:
+                    summary["inhibitors_efficacy_ranges"][node] = {"min": efficacy, "max": efficacy}
+                else:
+                    summary["inhibitors_efficacy_ranges"][node]["min"] = min(summary["inhibitors_efficacy_ranges"][node]["min"], efficacy)
+                    summary["inhibitors_efficacy_ranges"][node]["max"] = max(summary["inhibitors_efficacy_ranges"][node]["max"], efficacy)
         
         # Convert sets to lists for JSON serialization
         summary["unique_stimuli"] = list(summary["unique_stimuli"])

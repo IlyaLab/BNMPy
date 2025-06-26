@@ -21,7 +21,7 @@ from BNMPy.BMatrix import load_pbn_from_string
 # Load or create your PBN
 pbn = load_pbn_from_string(...)
 
-# Initialize optimizer
+# Initialize optimizer with efficacy-enabled experimental data
 optimizer = ParameterOptimizer(pbn, "experiments.csv", nodes_to_optimize=['Cas3'], verbose=False)
 
 # Run optimization
@@ -39,15 +39,42 @@ if result.success:
 CSV file format:
 
 ```csv
-Experiments,Stimuli,Inhibitors,Measured_nodes,Measured_values
-1,TGFa,TNFa,"NFkB,ERK,C8,Akt","0.7,0.88,0,1"
-2,TNFa,TGFa,"NFkB,ERK,C8,Akt","0.3,0.12,1,0"
+Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values
+1,TGFa,1,TNFa,1,"NFkB,ERK,C8,Akt","0.7,0.88,0,1"
+2,TNFa,1,TGFa,1,"NFkB,ERK,C8,Akt","0.3,0.12,1,0"
+3,"TGFa,TNFa","1,1",,,"NFkB,ERK,C8,Akt","1,1,1,1"
+4,"TGFa,TNFa","1,1",PI3K,0.7,"NFkB,ERK,C8,Akt","0.3,0.12,1,0"
 ```
 
 - `Stimuli`: Nodes fixed to 1 (comma-separated)
+- `Stimuli_efficacy`: Efficacy of stimuli (0-1, comma-separated, optional)
 - `Inhibitors`: Nodes fixed to 0 (comma-separated)
+- `Inhibitors_efficacy`: Efficacy of inhibitors (0-1, comma-separated, optional)
 - `Measured_nodes`: Nodes with experimental measurements
 - `Measured_values`: Corresponding values (0-1, normalized)
+
+**Efficacy Values:**
+
+- **1.0 (default)**: Full efficacy - node is completely knocked out/stimulated
+- **< 1.0**: Partial efficacy - creates probabilistic perturbation
+  - **For inhibitors (target=0)**: P(node=0) = efficacy, P(node=1) = 1-efficacy
+  - **For stimuli (target=1)**: P(node=1) = efficacy, P(node=0) = 1-efficacy
+- **Example**: `PI3K,0.7` means PI3K inhibition has 70% probability of setting PI3K=0, 30% of PI3K=1
+- If efficacy columns are empty, defaults to 1.0 for all perturbations
+
+### Efficacy Usage Example
+
+```python
+# Example experiments.csv with efficacy columns:
+# Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values
+# 1,TGFa,1.0,PI3K,0.7,"ERK,Akt","0.8,0.3"
+# 2,"TGFa,TNFa","1.0,0.9",,"","ERK,Akt","0.9,0.1"
+
+# This means:
+# - Experiment 1: TGFa stimulation at 100% efficacy (always 1), PI3K inhibition at 70% efficacy (70% chance of 0, 30% chance of 1)
+# - Experiment 2: TGFa stimulation at 100% efficacy (always 1), TNFa stimulation at 90% efficacy (90% chance of 1, 10% chance of 0)
+# - The probabilistic nature allows modeling partial drug efficacy and biological variability
+```
 
 #### PBN Data
 

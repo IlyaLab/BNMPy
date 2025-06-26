@@ -58,7 +58,9 @@ class SimulationEvaluator:
                     'epsilon': 0.001,
                     'r': 0.025,
                     's': 0.95,
-                    'p_mir': 0.001
+                    'p_mir': 0.001,
+                    'initial_nsteps': 100,
+                    'max_iterations': 500
                 },
                 'monte_carlo_params': {
                     'n_runs': 10,
@@ -273,12 +275,14 @@ class SimulationEvaluator:
         np.ndarray
             Steady state probabilities
         """
-        # 1. Set experimental conditions
+        # 1. Set experimental conditions with efficacy values
         self.steady_state_calc.set_experimental_conditions(
             stimuli=experiment['stimuli'],
-            inhibitors=experiment['inhibitors']
+            stimuli_efficacy=experiment['stimuli_efficacy'],
+            inhibitors=experiment['inhibitors'],
+            inhibitors_efficacy=experiment['inhibitors_efficacy']
         )
-        # print(f"  Simulating with Stimuli: {experiment['stimuli']}, Inhibitors: {experiment['inhibitors']}")
+        # print(f"  Simulating with Stimuli: {experiment['stimuli']} (efficacy: {experiment['stimuli_efficacy']}), Inhibitors: {experiment['inhibitors']} (efficacy: {experiment['inhibitors_efficacy']})")
 
         # 2. Calculate steady state
         ss_config = self.config.get('steady_state', self._default_config()['steady_state'])

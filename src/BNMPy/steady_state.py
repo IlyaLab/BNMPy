@@ -44,8 +44,8 @@ class SteadyStateCalculator:
     def _identify_input_nodes(self) -> List[int]:
         """
         Identify input nodes:
-        - sum(nf*nv) == 0 (no inputs)
-        - sum(nf*nv) == 1 and self-dependent (self-dependent only)
+        - sum(nf*nv) == 0 (no inputs) AND not a knockdown node
+        - sum(nf*nv) == 1 and self-dependent (self-dependent only) AND not a knockdown node
 
         These will not be perturbed.
         """
@@ -64,8 +64,12 @@ class SteadyStateCalculator:
             
             nfnv_sum = sum(nfnv)
             
+            # Check if this is a knockdown node
+            is_knockdown = hasattr(self.network, 'knockdown_nodes') and i in self.network.knockdown_nodes
+            
             # Check if input: sum=0 (no inputs) or sum=1 and self-dependent
-            if nfnv_sum == 0 or (nfnv_sum == 1 and self._is_self_dependent(i)):
+            # exclude knockdown nodes
+            if not is_knockdown and (nfnv_sum == 0 or (nfnv_sum == 1 and self._is_self_dependent(i))):
                 input_indices.append(i)
                 
             running_index += self.nf[i]
@@ -115,8 +119,8 @@ class SteadyStateCalculator:
                                s: float = 0.95,
                                p_noise: float = 0,
                                p_mir: float = 0.001,
-                               initial_nsteps: int = 1000,
-                               max_iterations: int = 100,
+                               initial_nsteps: int = 100,
+                               max_iterations: int = 500,
                                freeze_self_loop: bool = False) -> np.ndarray:
         """
         Two-State Markov Chain steady-state calculation
@@ -131,8 +135,8 @@ class SteadyStateCalculator:
         - `s` (float, default=0.95): Probability of accuracy (closer to 1 = more confident)
         - `p_noise` (float, default=0): Noise probability for Monte Carlo method
         - `p_mir` (float, default=0.001): Perturbation probability (Miranda-Parga scheme)
-        - `initial_nsteps` (int, default=1000): Initial number of simulation steps
-        - `max_iterations` (int, default=100): Maximum convergence iterations
+        - `initial_nsteps` (int, default=100): Initial number of simulation steps
+        - `max_iterations` (int, default=500): Maximum convergence iterations
         - `freeze_self_loop` (bool, default=False): Freeze self-loop nodes (constant nodes)
         """
         # Store original state
@@ -211,13 +215,15 @@ class SteadyStateCalculator:
         if len(y_kept) > 0:
             y_final = np.array(y_kept)
             steady_state = np.zeros(self.N)
+            
             # For input nodes, use their constant value
             for i in self.input_indices:
-                steady_state[i] = self.network.nodes[i]  # or initial value
+                steady_state[i] = self.network.nodes[i]
             
-            # For other nodes, use the average of all trajectories
+            # For knockdown nodes, calculate based on their efficacy
             for i in range(self.N):
                 if i not in self.input_indices:
+                    # For all non-input nodes (including knockdowns), use trajectory average
                     steady_state[i] = np.mean(y_final[:, i])
         else:
             # Fallback to Monte Carlo if TSMC fails
@@ -357,28 +363,52 @@ class SteadyStateCalculator:
         return np.mean(steady_states, axis=0)
     
     def set_experimental_conditions(self, stimuli: List[str] = None, 
+                                   stimuli_efficacy: List[float] = None,
                                    inhibitors: List[str] = None,
+                                   inhibitors_efficacy: List[float] = None,
                                    node_dict: Dict[str, int] = None):
         """
         Set experimental conditions
+        
+        Parameters:
+        -----------
+        stimuli : List[str], optional
+            Node names to stimulate (fix to 1)
+        stimuli_efficacy : List[float], optional
+            Efficacy values for stimuli (0-1). If 1.0, full knockout. If < 1.0, probabilistic.
+        inhibitors : List[str], optional
+            Node names to inhibit (fix to 0)
+        inhibitors_efficacy : List[float], optional
+            Efficacy values for inhibitors (0-1). If 1.0, full knockout. If < 1.0, probabilistic.
+        node_dict : Dict[str, int], optional
+            Node name to index mapping
         """
         if node_dict is None:
             node_dict = getattr(self.network, 'nodeDict', {})
         
-        # Apply stimuli (knockouts to 1)
+        # Apply stimuli with efficacy
         if stimuli:
-            for node_name in stimuli:
+            stimuli_eff = stimuli_efficacy if stimuli_efficacy else [1.0] * len(stimuli)
+            for node_name, efficacy in zip(stimuli, stimuli_eff):
                 if node_name in node_dict:
-                    self.network.knockout(node_name, 1)
+                    if efficacy == 1.0:
+                        self.network.knockout(node_name, 1)
+                    else:
+                        self.network.knockdown(node_name, 1, efficacy)
         
-        # Apply inhibitors (knockouts to 0)
+        # Apply inhibitors with efficacy
         if inhibitors:
-            for node_name in inhibitors:
+            inhibitors_eff = inhibitors_efficacy if inhibitors_efficacy else [1.0] * len(inhibitors)
+            for node_name, efficacy in zip(inhibitors, inhibitors_eff):
                 if node_name in node_dict:
-                    self.network.knockout(node_name, 0)
+                    if efficacy == 1.0:
+                        self.network.knockout(node_name, 0)
+                    else:
+                        self.network.knockdown(node_name, 0, efficacy)
     
     def reset_network_conditions(self):
         """Reset network to original state"""
+        # Reset both knockouts and knockdowns
         self.network.undoKnockouts()
     
     def _save_network_state(self):

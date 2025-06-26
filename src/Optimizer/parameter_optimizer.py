@@ -354,7 +354,7 @@ class ParameterOptimizer:
         return stagnation_periods
 
     def plot_optimization_history(self, result: OptimizeResult, save_path: Optional[str] = None, 
-                                 show_stagnation: bool = False, log_scale: bool = False):
+                                 show_stagnation: bool = False, log_scale: bool = False, sorted: bool = False):
         """
         Plot the optimization history (SSE over iterations).
         
@@ -368,6 +368,8 @@ class ParameterOptimizer:
             Whether to highlight stagnation periods
         log_scale : bool, optional
             Whether to use logarithmic scale for y-axis
+        sorted: bool, optional
+            Whether to sort the optimization history by SSE
         """
         try:
             import matplotlib.pyplot as plt
@@ -380,7 +382,8 @@ class ParameterOptimizer:
             return
         
         history = np.array(result.history)
-        
+        if sorted:
+            history = np.sort(history)
         plt.figure(figsize=(10, 6))
         plt.plot(history, 'b-', linewidth=2, label='SSE')
         
