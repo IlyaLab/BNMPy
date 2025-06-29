@@ -115,7 +115,7 @@ class SimulationEvaluator:
         try:
             cij_matrix = self._vector_to_cij_matrix(cij_vector)
             # print(f"Reshaped Cij matrix:\n{cij_matrix}")
-            if not self._validate_cij_matrix(cij_matrix):
+            if not self._validate_cij_matrix(cij_matrix, verbose=False):
                 # print("Objective function penalty: Invalid Cij matrix.")
                 return 1e10  # Large but finite penalty
         except Exception as e:
@@ -194,16 +194,26 @@ class SimulationEvaluator:
         vector_idx = 0
         for node_idx in self.node_indices_to_optimize:
             n_funcs = nf[node_idx]
-            node_probs = cij_vector[vector_idx:vector_idx + n_funcs]
+            node_probs = cij_vector[vector_idx:vector_idx + n_funcs].copy()
             
-            # Normalize probabilities if they don't sum to 1
+            # Handle edge cases and normalize probabilities
             prob_sum = np.sum(node_probs)
-            if not np.isclose(prob_sum, 1.0, rtol=1e-5):
-                if prob_sum > 1e-9: # Avoid division by zero
-                    node_probs = node_probs / prob_sum
             
-            # Create a new, clean row for the optimized node, padded with zeros
-            new_row = np.zeros(max_funcs)
+            if prob_sum <= 1e-9 or not np.isfinite(prob_sum):
+                # If sum is effectively zero or invalid, use uniform distribution
+                node_probs = np.ones(n_funcs) / n_funcs
+            elif not np.isclose(prob_sum, 1.0, rtol=1e-5):
+                # Normalize to sum to 1
+                node_probs = node_probs / prob_sum
+            
+            # Ensure probabilities are within valid bounds
+            node_probs = np.clip(node_probs, 1e-10, 1.0)
+            
+            # Renormalize after clipping to ensure they still sum to 1
+            node_probs = node_probs / np.sum(node_probs)
+            
+            # Create a new, clean row for the optimized node, padded with -1
+            new_row = np.full(max_funcs, -1.0)
             new_row[:n_funcs] = node_probs
             cij_matrix[node_idx, :] = new_row
             
@@ -211,7 +221,7 @@ class SimulationEvaluator:
             
         return cij_matrix
     
-    def _validate_cij_matrix(self, cij_matrix: np.ndarray) -> bool:
+    def _validate_cij_matrix(self, cij_matrix: np.ndarray, verbose: bool = False) -> bool:
         """
         Validate Cij matrix constraints with numerical tolerance
         
@@ -219,6 +229,8 @@ class SimulationEvaluator:
         -----------
         cij_matrix : np.ndarray
             Selection probability matrix
+        verbose : bool, optional
+            Whether to print validation error messages (default: False during optimization)
             
         Returns:
         --------
@@ -227,10 +239,12 @@ class SimulationEvaluator:
         """
         # Check for valid probability values, ignoring -1 placeholders
         if np.any((cij_matrix < -1e-10) & (cij_matrix != -1)):
-            print(f"Validation failed: Cij matrix contains invalid negative values.")
+            if verbose:
+                print(f"Validation failed: Cij matrix contains invalid negative values.")
             return False
         if np.any(cij_matrix > 1 + 1e-10):
-            print(f"Validation failed: Cij matrix contains values greater than 1.")
+            if verbose:
+                print(f"Validation failed: Cij matrix contains values greater than 1.")
             return False
             
         # Check that rows for optimized nodes sum to 1
@@ -240,9 +254,9 @@ class SimulationEvaluator:
         for node_idx in self.node_indices_to_optimize:
             row_sum = np.sum(temp_cij[node_idx, :])
             if not np.isclose(row_sum, 1.0, rtol=1e-5, atol=1e-8):
-                # nodeDict is a dictionary that maps node names to their indices
-                node_name = list(self.pbn.nodeDict.keys())[node_idx]
-                print(f"Validation failed for optimized node '{node_name}': Probabilities do not sum to 1 (sum={row_sum}).")
+                if verbose:
+                    node_name = list(self.pbn.nodeDict.keys())[node_idx]
+                    print(f"Validation failed for optimized node '{node_name}': Probabilities do not sum to 1 (sum={row_sum}).")
                 return False
             
         return True

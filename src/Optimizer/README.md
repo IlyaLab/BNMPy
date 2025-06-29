@@ -62,20 +62,6 @@ Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nod
 - **Example**: `PI3K,0.7` means PI3K inhibition has 70% probability of setting PI3K=0, 30% of PI3K=1
 - If efficacy columns are empty, defaults to 1.0 for all perturbations
 
-### Efficacy Usage Example
-
-```python
-# Example experiments.csv with efficacy columns:
-# Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values
-# 1,TGFa,1.0,PI3K,0.7,"ERK,Akt","0.8,0.3"
-# 2,"TGFa,TNFa","1.0,0.9",,"","ERK,Akt","0.9,0.1"
-
-# This means:
-# - Experiment 1: TGFa stimulation at 100% efficacy (always 1), PI3K inhibition at 70% efficacy (70% chance of 0, 30% chance of 1)
-# - Experiment 2: TGFa stimulation at 100% efficacy (always 1), TNFa stimulation at 90% efficacy (90% chance of 1, 10% chance of 0)
-# - The probabilistic nature allows modeling partial drug efficacy and biological variability
-```
-
 #### PBN Data
 
 A ProbabilisticBN, see BNMPy.
@@ -91,23 +77,26 @@ The parameters of each approach can be set via a config dictionary:
 
 ```python
 config = {
-# Early stopping control
-    'early_stopping': True,           # Enable early stopping for both DE and PSO
-    'success_threshold': 0.005,       # Stop if SSE drops below this value    # Retry control
-    'max_try': 3,                     # Try up to 3 times if optimization fails  
+# Global settings
+    'success_threshold': 0.005,       # Global success threshold for final result evaluation
+    'max_try': 3,                     # Try up to 3 times if optimization fails
+    'display_rules_every': 50,        # Display optimized rules every N iterations (0 = disabled)
 
 # Differential Evolution parameters
     'de_params': {
         'strategy': 'best1bin',
         'maxiter': 500,
         'popsize': 15,
-        'tol': 0.01,
+        'tol': 0.01,                  # Relative tolerance for scipy DE convergence
+        'atol': 0,                    # Absolute tolerance for scipy DE convergence
         'mutation': (0.5, 1),
         'recombination': 0.7,
         'init': 'sobol',
         'updating': 'deferred',
-        'workers': -1, # Use all available cores for parallelization
-        'polish': False  # Disable polish step for faster runs
+        'workers': -1,                # Use all available cores for parallelization
+        'polish': False,              # Disable polish step for faster runs
+        'early_stopping': True,       # Enable early stopping for DE
+        'success_threshold': 0.01     # SSE threshold for DE early stopping
     },  
 
 # Particle Swarm Optimization parameters
@@ -135,11 +124,24 @@ result = optimizer.optimize('differential_evolution')
 
 #### Early Stopping
 
-Control when optimization should stop early:
+Early stopping behavior differs between optimization methods:
 
-- **For DE**: Uses `success_threshold` to stop when SSE drops below threshold
-- **For PSO**: Uses both `success_threshold` and function tolerance (`ftol`, `ftol_iter`)
-- Enable with `early_stopping: True` in config
+**Differential Evolution (DE):**
+
+Two approaches:
+
+- `early_stopping`: stop when SSE drops below `success_threshold`
+- `tol` and `atol`: stops when `np.std(pop) <= atol + tol * np.abs(np.mean(population_energies))`
+
+**Particle Swarm Optimization (PSO):**
+
+- `ftol`: Function tolerance - stops when fitness improvement is below this value
+- `ftol_iter`: Number of iterations to check for stagnation
+
+**Final Success Determination:**
+
+- Both methods use the global `success_threshold` to determine if the final result is considered successful
+- This evaluation happens after optimization completes, regardless of early stopping
 
 #### Discrete Mode
 

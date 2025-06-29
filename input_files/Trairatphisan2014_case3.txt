@@ -8,6 +8,3 @@ NFkB = PI3K, 0.5
 NFkB = TNFa, 0.5
 ERK = Raf, 0.5
 ERK = NFkB, 0.5
-
-
-
