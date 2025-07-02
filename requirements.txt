@@ -1,0 +1,8 @@
+pandas
+numpy
+typing
+dataclasses
+
+# Optimizer
+scipy == 1.15.2
+pyswarms == 1.3.0
