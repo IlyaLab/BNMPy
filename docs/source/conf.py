@@ -21,6 +21,7 @@ extensions = ['numpydoc',
         'sphinx.ext.doctest',
         'sphinx.ext.autodoc',
         'sphinx.ext.autosummary',
+        'sphinx.ext.viewcode',
         'myst_parser']
 
 source_suffix = {

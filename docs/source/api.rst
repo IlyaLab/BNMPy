@@ -9,3 +9,5 @@ API
    booleanNetwork
    build_bn_from_kg
    PBN
+   vis
+   steady_state

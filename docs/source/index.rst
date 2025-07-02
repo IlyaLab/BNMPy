@@ -10,6 +10,7 @@ Welcome to BNMPy's documentation!
    :maxdepth: 3
    :caption: Contents:
 
+   bmatrix_readme
    api
 
 
