@@ -1,0 +1,6 @@
+furo
+sphinx
+myst-parser
+numpydoc
+sphinx_markdown_builder
+standard-imghdr
