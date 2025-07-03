@@ -1,7 +1,6 @@
 # building a boolean network
 
 # TODO: given a KG subset, can we construct a boolean network?
-from kgfe import graph_info, explanations, gene_names
 
 # try using signor
 def load_signor_network(gene_list, input_format="symbol", joiner='&'):
@@ -13,6 +12,7 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&'):
         input_format - "symbol", "id", or "uniprot"
         joiner - "&", "|", or "inhibitor_wins"
     """
+    from kgfe import graph_info, explanations, gene_names
     if ' ' not in joiner and (joiner == '&' or joiner == '|'):
         joiner = ' ' + joiner + ' '
     input_format = input_format.lower()
