@@ -389,6 +389,18 @@ class ParameterOptimizer:
         self._pso_iteration_count = 0
         self._pso_best_position = None
         self._pso_best_cost = float('inf')
+        
+        # Extract parameters for progress tracking
+        n_particles = pso_params.get('n_particles', 30)
+        iters = pso_params.get('iters', 100)
+        
+        # Print optimization setup info
+        print(f"PSO Setup:")
+        print(f"  - Particles: {n_particles}")
+        print(f"  - Max iterations: {iters}")
+        print(f"  - Problem dimensions: {len(bounds)}")
+        print(f"  - Total function evaluations: {n_particles * iters}")
+        print()
 
         def pso_objective(x):
             """Objective function wrapper that handles rule display for PSO"""
@@ -406,28 +418,46 @@ class ParameterOptimizer:
             # Increment iteration count once per swarm evaluation
             self._pso_iteration_count += 1
             
-            # Display rules if needed
-            if (display_rules_every > 0 and 
-                self._pso_iteration_count % display_rules_every == 0 and
-                self._pso_best_position is not None):
+            # Calculate progress percentage
+            progress = min(100.0, (self._pso_iteration_count / iters) * 100)
+            
+            # Create progress bar
+            bar_length = 30
+            filled_length = int(bar_length * progress / 100)
+            bar = '█' * filled_length + '░' * (bar_length - filled_length)
+            
+            # Check if we should display rules
+            should_display_rules = (display_rules_every > 0 and 
+                                   self._pso_iteration_count % display_rules_every == 0)
+            
+            # display logic (similar to DE)
+            if should_display_rules:
+                # Clear any progress bar if not in verbose mode
+                if not self.verbose:
+                    sys.stdout.write('\r' + ' ' * 120 + '\r')
+                    sys.stdout.flush()
                 
                 elapsed_time = time.time() - self._start_time
                 rules = self._get_current_optimized_rules(self._pso_best_position)
                 
                 if rules:
-                    print(f"Elapsed time: {elapsed_time:.1f}s")
+                    print(f"PSO Iter {self._pso_iteration_count}: Best SSE: {self._pso_best_cost:.6f} - Time: {elapsed_time:.1f}s")
                     print("  Current optimized rules:")
                     for rule in rules:
                         print(f"    {rule}")
                     print()  # Add blank line for readability
-                    sys.stdout.flush()
+            elif self.verbose:
+                # Verbose mode: show iteration details
+                current_best = min(costs)
+                print(f"PSO Iteration {self._pso_iteration_count}: Current best SSE: {current_best:.6f}, Global best SSE: {self._pso_best_cost:.6f}")
+            elif not should_display_rules:
+                # Non-verbose mode: show progress bar (similar to DE)
+                elapsed_time = time.time() - self._start_time
+                sys.stdout.write(f'\r[{bar}] {progress:.1f}% | Iter: {self._pso_iteration_count}/{iters} | Best SSE: {self._pso_best_cost:.6f} | Time: {elapsed_time:.1f}s')
+                sys.stdout.flush()
             
             return np.array(costs)
 
-        # Extract parameters for GlobalBestPSO constructor
-        n_particles = pso_params.get('n_particles', 30)
-        iters = pso_params.get('iters', 100)
-        
         # optimize parameters
         optimize_kwargs = {'iters': iters}
             
@@ -443,7 +473,9 @@ class ParameterOptimizer:
         cost, pos = optimizer.optimize(pso_objective, **optimize_kwargs)
 
         # Clear any remaining display artifacts
-        print()  # Add a newline to clean up display
+        if not self.verbose:
+            sys.stdout.write('\n')
+            sys.stdout.flush()
 
         # Check if early stopping occurred and determine success
         success_threshold = self.config.get('success_threshold', 0.01)
