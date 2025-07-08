@@ -97,6 +97,8 @@ class BooleanNetwork(object):
         # knock the connectivity value for all downstream genes to -1, and set the initial value to value
         self.setInitialValue(key, value)
         self.varF[self.nodeDict[key], :] = -1
+        # TODO: create a self-loop here - the node should be connected to itself.
+        #self.varF[self.nodeDict[key], self.nodeDict[key]] = 1
         self.varF.dtype = int
         # changing the truth table...
         self.F[self.nodeDict[key], 0] = value
@@ -229,8 +231,13 @@ class BooleanNetwork(object):
 
     def toGraph(self):
         # TODO: convert the network to an igraph representation.
+        import igraph as ig
         nodes = []
         edges = []
+        for i, node in enumerate(self.nodes):
+            node_name = self.nodeDict[i]
+            # TODO: get the connections
+            pass
         pass
 
 
