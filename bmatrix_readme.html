@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>BMatrix &#8212; BNMPy 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=279e0f84" />
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="api.html" />
+    <link rel="prev" title="Welcome to BNMPy’s documentation!" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to BNMPy’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BNMPy 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BMatrix</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="bmatrix">
+<h1>BMatrix<a class="headerlink" href="#bmatrix" title="Link to this heading">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">Created:</span> <span class="pre">1/29/2024</span></code>
+<code class="docutils literal notranslate"><span class="pre">Updated</span> <span class="pre">last</span> <span class="pre">on</span> <span class="pre">4/21/2025</span></code></p>
+<section id="required-packages">
+<h2>Required Packages<a class="headerlink" href="#required-packages" title="Link to this heading">¶</a></h2>
+<p>Python, Numpy, Pandas, Re, Itertools, BooleanNetwork</p>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
+<p>To install the BMatrix code, download it and import within Python file as ‘BMatrix’</p>
+</section>
+<hr class="docutils" />
+<section id="function-descriptions">
+<h2>Function Descriptions<a class="headerlink" href="#function-descriptions" title="Link to this heading">¶</a></h2>
+<section id="load-network-from-file-filename-initial-state-none">
+<h3>load_network_from_file(filename, initial_state=None)<a class="headerlink" href="#load-network-from-file-filename-initial-state-none" title="Link to this heading">¶</a></h3>
+<p><strong>Input</strong>: Requires <code class="docutils literal notranslate"><span class="pre">filename</span></code> which is the name of the .txt file that contains the equations. <code class="docutils literal notranslate"><span class="pre">initial_state</span></code> is a list of integers that represent the initial state of the network. If no initial state is provided, the code will generate a random initial state.
+<strong>Functionality</strong>: The code reads the .txt file and creates a BooleanNetwork object. If an equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed.
+<strong>Output</strong>: A BooleanNetwork object</p>
+</section>
+<section id="get-equations-file">
+<h3>get_equations(file)<a class="headerlink" href="#get-equations-file" title="Link to this heading">¶</a></h3>
+<p><strong>Input</strong>: A .txt file with the equations formatted <code class="docutils literal notranslate"><span class="pre">GENE</span> <span class="pre">=</span> <span class="pre">!</span> <span class="pre">(</span> <span class="pre">INHIBITOR</span> <span class="pre">|</span> <span class="pre">INHIBITOR</span> <span class="pre">)</span> <span class="pre">&amp;</span> <span class="pre">(</span> <span class="pre">ACTIVATOR</span> <span class="pre">|</span> <span class="pre">ACTIVIATOR</span> <span class="pre">)</span></code> <strong>Functionality</strong>: Reads the .txt file by line, if the format is incorrect, it returns an error. <strong>Output</strong>: <code class="docutils literal notranslate"><span class="pre">equations</span></code> which is a list of strings, where each string represents one line of the .txt file</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"> <span class="pre">Example:</span> <span class="pre">['FLT3</span> <span class="pre">=</span> <span class="pre">FLT3',</span> <span class="pre">'AKT</span> <span class="pre">=</span> <span class="pre">FLT3',</span> <span class="pre">'CEBPA</span> <span class="pre">=</span> <span class="pre">!</span> <span class="pre">FLT3',</span> <span class="pre">'DNMT3A</span> <span class="pre">=</span> <span class="pre">DNMT3A',</span> <span class="pre">'GSK3B</span> <span class="pre">=</span> <span class="pre">!</span> <span class="pre">AKT']</span></code></p>
+</div></blockquote>
+</section>
+<section id="get-gene-dict-equations">
+<h3>get_gene_dict(equations)<a class="headerlink" href="#get-gene-dict-equations" title="Link to this heading">¶</a></h3>
+<p><strong>Input</strong>: Requires <code class="docutils literal notranslate"><span class="pre">equations</span></code> <strong>Functionality</strong>: From equations, takes all the values on the left side of the = sign and creates a dictionary with those values starting from 0. <strong>Output</strong>: <code class="docutils literal notranslate"><span class="pre">gene_dict</span></code> a dictionary which includes all the genes (nodes) that are included in the simulation</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Example:</span> <span class="pre">{'FLT3':</span> <span class="pre">0,</span> <span class="pre">'AKT':</span> <span class="pre">1,</span> <span class="pre">'CEBPA':</span> <span class="pre">2,</span> <span class="pre">'DNMT3A':</span> <span class="pre">3,</span> <span class="pre">'GSK3B':</span> <span class="pre">4}</span></code></p>
+</div></blockquote>
+</section>
+<section id="get-upstream-genes-equations">
+<h3>get_upstream_genes(equations)<a class="headerlink" href="#get-upstream-genes-equations" title="Link to this heading">¶</a></h3>
+<p><strong>Input</strong>: Requires <code class="docutils literal notranslate"><span class="pre">equations</span></code> <strong>Functionality</strong>: Using <code class="docutils literal notranslate"><span class="pre">equations</span></code>, it takes the right side of the equations, and removes all symbols such as <code class="docutils literal notranslate"><span class="pre">|</span> <span class="pre">()</span> <span class="pre">&amp;</span></code> and leaves only the genes. <strong>Output</strong>: <code class="docutils literal notranslate"><span class="pre">upstream_genes</span></code> which is a list of strings, where every string represents the upstream genes of the gene (node) at the same line in <code class="docutils literal notranslate"><span class="pre">equations</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Example:</span> <span class="pre">['FLT3',</span> <span class="pre">'FLT3',</span> <span class="pre">'</span> <span class="pre">FLT3',</span> <span class="pre">'DNMT3A']</span></code></p>
+</div></blockquote>
+</section>
+<section id="get-connectivity-matrix-equations-gene-dict-upstream-genes">
+<h3>get_connectivity_matrix(equations,gene_dict,upstream_genes)<a class="headerlink" href="#get-connectivity-matrix-equations-gene-dict-upstream-genes" title="Link to this heading">¶</a></h3>
+<p><strong>Input</strong>: Requires <code class="docutils literal notranslate"><span class="pre">equations</span></code>, <code class="docutils literal notranslate"><span class="pre">gene_dict</span></code>, and <code class="docutils literal notranslate"><span class="pre">upstream_genes</span></code> <strong>Functionality</strong>: Takes the strings from <code class="docutils literal notranslate"><span class="pre">upstream_genes</span></code> and iterates over every gene in an individual string. For every gene in the string, it takes the value of that gene from <code class="docutils literal notranslate"><span class="pre">gene_dict</span></code> and appends the value to a result list. After every string is complete, it pads up the result list with -1. <strong>Output</strong>: <code class="docutils literal notranslate"><span class="pre">connectivity_matrix</span></code> which is a np.array</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Example:</span> <span class="pre">array([[</span> <span class="pre">0,</span> <span class="pre">-1,</span> <span class="pre">-1,</span> <span class="pre">-1],[</span> <span class="pre">0,</span> <span class="pre">-1,</span> <span class="pre">-1,</span> <span class="pre">-1],[</span> <span class="pre">0,</span> <span class="pre">-1,</span> <span class="pre">-1,</span> <span class="pre">-1],[</span> <span class="pre">3,</span> <span class="pre">-1,</span> <span class="pre">-1,</span> <span class="pre">-1]])</span></code></p>
+</div></blockquote>
+</section>
+<section id="get-truth-table-equations-upstream-genes-show-functions-none">
+<h3>get_truth_table(equations,upstream_genes, show_functions = None)<a class="headerlink" href="#get-truth-table-equations-upstream-genes-show-functions-none" title="Link to this heading">¶</a></h3>
+<p><strong>Input</strong>: Requires <code class="docutils literal notranslate"><span class="pre">equations</span></code> and <code class="docutils literal notranslate"><span class="pre">upstream_genes</span></code>. <code class="docutils literal notranslate"><span class="pre">show_functions</span></code> is a flag that gives the user the option to print out the functions that the code uses in eval() to create the truth table. It is automatically set to <code class="docutils literal notranslate"><span class="pre">False</span></code>.<strong>Functionality</strong>: Takes the right side of the <code class="docutils literal notranslate"><span class="pre">equations</span></code> list per line and evaluates the Boolean function using all possible combinations of gene values. It appends this output as a tuple to a list. After every line is evaluated, -1 is added to make all the tuples the same length. <strong>Output</strong>: <code class="docutils literal notranslate"><span class="pre">truth_table</span></code> which is an np.array</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Example:</span> <span class="pre">[[</span> <span class="pre">0</span>&#160; <span class="pre">1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1][</span> <span class="pre">0</span>&#160; <span class="pre">1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1][</span> <span class="pre">1</span>&#160; <span class="pre">0</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1][</span> <span class="pre">0</span>&#160; <span class="pre">1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1]]</span></code></p>
+</div></blockquote>
+</section>
+<section id="get-mutation-dict-file">
+<h3>get_mutation_dict(file)<a class="headerlink" href="#get-mutation-dict-file" title="Link to this heading">¶</a></h3>
+<p><strong>Input</strong>: Requires <code class="docutils literal notranslate"><span class="pre">file</span></code> which is a .txt file that includes all the genes and their mutations (which is simplified in this case as TSG = 0 and oncogenes = 1). The .txt file must have the format of <code class="docutils literal notranslate"><span class="pre">GENE</span> <span class="pre">=</span> <span class="pre">MUTATION</span></code> or else an error will occur. <strong>Functionality</strong>: For every line in the .txt file, it splits by the = sign and whatever is on the left is a key (in this case a key) and whatever is on the right of the = sign is the value. <strong>Output</strong>: <code class="docutils literal notranslate"><span class="pre">mutation_dict</span></code> which is a dictionary that has genes as the keys and mutations as the value.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Example:</span> <span class="pre">{'FLT3':</span> <span class="pre">1,</span> <span class="pre">'DNMT3A':</span> <span class="pre">0,</span> <span class="pre">'NPM1':</span> <span class="pre">1}</span></code></p>
+</div></blockquote>
+<p><em>This function can also be used to make perturbed_dict, which is needed when perturbed genes are involved in the simulation</em></p>
+</section>
+<section id="get-knocking-genes-profile-mutation-dict-connectivity-matrix-gene-dict-perturbed-genes-none-perturbed-dict-none">
+<h3>get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict,perturbed_genes=None, perturbed_dict=None)<a class="headerlink" href="#get-knocking-genes-profile-mutation-dict-connectivity-matrix-gene-dict-perturbed-genes-none-perturbed-dict-none" title="Link to this heading">¶</a></h3>
+<p><strong>Input</strong>: Requires <code class="docutils literal notranslate"><span class="pre">profile</span></code> which contains the patient’s mutation profile as a string (ex. ‘FLT3,NPM1,DNMT3A’), <code class="docutils literal notranslate"><span class="pre">connectivity_matrix</span></code>, <code class="docutils literal notranslate"><span class="pre">gene_dict</span></code></p>
+<p><em>This code does not require <code class="docutils literal notranslate"><span class="pre">perturbed_genes</span></code>, <code class="docutils literal notranslate"><span class="pre">perturbed_dict</span></code>, and <code class="docutils literal notranslate"><span class="pre">mutation_dict</span></code>. For both <code class="docutils literal notranslate"><span class="pre">perturbed_dict</span></code> and <code class="docutils literal notranslate"><span class="pre">perturbed_genes</span></code>, they are only to be used when perturbed genes are considered during the simulation. In this case, (where the effects of perturbed genes is to be measured) one can decide whether to include <code class="docutils literal notranslate"><span class="pre">mutation_dict</span></code>. Depends on the results one wants to get. <code class="docutils literal notranslate"><span class="pre">perturbed_genes</span></code> is formatted the same way as <code class="docutils literal notranslate"><span class="pre">profile</span></code> and <code class="docutils literal notranslate"><span class="pre">perturbed_dict</span></code> is formatted the same way as <code class="docutils literal notranslate"><span class="pre">mutation_dict</span></code></em></p>
+<p><strong>Functionality</strong>:
+The code reads the <code class="docutils literal notranslate"><span class="pre">profile</span></code> and splits the profile up into it’s seperate genes. For <code class="docutils literal notranslate"><span class="pre">profile</span></code> and/or <code class="docutils literal notranslate"><span class="pre">peturbed_genes</span></code> the code splits up the string and removes any repeat values.</p>
+<p><em>Perturbed genes + Mutated genes</em>:
+If both perturbed and mutated genes are involved, the code reads the <code class="docutils literal notranslate"><span class="pre">profile</span></code> and splits the profile and removes duplicates (which is then renamed <code class="docutils literal notranslate"><span class="pre">mutation_profile</span></code>). For every gene in the mutation_profile, if there is no genes, it returns ‘no_mutations’ and does not change the connectivity matrix or the inital state. If there is a gene, the code accesses the genes value in from <code class="docutils literal notranslate"><span class="pre">gene_dict</span></code>, and knocks the array in the connectivity matrix out to -1, and sets the gene’s inital value equal to the gene’s value in <code class="docutils literal notranslate"><span class="pre">mutation_dict</span></code>. Then, after all the genes in the <code class="docutils literal notranslate"><span class="pre">mutation_profile</span></code> are considered, the code does the same except it uses the perturbed genes. The main difference is that the perturbed genes DO NOT depend on the <code class="docutils literal notranslate"><span class="pre">profile</span></code>. It knocks in/out the perturbed genes regardless of patient profiles.</p>
+<p><em>Peturbed genes ONLY</em>:
+If only perturbed genes are involved, the code reads the <code class="docutils literal notranslate"><span class="pre">perturbed_genes</span></code> and splits the profile and removes duplicates. For every gene in the <code class="docutils literal notranslate"><span class="pre">perturbed_genes</span></code>, if there is no genes, it returns ‘no perturbed genes’ and does not change the connectivity matrix or the inital state. If there is a gene, the code accesses the genes value in from <code class="docutils literal notranslate"><span class="pre">gene_dict</span></code>, and knocks the array in the connectivity matrix out to -1, and sets the gene’s inital value equal to the gene’s value in <code class="docutils literal notranslate"><span class="pre">perturbed_dict</span></code>.</p>
+<p><em>Mutated genes ONLY</em>:
+If only mutated genes are involved, the code reads the <code class="docutils literal notranslate"><span class="pre">profile</span></code> and splits the profile and removes duplicates (renamed <code class="docutils literal notranslate"><span class="pre">mutation_profile</span></code> to prevent rewriting the variable). For every gene in the <code class="docutils literal notranslate"><span class="pre">mutation_profile</span></code>, if there is no genes, it returns ‘no mutated genes’ and does not change the connectivity matrix or the inital state. If there is a gene, the code accesses the genes value in from <code class="docutils literal notranslate"><span class="pre">gene_dict</span></code>, and knocks the array in the connectivity matrix out to -1, and sets the gene’s inital value equal to the gene’s value in <code class="docutils literal notranslate"><span class="pre">mutation_dict</span></code>.</p>
+<p><em>The perturbed genes take superiority over mutated genes. For example, if a GENE = 1 in a <code class="docutils literal notranslate"><span class="pre">mutation_dict</span></code> and the GENE is perturbed with the definition of the GENE being GENE = 0 in <code class="docutils literal notranslate"><span class="pre">perturbed_dict</span></code> for all patients, the value of the GENE will be set to 0.</em></p>
+<p><strong>Output</strong>: The output is <code class="docutils literal notranslate"><span class="pre">mutated_connectivity_matrix</span></code> which is the individual patient’s connectivity matrix, and <code class="docutils literal notranslate"><span class="pre">x0</span></code> which is the individual patient’s unique inital state.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Example:</span></code>
+<code class="docutils literal notranslate"><span class="pre">mutated_connectivity_matrix':</span> <span class="pre">[</span> <span class="pre">0</span> <span class="pre">-1</span> <span class="pre">-1][</span> <span class="pre">-1</span> <span class="pre">-1</span> <span class="pre">-1][</span> <span class="pre">0</span> <span class="pre">-1</span> <span class="pre">-1][</span> <span class="pre">3</span> <span class="pre">-1</span> <span class="pre">-1][</span> <span class="pre">1</span> <span class="pre">-1</span> <span class="pre">-1][</span> <span class="pre">5</span> <span class="pre">-1</span> <span class="pre">-1]</span></code>
+<code class="docutils literal notranslate"><span class="pre">x0:</span> <span class="pre">[0,1,1,1,1]</span></code></p>
+</div></blockquote>
+</section>
+</section>
+<section id="the-calculating-equations-which-all-start-with-cal-are-used-post-simulation-and-calculate-the-phenotype-scores-and-the-final-network-score">
+<h2><em>The calculating equations (which all start with <code class="docutils literal notranslate"><span class="pre">cal_</span></code>) are used post-simulation and calculate the phenotype scores and the final network score</em>_<a class="headerlink" href="#the-calculating-equations-which-all-start-with-cal-are-used-post-simulation-and-calculate-the-phenotype-scores-and-the-final-network-score" title="Link to this heading">¶</a></h2>
+<section id="get-cal-upstream-genes-equations">
+<h3>get_cal_upstream_genes(equations):<a class="headerlink" href="#get-cal-upstream-genes-equations" title="Link to this heading">¶</a></h3>
+<p><strong>Input</strong>: Requires <code class="docutils literal notranslate"><span class="pre">equations</span></code> <em>(These equations are from a .txt file that has the calculating functions Ex. Apoptosis = GENE)</em> <strong>Functionality</strong>: Using <code class="docutils literal notranslate"><span class="pre">equations</span></code>, it takes the right side of the equations, and removes all symbols such as <code class="docutils literal notranslate"><span class="pre">|</span> <span class="pre">()</span> <span class="pre">&amp;</span></code> and leaves only the genes. (Retains any duplicates) <strong>Output</strong>: <code class="docutils literal notranslate"><span class="pre">cal_upstream_genes</span></code> a list of lists, where every individual list is for one phenotype \</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Example:</span> <span class="pre">[['BCL2',</span> <span class="pre">'TP53'],</span> <span class="pre">['CEBPA',</span> <span class="pre">'ETV6',</span> <span class="pre">'MEIS1']]</span></code></p>
+</div></blockquote>
+</section>
+<section id="get-cal-functions-equations">
+<h3>get_cal_functions(equations):<a class="headerlink" href="#get-cal-functions-equations" title="Link to this heading">¶</a></h3>
+<p><strong>Input</strong>: Requires <code class="docutils literal notranslate"><span class="pre">equations</span></code> <strong>Functionality</strong>: Takes the right side of the <code class="docutils literal notranslate"><span class="pre">equations</span></code> (called <code class="docutils literal notranslate"><span class="pre">cal_functions</span></code> in the code) and replaces the Boolean symbols with + or -. In this case <code class="docutils literal notranslate"><span class="pre">!</span> <span class="pre">=</span> <span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">|</span> <span class="pre">=</span> <span class="pre">+</span></code>, and <code class="docutils literal notranslate"><span class="pre">&amp;</span> <span class="pre">=</span> <span class="pre">+</span></code>. The code then removes any parantheses in the functions, cleans them up (removing any extra spaces that came from removing the parantheses) and then returns the cleaned <code class="docutils literal notranslate"><span class="pre">cal_functions</span></code>. <br />
+<strong>Output</strong>: <code class="docutils literal notranslate"><span class="pre">cal_functions</span></code> which are functions that have genes being added/subtracted for the total phenotype score. \</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Example:</span> <span class="pre">['TP53</span> <span class="pre">+</span> <span class="pre">(-BCL2)</span> <span class="pre">',</span> <span class="pre">'</span> <span class="pre">CEBPA</span> <span class="pre">+</span> <span class="pre">ETV6</span> <span class="pre">+</span> <span class="pre">(-MEIS1)</span> <span class="pre">'}]</span></code></p>
+</div></blockquote>
+</section>
+</section>
+<section id="get-calculating-scores-is-to-be-used-post-simulation-which-requires-the-booleannetwork-code">
+<h2><em>get_calculating_scores is to be used post-simulation, which requires the BooleanNetwork code</em><a class="headerlink" href="#get-calculating-scores-is-to-be-used-post-simulation-which-requires-the-booleannetwork-code" title="Link to this heading">¶</a></h2>
+<section id="get-calculating-scores-network-traj-cal-functions-cal-upstream-genes-gene-dict-cal-range-none-scores-dict-none">
+<h3>get_calculating_scores(network_traj, cal_functions, cal_upstream_genes, gene_dict, cal_range=None, scores_dict=None)<a class="headerlink" href="#get-calculating-scores-network-traj-cal-functions-cal-upstream-genes-gene-dict-cal-range-none-scores-dict-none" title="Link to this heading">¶</a></h3>
+<p><strong>Input</strong>: Requires <code class="docutils literal notranslate"><span class="pre">network_traj</span></code> (from the BooleanNetwork simulation), <code class="docutils literal notranslate"><span class="pre">cal_functions</span></code>, <code class="docutils literal notranslate"><span class="pre">cal_upstream_genes</span></code> and <code class="docutils literal notranslate"><span class="pre">gene_dict</span></code>. \</p>
+<p><em>This code doesn’t require <code class="docutils literal notranslate"><span class="pre">cal_range</span></code> or <code class="docutils literal notranslate"><span class="pre">scores_dict</span></code>. <code class="docutils literal notranslate"><span class="pre">cal_range</span></code> specifies a specific range of <code class="docutils literal notranslate"><span class="pre">network_traj</span></code> values to be used in calculating the scores, it is automatically set to the last 100,000 steps. <code class="docutils literal notranslate"><span class="pre">scores_dict</span></code> is a dictionary, where the keys are the phenotype names + <code class="docutils literal notranslate"><span class="pre">Network</span></code> score. It is automatically set to have the keys “Apoptosis”, “Differentiation”, “Proliferation”, and “Network”</em> \</p>
+<p><strong>Functionality</strong>: The code iterates over every function in <code class="docutils literal notranslate"><span class="pre">cal_functions</span></code> and retrieves the function’s associated <code class="docutils literal notranslate"><span class="pre">cal_upstream_genes</span></code>. For each function, it extracts the genes and evaluates the function for each row in the <code class="docutils literal notranslate"><span class="pre">cal_range</span></code>. The results are stored in the scores_dict under the respective keys. After evaluating scores for every function in <code class="docutils literal notranslate"><span class="pre">cal_functions</span></code>, it calculates the ‘Network’ scores based on the formula: Proliferation - (Differentiation + Apoptosis). After calculating the Network scores, it calculates the mean of the ‘Network’ scores called the final score. <strong>Output</strong>: The output is a <code class="docutils literal notranslate"><span class="pre">scores_dict</span></code> which is a dictionary that has the scores for every phenotype + network for all of <code class="docutils literal notranslate"><span class="pre">cal_range</span></code> and <code class="docutils literal notranslate"><span class="pre">final_score</span></code> which is the mean of all the values of <code class="docutils literal notranslate"><span class="pre">scores_dict['Network']</span></code>.</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Example:</span></code>
+<code class="docutils literal notranslate"><span class="pre">scores_dict:</span> <span class="pre">{'Apoptosis':</span> <span class="pre">[0,0,...],'Differentiation':</span> <span class="pre">[1,0,...],'Proliferation':[0,1,...],'Network':[0,1,...]}</span></code>
+<code class="docutils literal notranslate"><span class="pre">final_score:</span> <span class="pre">4.45318</span></code></p>
+</div></blockquote>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">BMatrix</a><ul>
+<li><a class="reference internal" href="#required-packages">Required Packages</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#function-descriptions">Function Descriptions</a><ul>
+<li><a class="reference internal" href="#load-network-from-file-filename-initial-state-none">load_network_from_file(filename, initial_state=None)</a></li>
+<li><a class="reference internal" href="#get-equations-file">get_equations(file)</a></li>
+<li><a class="reference internal" href="#get-gene-dict-equations">get_gene_dict(equations)</a></li>
+<li><a class="reference internal" href="#get-upstream-genes-equations">get_upstream_genes(equations)</a></li>
+<li><a class="reference internal" href="#get-connectivity-matrix-equations-gene-dict-upstream-genes">get_connectivity_matrix(equations,gene_dict,upstream_genes)</a></li>
+<li><a class="reference internal" href="#get-truth-table-equations-upstream-genes-show-functions-none">get_truth_table(equations,upstream_genes, show_functions = None)</a></li>
+<li><a class="reference internal" href="#get-mutation-dict-file">get_mutation_dict(file)</a></li>
+<li><a class="reference internal" href="#get-knocking-genes-profile-mutation-dict-connectivity-matrix-gene-dict-perturbed-genes-none-perturbed-dict-none">get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict,perturbed_genes=None, perturbed_dict=None)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-calculating-equations-which-all-start-with-cal-are-used-post-simulation-and-calculate-the-phenotype-scores-and-the-final-network-score"><em>The calculating equations (which all start with <code class="docutils literal notranslate"><span class="pre">cal_</span></code>) are used post-simulation and calculate the phenotype scores and the final network score</em>_</a><ul>
+<li><a class="reference internal" href="#get-cal-upstream-genes-equations">get_cal_upstream_genes(equations):</a></li>
+<li><a class="reference internal" href="#get-cal-functions-equations">get_cal_functions(equations):</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#get-calculating-scores-is-to-be-used-post-simulation-which-requires-the-booleannetwork-code"><em>get_calculating_scores is to be used post-simulation, which requires the BooleanNetwork code</em></a><ul>
+<li><a class="reference internal" href="#get-calculating-scores-network-traj-cal-functions-cal-upstream-genes-gene-dict-cal-range-none-scores-dict-none">get_calculating_scores(network_traj, cal_functions, cal_upstream_genes, gene_dict, cal_range=None, scores_dict=None)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">Welcome to BNMPy’s documentation!</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="api.html"
+                          title="next chapter">API</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bmatrix_readme.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to BNMPy’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BNMPy 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BMatrix</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, IlyaLab.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

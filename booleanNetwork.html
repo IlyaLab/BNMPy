@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>BNMPy.booleanNetwork &#8212; BNMPy 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=279e0f84" />
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="BNMPy.build_bn_from_kg" href="build_bn_from_kg.html" />
+    <link rel="prev" title="BNMPy.BMatrix" href="bmatrix.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="build_bn_from_kg.html" title="BNMPy.build_bn_from_kg"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="bmatrix.html" title="BNMPy.BMatrix"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BNMPy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" accesskey="U">API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BNMPy.booleanNetwork</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="bnmpy-booleannetwork">
+<h1>BNMPy.booleanNetwork<a class="headerlink" href="#bnmpy-booleannetwork" title="Link to this heading">¶</a></h1>
+<span class="target" id="module-BNMPy.booleanNetwork"></span><dl class="py class">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">BNMPy.booleanNetwork.</span></span><span class="sig-name descname"><span class="pre">BooleanNetwork</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">numberOfNodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialNodeValues</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputFilePath</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodeDict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">equations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork" title="Link to this definition">¶</a></dt>
+<dd><p>Boolean network object…</p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.buildK" title="BNMPy.booleanNetwork.BooleanNetwork.buildK"><code class="xref py py-obj docutils literal notranslate"><span class="pre">buildK</span></code></a>()</p></td>
+<td><p>This rebuilds the K array.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.knockout" title="BNMPy.booleanNetwork.BooleanNetwork.knockout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">knockout</span></code></a>(key, value)</p></td>
+<td><p>Sets a specific node to be permanently fixed to a given value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.setInitialValue" title="BNMPy.booleanNetwork.BooleanNetwork.setInitialValue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setInitialValue</span></code></a>(key, value)</p></td>
+<td><p>Sets a particular node to a given initial value, where the key is indexed in nodeDict.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.setInitialValues" title="BNMPy.booleanNetwork.BooleanNetwork.setInitialValues"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setInitialValues</span></code></a>(initialNodeValues)</p></td>
+<td><p>Sets the initial values of the boolean network.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.undoKnockouts" title="BNMPy.booleanNetwork.BooleanNetwork.undoKnockouts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">undoKnockouts</span></code></a>()</p></td>
+<td><p>Undoes all knockouts.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.updateUntilAttractorIsReached" title="BNMPy.booleanNetwork.BooleanNetwork.updateUntilAttractorIsReached"><code class="xref py py-obj docutils literal notranslate"><span class="pre">updateUntilAttractorIsReached</span></code></a>(giveUpIterations)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.update_noise" title="BNMPy.booleanNetwork.BooleanNetwork.update_noise"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_noise</span></code></a>(p[, iterations])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>getBias</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>getMaxConnectivity</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>getMeanConnectivity</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>getRealization</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>getTrajectory</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>initializeOutput</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>stateToWrite</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>toGraph</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>writeNetworkHistory</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.buildK">
+<span class="sig-name descname"><span class="pre">buildK</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.buildK"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.buildK" title="Link to this definition">¶</a></dt>
+<dd><p>This rebuilds the K array.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.getBias">
+<span class="sig-name descname"><span class="pre">getBias</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.getBias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.getBias" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.getMaxConnectivity">
+<span class="sig-name descname"><span class="pre">getMaxConnectivity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.getMaxConnectivity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.getMaxConnectivity" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.getMeanConnectivity">
+<span class="sig-name descname"><span class="pre">getMeanConnectivity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.getMeanConnectivity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.getMeanConnectivity" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.getRealization">
+<span class="sig-name descname"><span class="pre">getRealization</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.getRealization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.getRealization" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.getTrajectory">
+<span class="sig-name descname"><span class="pre">getTrajectory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.getTrajectory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.getTrajectory" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.initializeOutput">
+<span class="sig-name descname"><span class="pre">initializeOutput</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.initializeOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.initializeOutput" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.knockout">
+<span class="sig-name descname"><span class="pre">knockout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.knockout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.knockout" title="Link to this definition">¶</a></dt>
+<dd><p>Sets a specific node to be permanently fixed to a given value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.setInitialValue">
+<span class="sig-name descname"><span class="pre">setInitialValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.setInitialValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.setInitialValue" title="Link to this definition">¶</a></dt>
+<dd><p>Sets a particular node to a given initial value, where the key is indexed in nodeDict.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.setInitialValues">
+<span class="sig-name descname"><span class="pre">setInitialValues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initialNodeValues</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.setInitialValues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.setInitialValues" title="Link to this definition">¶</a></dt>
+<dd><p>Sets the initial values of the boolean network.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.stateToWrite">
+<span class="sig-name descname"><span class="pre">stateToWrite</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.stateToWrite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.stateToWrite" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.toGraph">
+<span class="sig-name descname"><span class="pre">toGraph</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.toGraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.toGraph" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.undoKnockouts">
+<span class="sig-name descname"><span class="pre">undoKnockouts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.undoKnockouts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.undoKnockouts" title="Link to this definition">¶</a></dt>
+<dd><p>Undoes all knockouts. Does not change initial values, however.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.update" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.updateUntilAttractorIsReached">
+<span class="sig-name descname"><span class="pre">updateUntilAttractorIsReached</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">giveUpIterations</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.updateUntilAttractorIsReached"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.updateUntilAttractorIsReached" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.update_noise">
+<span class="sig-name descname"><span class="pre">update_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.update_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.update_noise" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.BooleanNetwork.writeNetworkHistory">
+<span class="sig-name descname"><span class="pre">writeNetworkHistory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#BooleanNetwork.writeNetworkHistory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.BooleanNetwork.writeNetworkHistory" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.getDataFromFile">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.booleanNetwork.</span></span><span class="sig-name descname"><span class="pre">getDataFromFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startIndex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invert</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#getDataFromFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.getDataFromFile" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.getParametersFromFile">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.booleanNetwork.</span></span><span class="sig-name descname"><span class="pre">getParametersFromFile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">numberOfNodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkagesFilePath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">functionsFilePath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialNodesFilePath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#getParametersFromFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.getParametersFromFile" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.getRandomInitialNodeValues">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.booleanNetwork.</span></span><span class="sig-name descname"><span class="pre">getRandomInitialNodeValues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">numberOfNodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#getRandomInitialNodeValues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.getRandomInitialNodeValues" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.booleanNetwork.getRandomParameters">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.booleanNetwork.</span></span><span class="sig-name descname"><span class="pre">getRandomParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">numberOfNodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isConstantConnectivity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/booleanNetwork.html#getRandomParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.booleanNetwork.getRandomParameters" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">BNMPy.booleanNetwork</a><ul>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork</span></code></a><ul>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.buildK"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.buildK()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.getBias"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.getBias()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.getMaxConnectivity"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.getMaxConnectivity()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.getMeanConnectivity"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.getMeanConnectivity()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.getRealization"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.getRealization()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.getTrajectory"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.getTrajectory()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.initializeOutput"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.initializeOutput()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.knockout"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.knockout()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.setInitialValue"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.setInitialValue()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.setInitialValues"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.setInitialValues()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.stateToWrite"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.stateToWrite()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.toGraph"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.toGraph()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.undoKnockouts"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.undoKnockouts()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.update"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.update()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.updateUntilAttractorIsReached"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.updateUntilAttractorIsReached()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.update_noise"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.update_noise()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.BooleanNetwork.writeNetworkHistory"><code class="docutils literal notranslate"><span class="pre">BooleanNetwork.writeNetworkHistory()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.getDataFromFile"><code class="docutils literal notranslate"><span class="pre">getDataFromFile()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.getParametersFromFile"><code class="docutils literal notranslate"><span class="pre">getParametersFromFile()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.getRandomInitialNodeValues"><code class="docutils literal notranslate"><span class="pre">getRandomInitialNodeValues()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.booleanNetwork.getRandomParameters"><code class="docutils literal notranslate"><span class="pre">getRandomParameters()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="bmatrix.html"
+                          title="previous chapter">BNMPy.BMatrix</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="build_bn_from_kg.html"
+                          title="next chapter">BNMPy.build_bn_from_kg</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/booleanNetwork.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="build_bn_from_kg.html" title="BNMPy.build_bn_from_kg"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="bmatrix.html" title="BNMPy.BMatrix"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BNMPy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" >API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BNMPy.booleanNetwork</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, IlyaLab.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

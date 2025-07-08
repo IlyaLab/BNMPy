@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BNMPy.booleanNetwork &#8212; BNMPy 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=279e0f84" />
+    <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BNMPy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BNMPy.booleanNetwork</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for BNMPy.booleanNetwork</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+
+<div class="viewcode-block" id="BooleanNetwork">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BooleanNetwork</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Boolean network object...</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">numberOfNodes</span><span class="p">,</span> <span class="n">linkages</span><span class="p">,</span> <span class="n">functions</span><span class="p">,</span> <span class="n">initialNodeValues</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">outputFilePath</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">nodeDict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">equations</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># nodeDict is a dict of gene name to index.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">numberOfNodes</span>
+        <span class="c1"># varF is the connectivity matrix.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">varF</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">linkages</span><span class="p">)</span>
+        <span class="c1"># F is the truth table.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">functions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initialNodeValues</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">networkHistory</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">]])</span>
+        <span class="c1"># print(&#39;after nodes are added to networkHistory&#39;)</span>
+        <span class="c1"># equations is a list of strings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">equations</span> <span class="o">=</span> <span class="n">equations</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isConstantConnectivity</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isConstanNode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">varF</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">linkage</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">varF</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">linkage</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">isConstantConnectivity</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">break</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">isConstanNode</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                
+        <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputFilePath</span> <span class="o">=</span> <span class="n">outputFilePath</span>
+
+        <span class="k">if</span> <span class="p">(</span> <span class="n">outputFilePath</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="p">)</span> <span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initializeOutput</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">nodeDict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nodeDict</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodeDict</span> <span class="o">=</span> <span class="n">nodeDict</span>
+        <span class="c1"># old connectivity matrices - for mutations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">old_varF</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">old_F</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="BooleanNetwork.buildK">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.buildK">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">buildK</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;This rebuilds the K array.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isConstantConnectivity</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isConstanNode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">varF</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">linkage</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">varF</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">linkage</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">isConstantConnectivity</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">break</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">isConstanNode</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                
+        <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BooleanNetwork.setInitialValues">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.setInitialValues">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setInitialValues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initialNodeValues</span><span class="p">):</span>
+        <span class="s2">&quot;Sets the initial values of the boolean network.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initialNodeValues</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BooleanNetwork.setInitialValue">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.setInitialValue">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setInitialValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="s2">&quot;Sets a particular node to a given initial value, where the key is indexed in nodeDict.&quot;</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="BooleanNetwork.initializeOutput">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.initializeOutput">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initializeOutput</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputFilePath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">stringToWrite</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">stringToWrite</span> <span class="o">+=</span> <span class="s1">&#39;Node_</span><span class="si">{}</span><span class="s1">,&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># replace last comma with newline</span>
+        <span class="n">stringToWrite</span> <span class="o">=</span> <span class="n">stringToWrite</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">stringToWrite</span><span class="p">)</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stateToWrite</span><span class="p">())</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BooleanNetwork.knockout">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.knockout">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">knockout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="s2">&quot;Sets a specific node to be permanently fixed to a given value.&quot;</span>
+        <span class="c1"># varF = connectivity matrix</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_varF</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">old_varF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">varF</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">old_F</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># knock the connectivity value for all downstream genes to -1, and set the initial value to value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setInitialValue</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">varF</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="p">:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="c1"># TODO: create a self-loop here - the node should be connected to itself.</span>
+        <span class="c1">#self.varF[self.nodeDict[key], self.nodeDict[key]] = 1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">varF</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="nb">int</span>
+        <span class="c1"># changing the truth table...</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int8</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buildK</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BooleanNetwork.undoKnockouts">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.undoKnockouts">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">undoKnockouts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Undoes all knockouts. Does not change initial values, however.&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_varF</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">varF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_varF</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">old_varF</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">F</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_F</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">old_F</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">buildK</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BooleanNetwork.stateToWrite">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.stateToWrite">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stateToWrite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">stringToWrite</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="n">stringToWrite</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span><span class="p">)</span>
+        <span class="n">stringToWrite</span> <span class="o">=</span> <span class="n">stringToWrite</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+        <span class="k">return</span> <span class="n">stringToWrite</span></div>
+
+
+<div class="viewcode-block" id="BooleanNetwork.writeNetworkHistory">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.writeNetworkHistory">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">writeNetworkHistory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">timestep</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">networkHistory</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">timestep</span><span class="p">:</span>
+                <span class="n">string</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span><span class="p">)</span>
+            <span class="n">string</span> <span class="o">=</span> <span class="n">string</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputFilePath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BooleanNetwork.update">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.update">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span> <span class="p">(</span><span class="n">iterations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="p">)</span> <span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span>  <span class="p">)</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>  <span class="p">[</span><span class="mi">2</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span> <span class="p">)</span> 
+        
+        <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span>
+        
+        <span class="k">for</span> <span class="n">iterationNumber</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+            <span class="n">newNodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span>
+            
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                
+              <span class="k">if</span> <span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isConstanNode</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">)</span> <span class="p">:</span>
+                <span class="n">fInput</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                    <span class="n">fInput</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">varF</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]]</span> <span class="o">*</span> <span class="n">temp</span><span class="p">[</span> <span class="n">j</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="p">]</span>
+                <span class="n">newNodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">fInput</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">newNodes</span>
+            <span class="n">y</span><span class="p">[</span> <span class="n">iterationNumber</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">newNodes</span>
+
+        <span class="k">return</span> <span class="n">y</span></div>
+
+
+    <span class="c1"># update the Boolean network with noise, derived from update functions (Boris)</span>
+<div class="viewcode-block" id="BooleanNetwork.update_noise">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.update_noise">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">1</span> <span class="p">):</span> 
+        
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span> <span class="p">(</span><span class="n">iterations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="p">)</span> <span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span>  <span class="p">)</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>  <span class="p">[</span><span class="mi">2</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span> <span class="p">)</span> 
+        
+        <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span>
+        
+        <span class="k">for</span> <span class="n">iterationNumber</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+            <span class="n">newNodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span>
+            
+            <span class="c1"># check if there is a better way to do this [[ Boris ]] </span>
+            <span class="n">gam</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="kc">False</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isConstanNode</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">p</span>  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>  <span class="p">])</span>
+            
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">gam</span><span class="p">):</span>
+                
+                <span class="n">newNodes</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">bitwise_xor</span><span class="p">(</span>  <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="p">,</span>  <span class="n">gam</span><span class="p">)</span>  
+                
+            <span class="k">else</span> <span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                    
+                  <span class="k">if</span> <span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isConstanNode</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">)</span> <span class="p">:</span>
+                    <span class="n">fInput</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                        <span class="n">fInput</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">varF</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]]</span> <span class="o">*</span> <span class="n">temp</span><span class="p">[</span> <span class="n">j</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="p">]</span>
+                
+                    <span class="n">newNodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">fInput</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">newNodes</span>
+            <span class="n">y</span><span class="p">[</span> <span class="n">iterationNumber</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">newNodes</span>
+
+        <span class="k">return</span> <span class="n">y</span> </div>
+
+
+ 	
+
+    <span class="c1"># Updates the network until either an attractor is reached (in which case</span>
+    <span class="c1"># it returns the number of updates it took from the original state of the</span>
+    <span class="c1"># network to reach an attractor), or, if it doesn&#39;t confirm it reached an</span>
+    <span class="c1"># attractor in giveUpIterations steps, it returns numpy.NaN</span>
+<div class="viewcode-block" id="BooleanNetwork.updateUntilAttractorIsReached">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.updateUntilAttractorIsReached">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">updateUntilAttractorIsReached</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">giveUpIterations</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">giveUpIterations</span><span class="p">):</span>
+            <span class="c1">#df = pd.read_csv(self.outputFilePath)       # change to look at network history</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">networkHistory</span><span class="p">)):</span>
+                <span class="k">for</span> <span class="n">testState</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">networkHistory</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">:]:</span>
+                    <span class="c1"># print(&#39;%d, %d&#39; % (index, testIndex))</span>
+                    <span class="c1"># print(df.iloc[index] - df.iloc[testIndex])</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">networkHistory</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">-</span> <span class="n">testState</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                        <span class="k">return</span> <span class="n">index</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span></div>
+
+
+<div class="viewcode-block" id="BooleanNetwork.getRealization">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.getRealization">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getRealization</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">varF</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BooleanNetwork.getMeanConnectivity">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.getMeanConnectivity">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getMeanConnectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BooleanNetwork.getMaxConnectivity">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.getMaxConnectivity">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getMaxConnectivity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BooleanNetwork.getBias">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.getBias">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getBias</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">num0</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">num1</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">function</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">num1</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">elif</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">num0</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">num1</span> <span class="o">/</span> <span class="p">(</span><span class="n">num0</span> <span class="o">+</span> <span class="n">num1</span><span class="p">)</span></div>
+
+   
+<div class="viewcode-block" id="BooleanNetwork.getTrajectory">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.getTrajectory">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getTrajectory</span><span class="p">(</span> <span class="bp">self</span> <span class="p">)</span> <span class="p">:</span> 
+        <span class="k">return</span>  <span class="bp">self</span><span class="o">.</span><span class="n">networkHistory</span></div>
+
+
+<div class="viewcode-block" id="BooleanNetwork.toGraph">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.toGraph">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">toGraph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># TODO: convert the network to an igraph representation.</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">igraph</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ig</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">):</span>
+            <span class="n">node_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="c1"># TODO: get the connections</span>
+            <span class="k">pass</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+
+<div class="viewcode-block" id="getRandomParameters">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.getRandomParameters">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">getRandomParameters</span><span class="p">(</span><span class="n">numberOfNodes</span><span class="p">,</span> <span class="n">connectivity</span><span class="p">,</span>
+                        <span class="n">isConstantConnectivity</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">numberOfNodes</span> <span class="o">&lt;</span> <span class="n">connectivity</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Connectivity larger than number of nodes&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Generate connectivities</span>
+    <span class="n">connectivities</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">isConstantConnectivity</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numberOfNodes</span><span class="p">):</span>
+            <span class="n">connectivities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">connectivity</span><span class="p">)</span>
+        <span class="n">maxConnectivity</span> <span class="o">=</span> <span class="n">connectivity</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Note that this is a specific distribution (uniform)</span>
+        <span class="c1"># of the values of K[i]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numberOfNodes</span><span class="p">):</span>
+            <span class="n">connectivities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">connectivity</span> <span class="o">*</span> <span class="n">numberOfNodes</span><span class="p">)):</span>
+            <span class="n">connectivities</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">numberOfNodes</span><span class="p">)]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">maxConnectivity</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">connectivities</span><span class="p">)</span>
+
+    <span class="c1"># Generate linkages</span>
+    <span class="n">linkages</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numberOfNodes</span><span class="p">):</span>
+        <span class="n">linkages</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">connectivities</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">newnode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">numberOfNodes</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">newnode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">linkages</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">linkages</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newnode</span><span class="p">)</span>
+                    <span class="k">break</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxConnectivity</span> <span class="o">-</span> <span class="n">connectivities</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+            <span class="n">linkages</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Generate functions</span>
+    <span class="n">functions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numberOfNodes</span><span class="p">):</span>
+        <span class="n">functions</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+        <span class="c1"># Initialize a maxK by N matrix filled with -1</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">maxConnectivity</span><span class="p">):</span>
+            <span class="n">functions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Fill in K[i] values</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">connectivities</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">bias</span><span class="p">:</span>
+                <span class="n">functions</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">functions</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Initialize nodes</span>
+    <span class="n">initialNodeValues</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numberOfNodes</span><span class="p">):</span>
+        <span class="n">initialNodeValues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">linkages</span><span class="p">,</span> <span class="n">functions</span><span class="p">,</span> <span class="n">initialNodeValues</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="getRandomInitialNodeValues">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.getRandomInitialNodeValues">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">getRandomInitialNodeValues</span><span class="p">(</span><span class="n">numberOfNodes</span><span class="p">):</span>
+    <span class="n">initialNodeValues</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numberOfNodes</span><span class="p">):</span>
+        <span class="n">initialNodeValues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">initialNodeValues</span></div>
+
+
+<div class="viewcode-block" id="getDataFromFile">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.getDataFromFile">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">getDataFromFile</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">startIndex</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+    <span class="n">rawData</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rawData</span><span class="p">)):</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">split</span> <span class="ow">in</span> <span class="n">rawData</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">datum</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">)</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">datum</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">startIndex</span><span class="p">:]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">invert</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># elif len(data[0]) == 1:</span>
+        <span class="c1">#     for i in range(len(data)):</span>
+        <span class="c1">#         data[i] = data[i][0]</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="n">invertedData</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+        <span class="n">invertedData</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+            <span class="n">invertedData</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">invertedData</span></div>
+
+
+
+<div class="viewcode-block" id="getParametersFromFile">
+<a class="viewcode-back" href="../../booleanNetwork.html#BNMPy.booleanNetwork.getParametersFromFile">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">getParametersFromFile</span><span class="p">(</span><span class="n">numberOfNodes</span><span class="p">,</span> <span class="n">linkagesFilePath</span><span class="p">,</span>
+                          <span class="n">functionsFilePath</span><span class="p">,</span> <span class="n">initialNodesFilePath</span><span class="p">):</span>
+    <span class="c1"># Get data from files</span>
+    <span class="n">linkages</span> <span class="o">=</span> <span class="n">getDataFromFile</span><span class="p">(</span><span class="n">linkagesFilePath</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">functions</span> <span class="o">=</span> <span class="n">getDataFromFile</span><span class="p">(</span><span class="n">functionsFilePath</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">initialNodeValues</span> <span class="o">=</span> <span class="n">getDataFromFile</span><span class="p">(</span><span class="n">initialNodesFilePath</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Change inputs from being one-indexed to zero-indexed</span>
+    <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">linkages</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">linkages</span><span class="p">[</span><span class="n">link</span><span class="p">])):</span>
+            <span class="k">if</span> <span class="n">linkages</span><span class="p">[</span><span class="n">link</span><span class="p">][</span><span class="nb">input</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">linkages</span><span class="p">[</span><span class="n">link</span><span class="p">][</span><span class="nb">input</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">linkages</span><span class="p">)</span> <span class="o">!=</span> <span class="n">numberOfNodes</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">functions</span><span class="p">)</span> <span class="o">!=</span> <span class="n">numberOfNodes</span> \
+            <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">initialNodeValues</span><span class="p">)</span> <span class="o">!=</span> <span class="n">numberOfNodes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;Number of nodes does not match network parameter(s)&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">linkages</span><span class="p">,</span> <span class="n">functions</span><span class="p">,</span> <span class="n">initialNodeValues</span><span class="p">)</span></div>
+
+
+    <span class="c1"># Test above before implementing for functions or initial nodes</span>
+
+    <span class="c1"># self.__init__(numberOfNodes, linkages, functions, initialNodes)</span>
+
+
+<span class="c1">#directory = os.getcwd() + &#39;/&#39;</span>
+<span class="c1">#linkages_filename = &#39;linkages_test1.csv&#39;</span>
+<span class="c1">#functions_filename = &#39;functions_test1.csv&#39;</span>
+<span class="c1">#initial_filename = &#39;init_test1.csv&#39;</span>
+
+
+<span class="c1">#(varF, F, init) = getParametersFromFile(3, directory + linkages_filename,</span>
+<span class="c1">#                                           directory + functions_filename,</span>
+<span class="c1">#                                           directory + initial_filename)</span>
+
+
+<span class="c1">#ngenes = 3</span>
+
+<span class="c1">#varF = np.array( [[0, 1, -1],  # indices of genes connected to gene 0</span>
+<span class="c1">#                  [0, 1, -1],  # indices of genes connected to gene 1</span>
+<span class="c1">#                  [0, 1, 2]] ) # indices of genes connected to gene 2</span>
+
+<span class="c1">#F = np.array( [[0, 1, 1, 1, -1, -1, -1, -1], # truth table for gene 0 </span>
+<span class="c1">#               [0, 1, 1, 1, -1, -1, -1, -1], # truth table for gene 1</span>
+<span class="c1">#               [0, 0, 1, 0, 1, 0, 1, 0]] ) # truth table for gene 2</span>
+
+
+<span class="c1">#x0  =  np.array( [0, 1, 1] )</span>
+<span class="c1">#network = BooleanNetwork( ngenes , varF, F, x0 , outputFilePath = &#39;test_2018-06-26_2.csv&#39;)</span>
+<span class="c1">#network = BooleanNetwork( ngenes , varF, F, x0  )</span>
+<span class="c1">#network.update_noise (0.01  , 20)</span>
+<span class="c1">#network.update( 3 )</span>
+
+<span class="c1">#network.writeNetworkHistory()</span>
+
+
+<span class="c1">#y = network.getTrajectory() </span>
+
+<span class="c1">#p = np.array(  [2**i for i in range(ngenes-1, -1, -1) ] )  </span>
+
+<span class="c1">#states = [ yi @ p.T for yi in y ] </span>
+
+<span class="c1">#print( states )</span>
+
+<span class="c1">#print ( &quot; --- &quot; )</span>
+<span class="c1">#print(y)</span>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BNMPy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BNMPy.booleanNetwork</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, IlyaLab.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

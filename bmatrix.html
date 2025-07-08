@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>BNMPy.BMatrix &#8212; BNMPy 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=279e0f84" />
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="BNMPy.booleanNetwork" href="booleanNetwork.html" />
+    <link rel="prev" title="API" href="api.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="booleanNetwork.html" title="BNMPy.booleanNetwork"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BNMPy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" accesskey="U">API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BNMPy.BMatrix</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-BNMPy.BMatrix">
+<span id="bnmpy-bmatrix"></span><h1>BNMPy.BMatrix<a class="headerlink" href="#module-BNMPy.BMatrix" title="Link to this heading">¶</a></h1>
+<p>Resources for loading boolean networks from files (strings)</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.BMatrix.get_upstream_genes">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.BMatrix.</span></span><span class="sig-name descname"><span class="pre">get_upstream_genes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">equations</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/BMatrix.html#get_upstream_genes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.BMatrix.get_upstream_genes" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a string of gene names, space-separated, for each of the equations.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.BMatrix.load_network_from_file">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.BMatrix.</span></span><span class="sig-name descname"><span class="pre">load_network_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/BMatrix.html#load_network_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.BMatrix.load_network_from_file" title="Link to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Given a file representing a boolean network, this generates a BooleanNetwork object.</p>
+<p>Formatting:</p>
+</div></blockquote>
+<dl class="simple">
+<dt>gene = equation</dt><dd><ul class="simple">
+<li><p>all genes must have their own equation in a line (sometimes the equation is just A = A)</p></li>
+<li><p>each equation must have an equal sign and a space before and after it</p></li>
+<li><p>If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.BMatrix.load_network_from_string">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.BMatrix.</span></span><span class="sig-name descname"><span class="pre">load_network_from_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/BMatrix.html#load_network_from_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.BMatrix.load_network_from_string" title="Link to this definition">¶</a></dt>
+<dd><p>Given a string representing a boolean network, this generates a BooleanNetwork object.</p>
+<p>Formatting:</p>
+<ul class="simple">
+<li><p>all genes must have their own equation (sometimes the equation is just A = A)</p></li>
+<li><p>each equation must have an equal sign and a space before and after it</p></li>
+<li><p>If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.BMatrix.load_pbn_from_file">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.BMatrix.</span></span><span class="sig-name descname"><span class="pre">load_pbn_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/BMatrix.html#load_pbn_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.BMatrix.load_pbn_from_file" title="Link to this definition">¶</a></dt>
+<dd><p>Given a file representing a probabilistic boolean network, this generates a ProbabilisticBN object.</p>
+<p>File format example:
+x1 = (x1 | x2 | x3) &amp; (!x1 | x2 | x3), 0.6
+x1 = (x1 | x2 | x3) &amp; (x1 | !x2 | !x3) &amp; (!x1 | x2 | x3), 0.4
+x2 = (x1 | x2 | x3) &amp; (x1 | !x2 | !x3) &amp; (!x1 | !x2 | x3)
+x3 = (!x1 &amp; x2 &amp; x3) | (x1 &amp; !x2 &amp; x3) | (x1 &amp; x2 &amp; !x3) | (x1 &amp; x2 &amp; x3), 0.5
+x3 = (x1 &amp; x2 &amp; x3), 0.5</p>
+<p>Each line has format: node = boolean_function, probability
+The probability part can be omitted if there is only one function for that gene.
+The boolean_function can also be a constant value (0 or 1), meaning that the gene is set as mutated/perturbed</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.BMatrix.load_pbn_from_string">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.BMatrix.</span></span><span class="sig-name descname"><span class="pre">load_pbn_from_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/BMatrix.html#load_pbn_from_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.BMatrix.load_pbn_from_string" title="Link to this definition">¶</a></dt>
+<dd><p>Given a string representing a probabilistic boolean network, this generates a ProbabilisticBN object.</p>
+<p>String format should match the file format expected by load_pbn_from_file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.BMatrix.rename_nodes">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.BMatrix.</span></span><span class="sig-name descname"><span class="pre">rename_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapping</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/BMatrix.html#rename_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.BMatrix.rename_nodes" title="Link to this definition">¶</a></dt>
+<dd><p>Rename nodes in a boolean network based on a mapping.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">BNMPy.BMatrix</a><ul>
+<li><a class="reference internal" href="#BNMPy.BMatrix.get_upstream_genes"><code class="docutils literal notranslate"><span class="pre">get_upstream_genes()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.BMatrix.load_network_from_file"><code class="docutils literal notranslate"><span class="pre">load_network_from_file()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.BMatrix.load_network_from_string"><code class="docutils literal notranslate"><span class="pre">load_network_from_string()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.BMatrix.load_pbn_from_file"><code class="docutils literal notranslate"><span class="pre">load_pbn_from_file()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.BMatrix.load_pbn_from_string"><code class="docutils literal notranslate"><span class="pre">load_pbn_from_string()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.BMatrix.rename_nodes"><code class="docutils literal notranslate"><span class="pre">rename_nodes()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="api.html"
+                          title="previous chapter">API</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="booleanNetwork.html"
+                          title="next chapter">BNMPy.booleanNetwork</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bmatrix.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="booleanNetwork.html" title="BNMPy.booleanNetwork"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BNMPy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" >API</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BNMPy.BMatrix</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, IlyaLab.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

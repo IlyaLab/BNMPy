@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BNMPy.BMatrix &#8212; BNMPy 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=279e0f84" />
+    <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BNMPy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BNMPy.BMatrix</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for BNMPy.BMatrix</h1><div class="highlight"><pre>
+<span></span><span class="c1">## Created by Tazein on 1/29/24</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Resources for loading boolean networks from files (strings)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">product</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="c1">################## equations for simulation variables ##################</span>
+
+<span class="n">BUILT_INS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">,</span> <span class="s1">&#39;False&#39;</span><span class="p">}</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_equations</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">equations</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">equations</span> <span class="o">=</span> <span class="p">[</span><span class="n">equation</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">equations</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">equation</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">equations</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_gene_dict</span><span class="p">(</span><span class="n">equations</span><span class="p">):</span>
+    <span class="n">left_side</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">equations</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">left_side</span><span class="p">:</span>
+            <span class="n">left_side</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="n">genes</span> <span class="o">=</span> <span class="n">left_side</span>
+    
+    <span class="c1"># making a dictionary for the genes starting from 0</span>
+    <span class="n">gene_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">gene</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">gene</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">genes</span><span class="p">)}</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">gene_dict</span><span class="p">)</span>
+
+<div class="viewcode-block" id="get_upstream_genes">
+<a class="viewcode-back" href="../../bmatrix.html#BNMPy.BMatrix.get_upstream_genes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_upstream_genes</span><span class="p">(</span><span class="n">equations</span><span class="p">):</span> 
+    <span class="s2">&quot;Returns a string of gene names, space-separated, for each of the equations.&quot;</span>
+    <span class="c1">#get only the right side of the equations</span>
+    <span class="n">right_side</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">equations</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">right_side</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">functions</span> <span class="o">=</span> <span class="n">right_side</span>
+
+    <span class="c1">#getting rid of the Boolean characters ! | &amp; and ()</span>
+    <span class="n">characters_to_remove</span> <span class="o">=</span> <span class="s2">&quot;!|&amp;()&quot;</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">functions</span><span class="p">:</span>
+        <span class="n">translation_table</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">maketrans</span><span class="p">({</span><span class="n">c</span><span class="p">:</span> <span class="s1">&#39; &#39;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">characters_to_remove</span><span class="p">})</span>
+        <span class="n">cleaned_expression</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">translation_table</span><span class="p">)</span> 
+        <span class="n">tokens</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">cleaned_expression</span><span class="o">.</span><span class="n">split</span><span class="p">()))</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tokens</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BUILT_INS</span><span class="p">]</span>
+        <span class="n">cleaned_expression</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+        <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cleaned_expression</span><span class="p">)</span>
+    <span class="n">upstream_genes</span> <span class="o">=</span> <span class="n">values</span>
+
+    <span class="k">return</span><span class="p">(</span><span class="n">upstream_genes</span><span class="p">)</span></div>
+
+    
+<span class="k">def</span><span class="w"> </span><span class="nf">get_connectivity_matrix</span><span class="p">(</span><span class="n">equations</span><span class="p">,</span><span class="n">upstream_genes</span><span class="p">,</span><span class="n">gene_dict</span><span class="p">):</span>    
+    <span class="c1">#now we actually make the connectivity matrix</span>
+    <span class="n">result_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">upstream_genes</span><span class="p">:</span>
+        <span class="n">genes</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">genes</span><span class="p">])</span>
+        <span class="n">result_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">result_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result_list</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span> <span class="c1">#they are not all the same length</span>
+    
+    <span class="c1">#now we fix the length by adding the -1 (aka the padding) </span>
+    <span class="n">max_length</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">result_array</span><span class="p">)</span>
+    <span class="n">connectivity_matrix</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_length</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)),</span> <span class="n">constant_values</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">result_array</span><span class="p">]</span>
+    <span class="n">connectivity_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    
+    <span class="k">return</span><span class="p">(</span><span class="n">connectivity_matrix</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_truth_table</span><span class="p">(</span><span class="n">equations</span><span class="p">,</span><span class="n">upstream_genes</span><span class="p">,</span><span class="n">show_functions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    
+    <span class="k">if</span> <span class="n">show_functions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> 
+        <span class="n">show_functions</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1">#get only the right side of the equations</span>
+    <span class="n">right_side</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">equations</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">right_side</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">functions</span> <span class="o">=</span> <span class="n">right_side</span>
+
+    <span class="n">functions</span> <span class="o">=</span> <span class="p">[</span><span class="n">function</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;!&#39;</span><span class="p">,</span> <span class="s1">&#39; not &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">,</span> <span class="s1">&#39; or &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&amp;&#39;</span><span class="p">,</span><span class="s1">&#39; and &#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">functions</span><span class="p">]</span>
+        
+    <span class="n">truth</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">var1</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">equations</span><span class="p">)):</span>
+        <span class="n">function</span> <span class="o">=</span> <span class="n">functions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>   
+        <span class="k">if</span> <span class="n">show_functions</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+            
+        <span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="n">upstream_genes</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="c1">#get the genes in the expression (ex: FLT3)</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">combinations</span> <span class="o">=</span> <span class="n">product</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">repeat</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">))</span> <span class="c1">#gets all possiblities</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+    
+        <span class="k">for</span> <span class="n">combo</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">combo</span><span class="p">))</span>
+        
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">variables</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">function</span><span class="p">:</span> <span class="c1">#if the node is equal to itself (aka FLT3=FLT3)</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">variables</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">values</span><span class="p">)))</span> <span class="c1">#evaluates the equations</span>
+
+            <span class="n">var1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="c1">#adds the output to var1</span>
+        
+        <span class="n">truth</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">var1</span><span class="p">))</span>
+        <span class="n">var1</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">truth_table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span> <span class="c1">#they are not all the same length</span>
+
+    <span class="c1">#now we fix the length by adding the -1 (aka the padding) </span>
+    <span class="n">max_length</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">truth_table</span><span class="p">)</span>
+    <span class="n">truth_table</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_length</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)),</span> <span class="n">constant_values</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">truth_table</span><span class="p">]</span>
+    <span class="n">truth_table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">truth_table</span><span class="p">)</span>
+    
+    <span class="k">return</span><span class="p">(</span><span class="n">truth_table</span><span class="p">)</span>
+
+<span class="c1">################## knocking in/out genes after creating variables but before simulation ##################</span>
+
+<span class="c1">##can also use mutation_dict for perturbed_dict, just replace the file </span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_mutation_dict</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+    <span class="n">mutation_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">))</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span> <span class="c1">#there is no = sign</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;There is a formatting error: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Make sure that it is formatted with an equal sign. For example: FLT3 = 1&#39;</span><span class="p">)</span>
+                <span class="k">return</span>
+            
+            <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+            <span class="n">mutation_dict</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+    
+    <span class="k">return</span><span class="p">(</span><span class="n">mutation_dict</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_knocking_genes</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">mutation_dict</span><span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">gene_dict</span><span class="p">,</span> <span class="n">perturbed_genes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">perturbed_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">ngenes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gene_dict</span><span class="p">)</span>
+    <span class="n">mutated_connectivity_matrix</span> <span class="o">=</span> <span class="n">connectivity_matrix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Create a copy of connectivity_matrix for each iteration </span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">ngenes</span><span class="p">)</span>  <span class="c1"># Random initial state resets with every profile</span>
+
+    
+    <span class="k">if</span> <span class="n">perturbed_genes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> 
+        <span class="n">perturbed_genes</span> <span class="o">=</span> <span class="p">[]</span>
+        
+    <span class="k">if</span> <span class="n">perturbed_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">perturbed_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        
+    <span class="k">if</span> <span class="n">profile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="c1">#if there is a profile</span>
+        <span class="n">mutation_profile</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)))</span>  <span class="c1"># Removes any repeat values </span>
+        
+    <span class="k">if</span> <span class="n">profile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mutation_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1">#there are no mutation_dict (aka no mutations) </span>
+        <span class="n">mutation_profile</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            
+    <span class="k">if</span> <span class="n">perturbed_genes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="c1">#if there are perturbed genes</span>
+        <span class="n">perturbed_genes</span> <span class="o">=</span> <span class="n">perturbed_genes</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">perturbed_genes</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">perturbed_genes</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+        <span class="n">perturbed_genes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">perturbed_genes</span><span class="p">))</span>  <span class="c1"># Removes any repeat values</span>
+
+        
+    <span class="c1"># Setting that gene&#39;s value to wild value</span>
+    <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">mutation_dict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">gene</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">or</span> <span class="n">gene</span> <span class="o">==</span> <span class="s1">&#39;NA&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;no_mutation&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span> <span class="n">mutation_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>  <span class="p">)</span> <span class="p">:</span>
+                <span class="n">x0</span><span class="p">[</span><span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span> 
+            <span class="k">else</span> <span class="p">:</span>
+                <span class="n">x0</span><span class="p">[</span><span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Make the mutated_connectivity_matrix rows in mutation_profile all -1 </span>
+    <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">mutation_profile</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">gene</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">or</span> <span class="n">gene</span> <span class="o">==</span> <span class="s1">&#39;NA&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;no_mutation&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mutated_connectivity_matrix</span><span class="p">[[</span><span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]],</span> <span class="p">:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># Knock the connectivity_matrix to -1</span>
+            <span class="n">x0</span><span class="p">[</span><span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]]</span> <span class="o">=</span> <span class="n">mutation_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gene</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Setting that gene&#39;s value to mutation value</span>
+            
+    <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">perturbed_genes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gene</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;no perturbed genes in the simulation&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mutated_connectivity_matrix</span><span class="p">[[</span><span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]],</span> <span class="p">:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># Knock the connectivity_matrix to -1</span>
+            <span class="n">x0</span><span class="p">[</span><span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]]</span> <span class="o">=</span> <span class="n">perturbed_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gene</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Setting that gene&#39;s value to mutation value</span>
+            
+    <span class="k">return</span><span class="p">(</span><span class="n">mutated_connectivity_matrix</span><span class="p">,</span><span class="n">x0</span><span class="p">)</span>
+
+
+<span class="c1">################## equations for calculating phenotype and network ##################</span>
+
+<span class="c1">#getting the equations uses the same function (equations(file))</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_cal_upstream_genes</span><span class="p">(</span><span class="n">equations</span><span class="p">):</span>
+    <span class="n">right_side</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">equations</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">right_side</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">functions</span> <span class="o">=</span> <span class="n">right_side</span>
+
+    <span class="c1">#getting rid of the Boolean characters ! | &amp; and ()</span>
+    <span class="n">characters_to_remove</span> <span class="o">=</span> <span class="s2">&quot;!|&amp;()&quot;</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">functions</span><span class="p">:</span>
+        <span class="n">translation_table</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">maketrans</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">characters_to_remove</span><span class="p">)</span>
+        <span class="n">cleaned_expression</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">translation_table</span><span class="p">)</span>  
+        <span class="n">cleaned_expression</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">cleaned_expression</span><span class="o">.</span><span class="n">split</span><span class="p">())))</span>
+        <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cleaned_expression</span><span class="p">)</span>
+    <span class="n">cal_upstream_genes</span> <span class="o">=</span> <span class="n">values</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cal_upstream_genes</span><span class="p">)):</span>
+        <span class="n">cal_upstream_genes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">cal_upstream_genes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    
+    <span class="k">return</span> <span class="n">cal_upstream_genes</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_cal_functions</span><span class="p">(</span><span class="n">equations</span><span class="p">):</span>
+    <span class="n">right_side</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">equations</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">right_side</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">cal_functions</span> <span class="o">=</span> <span class="n">right_side</span>
+
+    <span class="n">cal_functions</span> <span class="o">=</span> <span class="p">[</span><span class="n">function</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;!&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&amp;&#39;</span><span class="p">,</span><span class="s1">&#39;+&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">cal_functions</span><span class="p">]</span>
+
+    <span class="n">characters_to_remove</span> <span class="o">=</span> <span class="s2">&quot;()&quot;</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">cal_functions</span><span class="p">:</span>
+        <span class="n">translation_table</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">maketrans</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">characters_to_remove</span><span class="p">)</span>
+        <span class="n">cleaned_expression</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">translation_table</span><span class="p">)</span>  
+        <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cleaned_expression</span><span class="p">)</span>
+        <span class="n">cal_functions</span> <span class="o">=</span> <span class="n">values</span>
+    
+    <span class="c1">#cleaning up the cal_functions format so it can be eval()</span>
+    <span class="n">cal_functions</span> <span class="o">=</span> <span class="p">[</span><span class="n">function</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; - &#39;</span><span class="p">,</span> <span class="s1">&#39; -&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">cal_functions</span><span class="p">]</span>
+    <span class="n">cal_functions</span> <span class="o">=</span> <span class="p">[</span><span class="n">function</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;- &#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">cal_functions</span><span class="p">]</span>
+    <span class="n">cal_functions</span> <span class="o">=</span> <span class="p">[</span><span class="n">function</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;- &#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">cal_functions</span><span class="p">]</span>
+    <span class="n">cal_functions</span> <span class="o">=</span> <span class="p">[</span><span class="n">function</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;  &#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">cal_functions</span><span class="p">]</span>
+
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">cal_functions</span><span class="p">:</span>
+        <span class="n">new_func</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(-\w+)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;(\1)&#39;</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span>
+        <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_func</span><span class="p">)</span>
+        <span class="n">cal_functions</span> <span class="o">=</span> <span class="n">values</span>
+        
+    <span class="k">return</span><span class="p">(</span><span class="n">cal_functions</span><span class="p">)</span>
+
+<span class="c1">#assumes that cal_functions == len(scores_dict)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_calculating_scores</span><span class="p">(</span><span class="n">network_traj</span><span class="p">,</span> <span class="n">cal_functions</span><span class="p">,</span> <span class="n">cal_upstream_genes</span><span class="p">,</span> <span class="n">gene_dict</span><span class="p">,</span> <span class="n">cal_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scores_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">scores_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">scores_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Apoptosis&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;Differentiation&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;Proliferation&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;Network&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+        
+    <span class="k">if</span> <span class="n">cal_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cal_range</span> <span class="o">=</span> <span class="n">network_traj</span><span class="p">[</span><span class="o">-</span><span class="mi">100000</span><span class="p">:]</span>
+    
+    <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Apoptosis&quot;</span><span class="p">,</span> <span class="s2">&quot;Differentiation&quot;</span><span class="p">,</span> <span class="s2">&quot;Proliferation&quot;</span><span class="p">,</span> <span class="s2">&quot;Network&quot;</span><span class="p">]</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cal_functions</span><span class="p">)):</span>
+        <span class="n">score_function</span> <span class="o">=</span> <span class="n">cal_functions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="n">cal_upstream_genes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># List to store scores for this iteration</span>
+
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cal_range</span><span class="p">:</span>
+            <span class="n">gene_values</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Clear gene_values for each row</span>
+            <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]]</span>
+                <span class="n">gene_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+            <span class="n">values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">gene_values</span><span class="p">))</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">score_function</span><span class="p">,</span> <span class="n">values</span><span class="p">))</span>
+
+            <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>  <span class="c1"># Append the score to the list for this iteration</span>
+
+        <span class="n">scores_dict</span><span class="p">[</span><span class="n">title</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">scores</span>
+        
+    <span class="c1"># Calculate the &#39;Network&#39; scores</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">Apoptosis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span> <span class="n">scores_dict</span><span class="p">[</span><span class="s1">&#39;Apoptosis&#39;</span><span class="p">]</span> <span class="p">)</span>
+    <span class="n">Differentiation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span> <span class="n">scores_dict</span><span class="p">[</span><span class="s1">&#39;Differentiation&#39;</span><span class="p">]</span> <span class="p">)</span>
+    <span class="n">Proliferation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span> <span class="n">scores_dict</span><span class="p">[</span><span class="s1">&#39;Proliferation&#39;</span><span class="p">]</span> <span class="p">)</span>
+    
+    <span class="n">final_scores_dict</span> <span class="o">=</span> <span class="p">{}</span> 
+    
+    <span class="n">final_scores_dict</span><span class="p">[</span><span class="s1">&#39;Apoptosis&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">Apoptosis</span>
+    <span class="n">final_scores_dict</span><span class="p">[</span><span class="s1">&#39;Differentiation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Differentiation</span>
+    <span class="n">final_scores_dict</span><span class="p">[</span><span class="s1">&#39;Proliferation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Proliferation</span>
+    <span class="c1">#for i in range(len(cal_range)): </span>
+    <span class="c1">#output = Proliferation[i] - (Differentiation[i] + Apoptosis[i])</span>
+    <span class="c1">#scores.append(output)</span>
+    
+    <span class="n">final_score</span> <span class="o">=</span> <span class="n">Proliferation</span> <span class="o">-</span> <span class="n">Differentiation</span> <span class="o">-</span> <span class="n">Apoptosis</span>
+    <span class="n">final_scores_dict</span><span class="p">[</span><span class="s1">&#39;Network&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_score</span> <span class="c1">#scores</span>
+    <span class="c1">#final_score = np.mean(scores_dict[&#39;Network&#39;])</span>
+    
+    <span class="k">return</span> <span class="p">(</span><span class="n">final_scores_dict</span><span class="p">,</span><span class="n">final_score</span><span class="p">)</span>
+
+<span class="c1">################## load BN/PBN from files/strings ##################</span>
+<div class="viewcode-block" id="load_network_from_file">
+<a class="viewcode-back" href="../../bmatrix.html#BNMPy.BMatrix.load_network_from_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_network_from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">initial_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a file representing a boolean network, this generates a BooleanNetwork object.</span>
+
+<span class="sd">    Formatting:</span>
+<span class="sd">   gene = equation</span>
+<span class="sd">    - all genes must have their own equation in a line (sometimes the equation is just A = A)</span>
+<span class="sd">    - each equation must have an equal sign and a space before and after it</span>
+<span class="sd">    - If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.booleanNetwork</span><span class="w"> </span><span class="kn">import</span> <span class="n">BooleanNetwork</span>
+    <span class="n">equations</span> <span class="o">=</span> <span class="n">get_equations</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">ngenes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span>
+    <span class="n">gene_dict</span> <span class="o">=</span> <span class="n">get_gene_dict</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span>
+    <span class="n">upstream_genes</span> <span class="o">=</span> <span class="n">get_upstream_genes</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span>
+    <span class="n">connectivity_matrix</span> <span class="o">=</span> <span class="n">get_connectivity_matrix</span><span class="p">(</span><span class="n">equations</span><span class="p">,</span> <span class="n">upstream_genes</span><span class="p">,</span> <span class="n">gene_dict</span><span class="p">)</span>
+    <span class="n">truth_table</span> <span class="o">=</span> <span class="n">get_truth_table</span><span class="p">(</span><span class="n">equations</span><span class="p">,</span> <span class="n">upstream_genes</span><span class="p">)</span>
+    
+    <span class="c1"># Initialize x0 array</span>
+    <span class="k">if</span> <span class="n">initial_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No initial state provided, using a random initial state&#39;</span><span class="p">)</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">ngenes</span><span class="p">)</span> <span class="c1">#random inital state </span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
+    
+    <span class="c1"># Handle constant values (0 or 1) in equations</span>
+    <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">equations</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+        <span class="n">gene</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        
+        <span class="c1"># Check if the equation is a constant value (0 or 1)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;0&#39;</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
+            <span class="n">gene_index</span> <span class="o">=</span> <span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span>
+            <span class="c1"># Set the gene&#39;s initial state to the constant value</span>
+            <span class="n">x0</span><span class="p">[</span><span class="n">gene_index</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="c1"># Set the connectivity matrix row to -1 to indicate it&#39;s a constant/perturbed gene</span>
+            <span class="n">connectivity_matrix</span><span class="p">[</span><span class="n">gene_index</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        
+    <span class="c1"># create a Boolean network object</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">BooleanNetwork</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">truth_table</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span>
+            <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">network</span></div>
+
+
+<div class="viewcode-block" id="load_network_from_string">
+<a class="viewcode-back" href="../../bmatrix.html#BNMPy.BMatrix.load_network_from_string">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_network_from_string</span><span class="p">(</span><span class="n">network_string</span><span class="p">,</span> <span class="n">initial_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a string representing a boolean network, this generates a BooleanNetwork object.</span>
+
+<span class="sd">    Formatting:</span>
+
+<span class="sd">    - all genes must have their own equation (sometimes the equation is just A = A)</span>
+<span class="sd">    - each equation must have an equal sign and a space before and after it</span>
+<span class="sd">    - If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.booleanNetwork</span><span class="w"> </span><span class="kn">import</span> <span class="n">BooleanNetwork</span>
+    <span class="n">equations</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">network_string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)]</span>
+    <span class="n">ngenes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span>
+    <span class="n">gene_dict</span> <span class="o">=</span> <span class="n">get_gene_dict</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span>
+    <span class="n">upstream_genes</span> <span class="o">=</span> <span class="n">get_upstream_genes</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span>
+    <span class="n">connectivity_matrix</span> <span class="o">=</span> <span class="n">get_connectivity_matrix</span><span class="p">(</span><span class="n">equations</span><span class="p">,</span> <span class="n">upstream_genes</span><span class="p">,</span> <span class="n">gene_dict</span><span class="p">)</span>
+    <span class="n">truth_table</span> <span class="o">=</span> <span class="n">get_truth_table</span><span class="p">(</span><span class="n">equations</span><span class="p">,</span> <span class="n">upstream_genes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">initial_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No initial state provided, using a random initial state&#39;</span><span class="p">)</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">ngenes</span><span class="p">)</span> <span class="c1">#random inital state </span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
+    
+    <span class="c1"># Handle constant values (0 or 1) in equations</span>
+    <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">equations</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+        <span class="n">gene</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        
+        <span class="c1"># Check if the equation is a constant value (0 or 1)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;0&#39;</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
+            <span class="n">gene_index</span> <span class="o">=</span> <span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span>
+            <span class="n">x0</span><span class="p">[</span><span class="n">gene_index</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">connectivity_matrix</span><span class="p">[</span><span class="n">gene_index</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    
+    <span class="n">network</span> <span class="o">=</span> <span class="n">BooleanNetwork</span><span class="p">(</span> <span class="n">ngenes</span> <span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">truth_table</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span>
+            <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">network</span></div>
+
+
+<div class="viewcode-block" id="load_pbn_from_file">
+<a class="viewcode-back" href="../../bmatrix.html#BNMPy.BMatrix.load_pbn_from_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_pbn_from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">initial_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a file representing a probabilistic boolean network, this generates a ProbabilisticBN object.</span>
+
+<span class="sd">    File format example:</span>
+<span class="sd">    x1 = (x1 | x2 | x3) &amp; (!x1 | x2 | x3), 0.6</span>
+<span class="sd">    x1 = (x1 | x2 | x3) &amp; (x1 | !x2 | !x3) &amp; (!x1 | x2 | x3), 0.4</span>
+<span class="sd">    x2 = (x1 | x2 | x3) &amp; (x1 | !x2 | !x3) &amp; (!x1 | !x2 | x3)</span>
+<span class="sd">    x3 = (!x1 &amp; x2 &amp; x3) | (x1 &amp; !x2 &amp; x3) | (x1 &amp; x2 &amp; !x3) | (x1 &amp; x2 &amp; x3), 0.5</span>
+<span class="sd">    x3 = (x1 &amp; x2 &amp; x3), 0.5</span>
+
+<span class="sd">    Each line has format: node = boolean_function, probability</span>
+<span class="sd">    The probability part can be omitted if there is only one function for that gene.</span>
+<span class="sd">    The boolean_function can also be a constant value (0 or 1), meaning that the gene is set as mutated/perturbed</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    filename : str</span>
+<span class="sd">        Path to the file containing the PBN definition</span>
+<span class="sd">    initial_state : array-like, optional</span>
+<span class="sd">        Initial values for each node. If None, random initial values are used.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    ProbabilisticBN</span>
+<span class="sd">        A probabilistic boolean network object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.PBN</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProbabilisticBN</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">gene_funcs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">gene_probs</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="c1"># Check if line contains probability</span>
+        <span class="k">if</span> <span class="s1">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="n">func_part</span><span class="p">,</span> <span class="n">prob_part</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">probability</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">prob_part</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">func_part</span> <span class="o">=</span> <span class="n">line</span>
+            <span class="n">probability</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Will be set to 1.0 later if it&#39;s the only function</span>
+        
+        <span class="k">if</span> <span class="s1">&#39;=&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">func_part</span><span class="p">:</span>
+            <span class="k">continue</span>
+            
+        <span class="n">gene</span><span class="p">,</span> <span class="n">equation</span> <span class="o">=</span> <span class="n">func_part</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">gene</span> <span class="o">=</span> <span class="n">gene</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">equation</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">gene</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gene_funcs</span><span class="p">:</span>
+            <span class="n">gene_funcs</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">gene_probs</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            
+        <span class="n">gene_funcs</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">equation</span><span class="p">)</span>
+        <span class="n">gene_probs</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">probability</span><span class="p">)</span>
+    
+    <span class="c1"># Validate and set probabilities</span>
+    <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">gene_funcs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gene_funcs</span><span class="p">[</span><span class="n">gene</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># If there&#39;s only one function, set probability to 1.0 if not specified</span>
+            <span class="k">if</span> <span class="n">gene_probs</span><span class="p">[</span><span class="n">gene</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">gene_probs</span><span class="p">[</span><span class="n">gene</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Check if all probabilities are specified</span>
+            <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">gene_probs</span><span class="p">[</span><span class="n">gene</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Gene </span><span class="si">{</span><span class="n">gene</span><span class="si">}</span><span class="s2"> has multiple functions but not all have probabilities specified&quot;</span><span class="p">)</span>
+            
+            <span class="c1"># Check if probabilities sum to 1</span>
+            <span class="n">prob_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">gene_probs</span><span class="p">[</span><span class="n">gene</span><span class="p">])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prob_sum</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Probabilities for gene </span><span class="si">{</span><span class="n">gene</span><span class="si">}</span><span class="s2"> sum to </span><span class="si">{</span><span class="n">prob_sum</span><span class="si">}</span><span class="s2">, not 1.0&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Create a mapping of gene names to indices</span>
+    <span class="n">gene_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">gene</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">gene</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gene_funcs</span><span class="o">.</span><span class="n">keys</span><span class="p">())}</span>
+    <span class="n">ngenes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gene_dict</span><span class="p">)</span>
+    
+    <span class="c1"># Create array for number of functions per node</span>
+    <span class="n">nf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">gene</span><span class="p">,</span> <span class="n">funcs</span> <span class="ow">in</span> <span class="n">gene_funcs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span>
+        <span class="n">nf</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">funcs</span><span class="p">)</span>
+    
+    <span class="c1"># Create probability matrix</span>
+    <span class="n">max_funcs</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">nf</span><span class="p">)</span>
+    <span class="n">cij</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">max_funcs</span><span class="p">),</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">gene</span><span class="p">,</span> <span class="n">probs</span> <span class="ow">in</span> <span class="n">gene_probs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">prob</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">probs</span><span class="p">):</span>
+            <span class="n">cij</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">prob</span>
+    
+    <span class="c1"># Process each function to get connectivity and truth tables</span>
+    <span class="n">all_equations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">gene_funcs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">gene_funcs</span><span class="p">[</span><span class="n">gene</span><span class="p">]:</span>
+            <span class="n">all_equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">gene</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="n">upstream_genes</span> <span class="o">=</span> <span class="n">get_upstream_genes</span><span class="p">(</span><span class="n">all_equations</span><span class="p">)</span>
+    
+    <span class="c1"># Create connectivity matrix and truth table</span>
+    <span class="n">connectivity_matrix</span> <span class="o">=</span> <span class="n">get_connectivity_matrix</span><span class="p">(</span><span class="n">all_equations</span><span class="p">,</span> <span class="n">upstream_genes</span><span class="p">,</span> <span class="n">gene_dict</span><span class="p">)</span>
+    <span class="n">truth_table</span> <span class="o">=</span> <span class="n">get_truth_table</span><span class="p">(</span><span class="n">all_equations</span><span class="p">,</span> <span class="n">upstream_genes</span><span class="p">)</span>
+    
+    <span class="c1"># Set initial state</span>
+    <span class="k">if</span> <span class="n">initial_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No initial state provided, using a random initial state&#39;</span><span class="p">)</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">ngenes</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
+    
+    <span class="c1"># Handle constant values (0 or 1) in equations</span>
+    <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">all_equations</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+        <span class="n">gene</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        
+        <span class="c1"># Check if the equation is a constant value (0 or 1)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;0&#39;</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
+            <span class="n">gene_index</span> <span class="o">=</span> <span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span>
+            <span class="c1"># Set the gene&#39;s initial state to the constant value</span>
+            <span class="n">x0</span><span class="p">[</span><span class="n">gene_index</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="c1"># Set the connectivity matrix row to -1 to indicate it&#39;s a constant</span>
+            <span class="n">connectivity_matrix</span><span class="p">[</span><span class="n">gene_index</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    
+    <span class="c1"># Create and return the PBN</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">ProbabilisticBN</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">nf</span><span class="p">,</span> <span class="n">truth_table</span><span class="p">,</span> <span class="n">cij</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">)</span>
+    <span class="n">network</span><span class="o">.</span><span class="n">gene_functions</span> <span class="o">=</span> <span class="n">gene_funcs</span>  <span class="c1"># Store the function strings</span>
+    <span class="k">return</span> <span class="n">network</span></div>
+
+
+<div class="viewcode-block" id="load_pbn_from_string">
+<a class="viewcode-back" href="../../bmatrix.html#BNMPy.BMatrix.load_pbn_from_string">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_pbn_from_string</span><span class="p">(</span><span class="n">network_string</span><span class="p">,</span> <span class="n">initial_state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a string representing a probabilistic boolean network, this generates a ProbabilisticBN object.</span>
+<span class="sd">    </span>
+<span class="sd">    String format should match the file format expected by load_pbn_from_file.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    network_string : str</span>
+<span class="sd">        String containing the PBN definition</span>
+<span class="sd">    initial_state : array-like, optional</span>
+<span class="sd">        Initial values for each node. If None, random initial values are used.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    ProbabilisticBN</span>
+<span class="sd">        A probabilistic boolean network object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.PBN</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProbabilisticBN</span>
+    
+    <span class="c1"># Split the string into lines</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">network_string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)]</span>
+    
+    <span class="c1"># Parse gene names and organize functions by gene</span>
+    <span class="n">gene_funcs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">gene_probs</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="c1"># Skip empty lines</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">continue</span>
+            
+        <span class="c1"># Split by the last comma to separate function and probability</span>
+        <span class="c1"># Check if line contains probability</span>
+        <span class="k">if</span> <span class="s1">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="n">func_part</span><span class="p">,</span> <span class="n">prob_part</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">probability</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">prob_part</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">func_part</span> <span class="o">=</span> <span class="n">line</span>
+            <span class="n">probability</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Will be set to 1.0 later if it&#39;s the only function</span>
+        
+        <span class="k">if</span> <span class="s1">&#39;=&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">func_part</span><span class="p">:</span>
+            <span class="k">continue</span>
+            
+        <span class="n">gene</span><span class="p">,</span> <span class="n">equation</span> <span class="o">=</span> <span class="n">func_part</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">gene</span> <span class="o">=</span> <span class="n">gene</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">equation</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">gene</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gene_funcs</span><span class="p">:</span>
+            <span class="n">gene_funcs</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">gene_probs</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            
+        <span class="n">gene_funcs</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">equation</span><span class="p">)</span>
+        <span class="n">gene_probs</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">probability</span><span class="p">)</span>
+
+    <span class="c1"># Validate and set probabilities</span>
+    <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">gene_funcs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gene_funcs</span><span class="p">[</span><span class="n">gene</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># If there&#39;s only one function, set probability to 1.0 if not specified</span>
+            <span class="k">if</span> <span class="n">gene_probs</span><span class="p">[</span><span class="n">gene</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">gene_probs</span><span class="p">[</span><span class="n">gene</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Check if all probabilities are specified</span>
+            <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">gene_probs</span><span class="p">[</span><span class="n">gene</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Gene </span><span class="si">{</span><span class="n">gene</span><span class="si">}</span><span class="s2"> has multiple functions but not all have probabilities specified&quot;</span><span class="p">)</span>
+            
+            <span class="c1"># Check if probabilities sum to 1</span>
+            <span class="n">prob_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">gene_probs</span><span class="p">[</span><span class="n">gene</span><span class="p">])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prob_sum</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Probabilities for gene </span><span class="si">{</span><span class="n">gene</span><span class="si">}</span><span class="s2"> sum to </span><span class="si">{</span><span class="n">prob_sum</span><span class="si">}</span><span class="s2">, not 1.0&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create a mapping of gene names to indices</span>
+    <span class="n">gene_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">gene</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">gene</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gene_funcs</span><span class="o">.</span><span class="n">keys</span><span class="p">())}</span>
+    <span class="n">ngenes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gene_dict</span><span class="p">)</span>
+    
+    <span class="c1"># Create array for number of functions per node</span>
+    <span class="n">nf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">gene</span><span class="p">,</span> <span class="n">funcs</span> <span class="ow">in</span> <span class="n">gene_funcs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span>
+        <span class="n">nf</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">funcs</span><span class="p">)</span>
+    
+    <span class="c1"># Create probability matrix</span>
+    <span class="n">max_funcs</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">nf</span><span class="p">)</span>
+    <span class="n">cij</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">max_funcs</span><span class="p">),</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">gene</span><span class="p">,</span> <span class="n">probs</span> <span class="ow">in</span> <span class="n">gene_probs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">prob</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">probs</span><span class="p">):</span>
+            <span class="n">cij</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">prob</span>
+    
+    <span class="c1"># Process each function to get connectivity and truth tables</span>
+    <span class="n">all_equations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">gene_funcs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">gene_funcs</span><span class="p">[</span><span class="n">gene</span><span class="p">]:</span>
+            <span class="n">all_equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">gene</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="n">upstream_genes</span> <span class="o">=</span> <span class="n">get_upstream_genes</span><span class="p">(</span><span class="n">all_equations</span><span class="p">)</span>
+    
+    <span class="c1"># Create connectivity matrix and truth table</span>
+    <span class="n">connectivity_matrix</span> <span class="o">=</span> <span class="n">get_connectivity_matrix</span><span class="p">(</span><span class="n">all_equations</span><span class="p">,</span> <span class="n">upstream_genes</span><span class="p">,</span> <span class="n">gene_dict</span><span class="p">)</span>
+    <span class="n">truth_table</span> <span class="o">=</span> <span class="n">get_truth_table</span><span class="p">(</span><span class="n">all_equations</span><span class="p">,</span> <span class="n">upstream_genes</span><span class="p">)</span>
+    
+    <span class="c1"># Set initial state</span>
+    <span class="k">if</span> <span class="n">initial_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No initial state provided, using a random initial state&#39;</span><span class="p">)</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">ngenes</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
+    
+    <span class="c1"># Handle constant values (0 or 1) in equations</span>
+    <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">all_equations</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+        <span class="n">gene</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        
+        <span class="c1"># Check if the equation is a constant value (0 or 1)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;0&#39;</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
+            <span class="n">gene_index</span> <span class="o">=</span> <span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span>
+            <span class="n">x0</span><span class="p">[</span><span class="n">gene_index</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">connectivity_matrix</span><span class="p">[</span><span class="n">gene_index</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    
+    <span class="c1"># Create and return the PBN</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">ProbabilisticBN</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">nf</span><span class="p">,</span> <span class="n">truth_table</span><span class="p">,</span> <span class="n">cij</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">)</span>
+    <span class="n">network</span><span class="o">.</span><span class="n">gene_functions</span> <span class="o">=</span> <span class="n">gene_funcs</span>  <span class="c1"># Store the function strings</span>
+    <span class="k">return</span> <span class="n">network</span></div>
+
+
+<div class="viewcode-block" id="rename_nodes">
+<a class="viewcode-back" href="../../bmatrix.html#BNMPy.BMatrix.rename_nodes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rename_nodes</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">mapping</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rename nodes in a boolean network based on a mapping.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    network : str</span>
+<span class="sd">        Network definition as file path or string</span>
+<span class="sd">    mapping : str or dict</span>
+<span class="sd">        Excel file path with &#39;Node&#39; and &#39;NewName&#39; columns, or dictionary with</span>
+<span class="sd">        original names as keys and new names as values</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    str</span>
+<span class="sd">        Updated network string with renamed nodes and expanded complexes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Load network from file if needed</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">network</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">network_string</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">network_string</span> <span class="o">=</span> <span class="n">network</span>
+
+    <span class="c1"># Process mapping input - either file or dictionary</span>
+    <span class="n">node_mapping</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">complex_nodes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">single_node_mapping</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">mapping_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">mapping</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">mapping_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">original_node</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Node&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">new_name</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;NewName&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">new_name</span><span class="p">):</span>
+                <span class="n">new_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">original_node</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">new_name</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="s1">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">new_name</span><span class="p">:</span>
+                <span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="n">comp</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">new_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">comp</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+                <span class="n">complex_nodes</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_name</span><span class="p">]</span>
+                <span class="n">single_node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_name</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">original_node</span><span class="p">,</span> <span class="n">new_name</span> <span class="ow">in</span> <span class="n">mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">original_node</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">original_node</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">original_node</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">new_name</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+                <span class="n">complex_nodes</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">new_name</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="s1">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">new_name</span><span class="p">:</span>
+                    <span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="n">comp</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">new_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">comp</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+                    <span class="n">complex_nodes</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_name</span><span class="p">]</span>
+                    <span class="n">single_node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_name</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;mapping must be either a file path or a dictionary&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Parse original network string into equations, ignore blank lines</span>
+    <span class="n">original_equations</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">network_string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="n">equation_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">eq</span> <span class="ow">in</span> <span class="n">original_equations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;=&#39;</span> <span class="ow">in</span> <span class="n">eq</span><span class="p">:</span>
+            <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">left</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">rule</span> <span class="o">=</span> <span class="n">right</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">rule</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">equation_dict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">rule</span>
+
+    <span class="n">new_equations</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">original_node</span><span class="p">,</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">equation_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">new_rule</span> <span class="o">=</span> <span class="n">rule</span>
+        <span class="c1"># Replace complexes</span>
+        <span class="k">for</span> <span class="n">complex_node</span><span class="p">,</span> <span class="n">components</span> <span class="ow">in</span> <span class="n">complex_nodes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">complex_node</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">complex_node</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span>
+            <span class="n">replacement</span> <span class="o">=</span> <span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="s1">&#39; &amp; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">components</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span>
+            <span class="n">new_rule</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">replacement</span><span class="p">,</span> <span class="n">new_rule</span><span class="p">)</span>
+        <span class="c1"># Replace single nodes</span>
+        <span class="k">for</span> <span class="n">old_node</span><span class="p">,</span> <span class="n">new_node</span> <span class="ow">in</span> <span class="n">single_node_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">old_node</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">new_node</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">old_node</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span>
+            <span class="n">new_rule</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">new_node</span><span class="p">,</span> <span class="n">new_rule</span><span class="p">)</span>
+        <span class="c1"># Left side</span>
+        <span class="k">if</span> <span class="n">original_node</span> <span class="ow">in</span> <span class="n">node_mapping</span><span class="p">:</span>
+            <span class="n">new_nodes</span> <span class="o">=</span> <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">new_node</span> <span class="ow">in</span> <span class="n">new_nodes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">new_node</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">new_equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_node</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">new_rule</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">original_node</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">new_rule</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_equations</span><span class="p">)</span></div>
+
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BNMPy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BNMPy.BMatrix</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, IlyaLab.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

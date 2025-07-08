@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BNMPy.steady_state &#8212; BNMPy 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=279e0f84" />
+    <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BNMPy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BNMPy.steady_state</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for BNMPy.steady_state</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
+
+
+<div class="viewcode-block" id="SteadyStateCalculator">
+<a class="viewcode-back" href="../../steady_state.html#BNMPy.steady_state.SteadyStateCalculator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SteadyStateCalculator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Steady-state calculation for Boolean and Probabilistic Boolean Network</span>
+<span class="sd">    Supports both Two-State Markov Chain (TSMC) and Monte Carlo methods</span>
+<span class="sd">    Reference: pbnStationary_TS.m from optPBN (Trairatphisan et al. 2014)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span> <span class="o">=</span> <span class="n">network</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">N</span>  <span class="c1"># Number of nodes</span>
+        
+        <span class="c1"># Extract network properties based on type</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="s1">&#39;cij&#39;</span><span class="p">):</span>  <span class="c1"># ProbabilisticBN</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_pbn</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">varF</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">varF</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nf</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">nf</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">F</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">F</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cij</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">cij</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">K</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cumsum</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">cumsum</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Nf</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">Nf</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># BooleanNetwork</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_pbn</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">varF</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">varF</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">F</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">F</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">K</span>
+            <span class="c1"># Convert to PBN-like format for unified processing</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cij</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cumsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Nf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span>
+            
+        <span class="c1"># Identify input nodes (constant or self-dependent only)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identify_input_nodes</span><span class="p">()</span>
+        
+        <span class="c1"># Store original network state for restoration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_nodes</span> <span class="o">=</span> <span class="kc">None</span>
+        
+    <span class="k">def</span><span class="w"> </span><span class="nf">_identify_input_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Identify input nodes:</span>
+<span class="sd">        - sum(nf*nv) == 0 (no inputs) AND not a knockdown node</span>
+<span class="sd">        - sum(nf*nv) == 1 and self-dependent (self-dependent only) AND not a knockdown node</span>
+
+<span class="sd">        These will not be perturbed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">input_indices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">running_index</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nf</span><span class="p">)):</span>
+            <span class="n">nfnv</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nf</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span> <span class="c1"># for each function/node</span>
+                <span class="c1"># Calculate nf[i] * nv[j] equivalent</span>
+                <span class="n">func_idx</span> <span class="o">=</span> <span class="n">running_index</span> <span class="o">+</span> <span class="n">j</span>
+                <span class="k">if</span> <span class="n">func_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">):</span>
+                    <span class="n">nfnv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">func_idx</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">nfnv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            
+            <span class="n">nfnv_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">nfnv</span><span class="p">)</span>
+            
+            <span class="c1"># Check if this is a knockdown node</span>
+            <span class="n">is_knockdown</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">,</span> <span class="s1">&#39;knockdown_nodes&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">knockdown_nodes</span>
+            
+            <span class="c1"># Check if input: sum=0 (no inputs) or sum=1 and self-dependent</span>
+            <span class="c1"># exclude knockdown nodes</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_knockdown</span> <span class="ow">and</span> <span class="p">(</span><span class="n">nfnv_sum</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="p">(</span><span class="n">nfnv_sum</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_self_dependent</span><span class="p">(</span><span class="n">i</span><span class="p">))):</span>
+                <span class="n">input_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                
+            <span class="n">running_index</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            
+        <span class="k">return</span> <span class="n">input_indices</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_self_dependent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if a node depends only on itself&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_pbn</span><span class="p">:</span>
+            <span class="n">func_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cumsum</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span>
+            <span class="n">func_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cumsum</span><span class="p">[</span><span class="n">node_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">func_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">func_start</span><span class="p">,</span> <span class="n">func_end</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">func_idx</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> 
+                    <span class="bp">self</span><span class="o">.</span><span class="n">varF</span><span class="p">[</span><span class="n">func_idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">node_idx</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> 
+                <span class="bp">self</span><span class="o">.</span><span class="n">varF</span><span class="p">[</span><span class="n">node_idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">node_idx</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    
+<div class="viewcode-block" id="SteadyStateCalculator.compute_steady_state">
+<a class="viewcode-back" href="../../steady_state.html#BNMPy.steady_state.SteadyStateCalculator.compute_steady_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_steady_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;tsmc&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        steady-state calculation</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        method : str</span>
+<span class="sd">            &#39;tsmc&#39; for Two-State Markov Chain or &#39;monte_carlo&#39; for Monte Carlo</span>
+<span class="sd">        **kwargs : dict</span>
+<span class="sd">            Method-specific parameters</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        np.ndarray : Steady-state probabilities for each node</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;tsmc&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_stationary_tsmc</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;monte_carlo&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_stationary_mc</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown method: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">. Use &#39;tsmc&#39; or &#39;monte_carlo&#39;&quot;</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="SteadyStateCalculator.compute_stationary_tsmc">
+<a class="viewcode-back" href="../../steady_state.html#BNMPy.steady_state.SteadyStateCalculator.compute_stationary_tsmc">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_stationary_tsmc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                               <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">,</span>
+                               <span class="n">r</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.025</span><span class="p">,</span> 
+                               <span class="n">s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
+                               <span class="n">p_noise</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                               <span class="n">p_mir</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">,</span>
+                               <span class="n">initial_nsteps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+                               <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span>
+                               <span class="n">freeze_self_loop</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Two-State Markov Chain steady-state calculation</span>
+<span class="sd">        In addition to the original function, handle input nodes and constant nodes</span>
+<span class="sd">        </span>
+<span class="sd">        Ref: pbnStationary_TS.m Approach 1</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        - `epsilon` (float, default=0.001): Range of transition probability (smaller = more accurate)</span>
+<span class="sd">        - `r` (float, default=0.025): Range of accuracy - most sensitive parameter (smaller = more accurate)</span>
+<span class="sd">        - `s` (float, default=0.95): Probability of accuracy (closer to 1 = more confident)</span>
+<span class="sd">        - `p_noise` (float, default=0): Noise probability for Monte Carlo method</span>
+<span class="sd">        - `p_mir` (float, default=0.001): Perturbation probability (Miranda-Parga scheme)</span>
+<span class="sd">        - `initial_nsteps` (int, default=100): Initial number of simulation steps</span>
+<span class="sd">        - `max_iterations` (int, default=500): Maximum convergence iterations</span>
+<span class="sd">        - `freeze_self_loop` (bool, default=False): Freeze self-loop nodes (constant nodes)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Store original state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_network_state</span><span class="p">()</span>
+        <span class="n">orig_input_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">freeze_self_loop</span><span class="p">:</span>
+            <span class="c1"># strip out nodes that are &quot;input&quot; only because of A=A</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">orig_input_idx</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_self_dependent</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span>
+        
+        <span class="c1"># Initialize parameters</span>
+        <span class="n">m0</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># burn-in steps</span>
+        <span class="n">nsteps</span> <span class="o">=</span> <span class="n">initial_nsteps</span>
+        <span class="n">N_memory</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">m0_memory</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="c1"># Track all measured nodes except input for convergence</span>
+        <span class="n">opt_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">opt_states</span><span class="p">:</span>
+            <span class="c1"># All nodes are inputs/constants</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="n">N_collect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">opt_states</span><span class="p">))</span>
+        <span class="n">m0_collect</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">opt_states</span><span class="p">))</span>
+        
+        <span class="n">counting</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">y_kept</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">Collection</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_kept</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">nsteps</span> <span class="ow">and</span> <span class="n">counting</span> <span class="o">&lt;=</span> <span class="n">max_iterations</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">counting</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># First simulation round</span>
+                <span class="n">Collection</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">N_collect</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">m0_collect</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">N_memory</span><span class="p">,</span> <span class="n">m0</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">])</span>
+                
+                <span class="c1"># Initial condition</span>
+                <span class="n">initial_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="p">:</span>
+                        <span class="n">initial_state</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">)</span>
+            
+                <span class="c1"># Run simulation</span>
+                <span class="n">y_trajectory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_tsmc_simulation</span><span class="p">(</span><span class="n">initial_state</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">,</span> <span class="n">p_mir</span><span class="p">,</span> <span class="n">p_noise</span><span class="p">)</span>
+                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Continue from last state</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_kept</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">initial_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_kept</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">initial_state</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+                
+                <span class="c1"># Run additional steps</span>
+                <span class="n">remaining_steps</span> <span class="o">=</span> <span class="n">nsteps</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_kept</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">y_trajectory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_tsmc_simulation</span><span class="p">(</span><span class="n">initial_state</span><span class="p">,</span> <span class="n">remaining_steps</span><span class="p">,</span> <span class="n">p_mir</span><span class="p">,</span> <span class="n">p_noise</span><span class="p">)</span>
+            
+            <span class="c1"># Append new trajectory (excluding initial state)</span>
+            <span class="k">if</span> <span class="n">counting</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">y_kept</span> <span class="o">=</span> <span class="n">y_trajectory</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">y_kept</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">y_trajectory</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            
+            <span class="c1"># Convert to numpy array for analysis</span>
+            <span class="n">y_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_kept</span><span class="p">)</span>
+            
+            <span class="c1"># Calculate required nsteps and m0 using marginal distribution analysis</span>
+            <span class="n">nsteps</span><span class="p">,</span> <span class="n">m0</span><span class="p">,</span> <span class="n">Collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_two_state_mc_marg_dist</span><span class="p">(</span>
+                <span class="n">y_array</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">,</span> <span class="n">m0</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">opt_states</span><span class="p">,</span> 
+                <span class="n">Collection</span><span class="p">,</span> <span class="n">N_memory</span><span class="p">,</span> <span class="n">m0_memory</span><span class="p">,</span> <span class="n">N_collect</span><span class="p">,</span> <span class="n">m0_collect</span>
+            <span class="p">)</span>
+            
+            <span class="n">counting</span> <span class="o">+=</span> <span class="mi">1</span>
+            
+        <span class="k">if</span> <span class="n">counting</span> <span class="o">&gt;</span> <span class="n">max_iterations</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TSMC did not converge after </span><span class="si">{</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2"> iterations&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Calculate final steady-state probabilities</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_kept</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">y_final</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_kept</span><span class="p">)</span>
+            <span class="n">steady_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+            
+            <span class="c1"># For input nodes, use their constant value</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="p">:</span>
+                <span class="n">steady_state</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            
+            <span class="c1"># For knockdown nodes, calculate based on their efficacy</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="p">:</span>
+                    <span class="c1"># For all non-input nodes (including knockdowns), use trajectory average</span>
+                    <span class="n">steady_state</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y_final</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Fallback to Monte Carlo if TSMC fails</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;TSMC failed, falling back to Monte Carlo&quot;</span><span class="p">)</span>
+            <span class="n">steady_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_stationary_mc</span><span class="p">()</span>
+        
+        <span class="c1"># Restore original state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_network_state</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span> <span class="o">=</span> <span class="n">orig_input_idx</span>
+        <span class="k">return</span> <span class="n">steady_state</span></div>
+
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_tsmc_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_state</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">p_mir</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">p_noise</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run TSMC simulation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nsteps</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+        <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_state</span>
+        
+        <span class="c1"># Set initial state in network</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">setInitialValues</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nsteps</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">p_noise</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">trajectory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">update_noise</span><span class="p">(</span><span class="n">p_noise</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Single step</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">trajectory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Single step</span>
+            <span class="n">y_next</span> <span class="o">=</span> <span class="n">trajectory</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Get the updated state</span>
+            
+            <span class="c1"># Apply Miranda perturbation (but not to input nodes)</span>
+            <span class="k">if</span> <span class="n">p_mir</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">pert</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">p_mir</span>
+                <span class="n">pert</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Don&#39;t perturb inputs</span>
+                <span class="n">y_next</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">y_next</span> <span class="o">+</span> <span class="n">pert</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+                
+                <span class="c1"># Update network state with perturbation</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">setInitialValues</span><span class="p">(</span><span class="n">y_next</span><span class="p">)</span>
+            
+            <span class="n">y</span><span class="p">[</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_next</span>
+            
+        <span class="k">return</span> <span class="n">y</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_two_state_mc_marg_dist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">m0</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> 
+                               <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">opt_states</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+                               <span class="n">Collection</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span> <span class="n">N_memory</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">m0_memory</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                               <span class="n">N_collect</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">m0_collect</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Two-State Markov Chain marginal distribution analysis</span>
+<span class="sd">        In addition to the original function, handle constant/deterministic nodes</span>
+<span class="sd">        </span>
+<span class="sd">        Ref: TwoStateMC_MargDist.m</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">norm</span>
+        
+        <span class="k">for</span> <span class="n">counter</span><span class="p">,</span> <span class="n">state_idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">opt_states</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">m0</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">continue</span>
+                
+            <span class="n">y_current</span> <span class="o">=</span> <span class="n">y</span><span class="p">[:,</span> <span class="n">state_idx</span><span class="p">]</span>
+            
+            <span class="c1"># Calculate transition counts</span>
+            <span class="n">y_crosstab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">y_current</span><span class="p">[</span><span class="n">m0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">y_current</span><span class="p">[</span><span class="n">m0</span><span class="o">+</span><span class="mi">1</span><span class="p">:]])</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_crosstab</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+                
+            <span class="n">pre1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_crosstab</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+            
+            <span class="n">counts</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_crosstab</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">y_crosstab</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">counts</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">pre1</span> <span class="o">-</span> <span class="n">counts</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">counts</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">y_crosstab</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_crosstab</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">counts</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_crosstab</span><span class="p">)</span> <span class="o">-</span> <span class="n">counts</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">counts</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">counts</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+            
+            <span class="c1"># Calculate transition probabilities</span>
+            <span class="n">row_sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">row_sums</span><span class="p">[</span><span class="n">row_sums</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Avoid division by zero</span>
+            <span class="n">pp</span> <span class="o">=</span> <span class="n">counts</span> <span class="o">/</span> <span class="n">row_sums</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+            
+            <span class="c1"># Extract alpha and beta</span>
+            <span class="n">alpha</span> <span class="o">=</span> <span class="n">pp</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">row_sums</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="n">pp</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">row_sums</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+            
+            <span class="c1"># Calculate m0 and N</span>
+            <span class="k">if</span> <span class="n">alpha</span> <span class="o">+</span> <span class="n">beta</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+                <span class="n">m0_temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">epsilon</span> <span class="o">*</span> <span class="p">(</span><span class="n">alpha</span> <span class="o">+</span> <span class="n">beta</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">-</span> <span class="n">beta</span><span class="p">))</span>
+                <span class="n">N_temp</span> <span class="o">=</span> <span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span> <span class="o">/</span> 
+                         <span class="p">(</span><span class="n">alpha</span> <span class="o">+</span> <span class="n">beta</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="n">r</span> <span class="o">/</span> <span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">s</span><span class="p">)))</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+                
+                <span class="n">m0_collect</span><span class="p">[</span><span class="n">counter</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">m0_temp</span><span class="p">))</span>
+                <span class="n">N_collect</span><span class="p">[</span><span class="n">counter</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N_temp</span><span class="p">)</span>
+            
+        <span class="c1"># Update memory values</span>
+        <span class="n">N_memory</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">N_collect</span><span class="p">),</span> <span class="n">N_memory</span><span class="p">)</span>
+        <span class="n">m0_memory</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">m0_collect</span><span class="p">),</span> <span class="n">m0_memory</span><span class="p">)</span>
+        
+        <span class="c1"># Update nsteps and m0 if needed</span>
+        <span class="k">if</span> <span class="n">nsteps</span> <span class="o">&lt;</span> <span class="n">N_memory</span><span class="p">:</span>
+            <span class="n">nsteps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">N_memory</span><span class="p">))</span>
+            <span class="n">m0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">m0_memory</span><span class="p">))</span>
+            
+        <span class="c1"># Collect results</span>
+        <span class="n">Collection</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">N_collect</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">m0_collect</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">N_memory</span><span class="p">,</span> <span class="n">m0</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">])</span>
+        
+        <span class="k">return</span> <span class="n">nsteps</span><span class="p">,</span> <span class="n">m0</span><span class="p">,</span> <span class="n">Collection</span>
+    
+<div class="viewcode-block" id="SteadyStateCalculator.compute_stationary_mc">
+<a class="viewcode-back" href="../../steady_state.html#BNMPy.steady_state.SteadyStateCalculator.compute_stationary_mc">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_stationary_mc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                             <span class="n">n_runs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> 
+                             <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+                             <span class="n">p_noise</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Monte Carlo steady-state calculation, handle input nodes and constant nodes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Store original state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_network_state</span><span class="p">()</span>
+        
+        <span class="n">steady_states</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_runs</span><span class="p">):</span>
+            <span class="c1"># Random initial state</span>
+            <span class="n">initial_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="p">:</span>
+                    <span class="n">initial_state</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">setInitialValues</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
+            
+            <span class="c1"># Run simulation</span>
+            <span class="n">trajectory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">update_noise</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p_noise</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="n">n_steps</span><span class="p">)</span>
+            
+            <span class="c1"># Take second half as steady state</span>
+            <span class="n">steady_portion</span> <span class="o">=</span> <span class="n">trajectory</span><span class="p">[</span><span class="n">n_steps</span><span class="o">//</span><span class="mi">2</span><span class="p">:]</span>
+            <span class="n">mean_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">steady_portion</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">steady_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean_state</span><span class="p">)</span>
+        
+        <span class="c1"># Restore original state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_network_state</span><span class="p">()</span>
+        
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">steady_states</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="SteadyStateCalculator.set_experimental_conditions">
+<a class="viewcode-back" href="../../steady_state.html#BNMPy.steady_state.SteadyStateCalculator.set_experimental_conditions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_experimental_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stimuli</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                                   <span class="n">stimuli_efficacy</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">inhibitors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">inhibitors_efficacy</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">node_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set experimental conditions</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        stimuli : List[str], optional</span>
+<span class="sd">            Node names to stimulate (fix to 1)</span>
+<span class="sd">        stimuli_efficacy : List[float], optional</span>
+<span class="sd">            Efficacy values for stimuli (0-1). If 1.0, full knockout. If &lt; 1.0, probabilistic.</span>
+<span class="sd">        inhibitors : List[str], optional</span>
+<span class="sd">            Node names to inhibit (fix to 0)</span>
+<span class="sd">        inhibitors_efficacy : List[float], optional</span>
+<span class="sd">            Efficacy values for inhibitors (0-1). If 1.0, full knockout. If &lt; 1.0, probabilistic.</span>
+<span class="sd">        node_dict : Dict[str, int], optional</span>
+<span class="sd">            Node name to index mapping</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">node_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">node_dict</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">,</span> <span class="s1">&#39;nodeDict&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        
+        <span class="c1"># Apply stimuli with efficacy</span>
+        <span class="k">if</span> <span class="n">stimuli</span><span class="p">:</span>
+            <span class="n">stimuli_eff</span> <span class="o">=</span> <span class="n">stimuli_efficacy</span> <span class="k">if</span> <span class="n">stimuli_efficacy</span> <span class="k">else</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">stimuli</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">efficacy</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">stimuli</span><span class="p">,</span> <span class="n">stimuli_eff</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">node_dict</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">efficacy</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">knockout</span><span class="p">(</span><span class="n">node_name</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">knockdown</span><span class="p">(</span><span class="n">node_name</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">efficacy</span><span class="p">)</span>
+        
+        <span class="c1"># Apply inhibitors with efficacy</span>
+        <span class="k">if</span> <span class="n">inhibitors</span><span class="p">:</span>
+            <span class="n">inhibitors_eff</span> <span class="o">=</span> <span class="n">inhibitors_efficacy</span> <span class="k">if</span> <span class="n">inhibitors_efficacy</span> <span class="k">else</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">inhibitors</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">efficacy</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inhibitors</span><span class="p">,</span> <span class="n">inhibitors_eff</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">node_dict</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">efficacy</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">knockout</span><span class="p">(</span><span class="n">node_name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">knockdown</span><span class="p">(</span><span class="n">node_name</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">efficacy</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="SteadyStateCalculator.reset_network_conditions">
+<a class="viewcode-back" href="../../steady_state.html#BNMPy.steady_state.SteadyStateCalculator.reset_network_conditions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_network_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset network to original state&quot;&quot;&quot;</span>
+        <span class="c1"># Reset both knockouts and knockdowns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">undoKnockouts</span><span class="p">()</span></div>
+
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_save_network_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save the current network state for restoration&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_restore_network_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Restore the saved network state&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original_nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">setInitialValues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_original_nodes</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="SteadyStateCalculator.get_convergence_info">
+<a class="viewcode-back" href="../../steady_state.html#BNMPy.steady_state.SteadyStateCalculator.get_convergence_info">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_convergence_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get information about convergence properties</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;network_type&#39;</span><span class="p">:</span> <span class="s1">&#39;PBN&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_pbn</span> <span class="k">else</span> <span class="s1">&#39;BN&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;num_nodes&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span>
+            <span class="s1">&#39;input_nodes&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="p">,</span>
+            <span class="s1">&#39;num_functions&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nf</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_pbn</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span>
+            <span class="s1">&#39;max_connectivity&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="SteadyStateCalculator.compute_stationary_deterministic">
+<a class="viewcode-back" href="../../steady_state.html#BNMPy.steady_state.SteadyStateCalculator.compute_stationary_deterministic">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_stationary_deterministic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find deterministic steady state (attractors) for Boolean networks</span>
+<span class="sd">        TODO: need more discussion on this</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Store original state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_network_state</span><span class="p">()</span>
+        
+        <span class="c1"># Try different initial conditions</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>  <span class="c1"># Try up to 10 random initial conditions</span>
+            <span class="n">initial_state</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">setInitialValues</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
+            
+            <span class="c1"># Track states to detect cycles</span>
+            <span class="n">state_history</span> <span class="o">=</span> <span class="p">[]</span>
+            
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_steps</span><span class="p">):</span>
+                <span class="n">current_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">state_tuple</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">current_state</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="n">state_tuple</span> <span class="ow">in</span> <span class="n">state_history</span><span class="p">:</span>
+                    <span class="c1"># Found a cycle</span>
+                    <span class="n">cycle_start</span> <span class="o">=</span> <span class="n">state_history</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">state_tuple</span><span class="p">)</span>
+                    <span class="n">cycle</span> <span class="o">=</span> <span class="n">state_history</span><span class="p">[</span><span class="n">cycle_start</span><span class="p">:]</span>
+                    
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cycle</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="c1"># Fixed point found</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_network_state</span><span class="p">()</span>
+                        <span class="k">return</span> <span class="n">current_state</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Limit cycle - return average</span>
+                        <span class="n">cycle_states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">cycle</span><span class="p">])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_network_state</span><span class="p">()</span>
+                        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cycle_states</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                
+                <span class="n">state_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state_tuple</span><span class="p">)</span>
+                
+                <span class="c1"># Update network using existing method</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="c1"># Restore original state and return None if no attractor found</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_network_state</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+</div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BNMPy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BNMPy.steady_state</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, IlyaLab.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>
