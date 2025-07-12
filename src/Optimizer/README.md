@@ -21,9 +21,7 @@ from BNMPy.BMatrix import load_pbn_from_string
 # Load or create your PBN
 pbn = load_pbn_from_string(...)
 
-# Compress 
-
-# Initialize optimizer with efficacy-enabled experimental data
+# Initialize optimizer
 optimizer = ParameterOptimizer(pbn, "experiments.csv", nodes_to_optimize=['Cas3'], verbose=False)
 
 # Run optimization
@@ -98,7 +96,7 @@ config = {
         'workers': -1,                # Use all available cores for parallelization
         'polish': False,              # Disable polish step for faster runs
         'early_stopping': True,       # Enable early stopping for DE
-        'success_threshold': 0.01     # SSE threshold for DE early stopping
+        'success_threshold': 0.01     # MSE threshold for DE early stopping
     },  
 
 # Particle Swarm Optimization parameters
@@ -132,7 +130,7 @@ Early stopping behavior differs between optimization methods:
 
 Two approaches:
 
-- `early_stopping`: stop when SSE drops below `success_threshold`
+- `early_stopping`: stop when MSE drops below `success_threshold`
 - `tol` and `atol`: stops when `np.std(pop) <= atol + tol * np.abs(np.mean(population_energies))`
 
 **Particle Swarm Optimization (PSO):**
@@ -171,8 +169,8 @@ The optimization returns an enhanced `OptimizeResult` object containing:
 - `success`: Boolean indicating if the optimizer terminated successfully
 - `message`: Status message
 - `x`: Optimized parameters (flattened vector)
-- `fun`: Final objective value (SSE)
-- `history`: List of best SSE values at each iteration
+- `fun`: Final objective value (MSE)
+- `history`: List of best MSE values at each iteration
 - `nfev`: Number of function evaluations
 - `nit`: Number of iterations
 
@@ -189,6 +187,23 @@ optimizer.plot_optimization_history(
     show_stagnation=True,    # Highlight stagnation periods
     log_scale=True          # Use logarithmic scale
 )
+```
+
+### Result Evaluation
+
+Evaluate optimization results:
+
+```python
+from BNMPy.Optimizer import evaluate_optimization_result
+
+evaluator = evaluate_optimization_result(
+    result, 
+    optimizer, 
+    output_dir="evaluation_results",
+    generate_plots=True,
+    generate_report=True
+)
+
 ```
 
 ## Model Compression
@@ -235,7 +250,6 @@ vis_compression_comparison(
 optimizer = ParameterOptimizer(compressed_network, "experiments.csv")
 result = optimizer.optimize(method='differential_evolution')
 ```
-
 
 ## References
 

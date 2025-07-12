@@ -332,35 +332,249 @@ class SteadyStateCalculator:
     def compute_stationary_mc(self, 
                              n_runs: int = 10, 
                              n_steps: int = 1000,
-                             p_noise: float = 0) -> np.ndarray:
+                             p_noise: float = 0,
+                             analyze_convergence: bool = False,
+                             output_node: str = None,
+                             show_plot: bool = True) -> Union[np.ndarray, Tuple[np.ndarray, Dict]]:
         """
         Monte Carlo steady-state calculation, handle input nodes and constant nodes
+        
+        Parameters:
+        -----------
+        n_runs : int, default=10
+            Number of independent Monte Carlo runs
+        n_steps : int, default=1000
+            Number of simulation steps per run
+        p_noise : float, default=0
+            Noise probability for simulation
+        analyze_convergence : bool, default=False
+            Whether to perform convergence analysis and show plot
+        output_node : str, optional
+            Node name for convergence analysis. If None, uses all nodes.
+        show_plot : bool, default=True
+            Whether to display convergence plot when analyze_convergence=True
+            
+        Returns:
+        --------
+        np.ndarray or Tuple[np.ndarray, Dict]
+            If analyze_convergence is False: steady-state probabilities
+            If analyze_convergence is True: (steady_state, convergence_info)
         """
         # Store original state
         self._save_network_state()
         
-        steady_states = []
+        if analyze_convergence:
+            # Single long run for convergence analysis
+            steady_state, convergence_info = self._compute_mc_with_convergence(n_steps, p_noise, output_node)
+            
+            # Display convergence plot if requested
+            if show_plot:
+                self._convergence_plot(convergence_info, output_node, show_plot)
+            
+            return steady_state, convergence_info
+        else:
+            # Standard multiple runs approach
+            steady_states = []
+            
+            for run in range(n_runs):
+                # Random initial state
+                initial_state = self.network.nodes.copy()
+                for i in range(self.N):
+                    if i not in self.input_indices:
+                        initial_state[i] = int(np.random.rand() > 0.5)
+                self.network.setInitialValues(initial_state)
+                
+                # Run simulation
+                trajectory = self.network.update_noise(p=p_noise, iterations=n_steps)
+                
+                # Take second half as steady state
+                steady_portion = trajectory[n_steps//2:]
+                mean_state = np.mean(steady_portion, axis=0)
+                steady_states.append(mean_state)
+            
+            # Restore original state
+            self._restore_network_state()
+            
+            return np.mean(steady_states, axis=0)
+    
+    def _compute_mc_with_convergence(self, n_steps: int, p_noise: float, output_node: str = None) -> Tuple[np.ndarray, Dict]:
+        """
+        Compute Monte Carlo steady state with convergence analysis.
         
-        for run in range(n_runs):
-            # Random initial state
-            initial_state = self.network.nodes.copy()
-            for i in range(self.N):
-                if i not in self.input_indices:
-                    initial_state[i] = int(np.random.rand() > 0.5)
-            self.network.setInitialValues(initial_state)
+        Parameters:
+        -----------
+        n_steps : int
+            Number of simulation steps
+        p_noise : float
+            Noise probability
+        output_node : str, optional
+            Node name for convergence analysis
             
-            # Run simulation
-            trajectory = self.network.update_noise(p=p_noise, iterations=n_steps)
-            
-            # Take second half as steady state
-            steady_portion = trajectory[n_steps//2:]
-            mean_state = np.mean(steady_portion, axis=0)
-            steady_states.append(mean_state)
+        Returns:
+        --------
+        Tuple[np.ndarray, Dict]
+            (steady_state, convergence_info)
+        """
+        # Random initial state
+        initial_state = self.network.nodes.copy()
+        for i in range(self.N):
+            if i not in self.input_indices:
+                initial_state[i] = int(np.random.rand() > 0.5)
+        self.network.setInitialValues(initial_state)
+        
+        # Run single long trajectory
+        trajectory = self.network.update_noise(p=p_noise, iterations=n_steps)
+        
+        # Take second half for steady state calculation
+        steady_portion = trajectory[n_steps//2:]
+        steady_state = np.mean(steady_portion, axis=0)
+        
+        # Convergence analysis on second half
+        convergence_info = self._analyze_convergence(steady_portion, output_node)
         
         # Restore original state
         self._restore_network_state()
         
-        return np.mean(steady_states, axis=0)
+        return steady_state, convergence_info
+    
+    def _analyze_convergence(self, trajectory: np.ndarray, output_node: str = None) -> Dict:
+        """
+        Analyze convergence of Monte Carlo trajectory.
+        
+        Based on the approach in steady_state_convergence.py:
+        - Calculate running averages at different time points
+        - Compute relative changes between consecutive averages
+        - Report final relative change as convergence measure
+        
+        Parameters:
+        -----------
+        trajectory : np.ndarray
+            Trajectory data (second half of simulation)
+        output_node : str, optional
+            Node name for convergence analysis. If None, analyzes all nodes.
+            
+        Returns:
+        --------
+        Dict
+            Convergence analysis results
+        """
+        if len(trajectory) < 10:
+            return {'final_relative_change': 0.0, 'converged': True}
+        
+        # Define time points for convergence analysis
+        traj_length = len(trajectory)
+        step_size = max(1, traj_length // 30)  # About 30 time points
+        time_points = list(range(step_size, traj_length + 1, step_size))
+        
+        if output_node and output_node in self.network.nodeDict:
+            # Analyze specific node
+            node_idx = self.network.nodeDict[output_node]
+            node_scores = self._calculate_node_convergence(trajectory, node_idx, time_points)
+            final_relative_change = node_scores[-1] if node_scores else 0.0
+            
+            convergence_info = {
+                'final_relative_change': final_relative_change,
+                'converged': final_relative_change < 1.0,  # Less than 1% change
+                'node_analyzed': output_node,
+                'relative_changes': node_scores,
+                'time_points': time_points
+            }
+        else:
+            # Analyze all nodes and take maximum
+            all_relative_changes = []
+            
+            for node_idx in range(self.N):
+                if node_idx not in self.input_indices:  # Skip input nodes
+                    node_scores = self._calculate_node_convergence(trajectory, node_idx, time_points)
+                    if node_scores:
+                        all_relative_changes.extend(node_scores)
+            
+            final_relative_change = all_relative_changes[-1] if all_relative_changes else 0.0
+            
+            convergence_info = {
+                'final_relative_change': final_relative_change,
+                'converged': final_relative_change < 1.0,  # Less than 1% change
+                'node_analyzed': 'all_nodes',
+                'n_nodes_analyzed': self.N - len(self.input_indices)
+            }
+        
+        return convergence_info
+    
+    def _convergence_plot(self, convergence_info: Dict, output_node: str = None):
+        """
+        Display convergence plot
+        
+        Parameters:
+        -----------
+        convergence_info : Dict
+            Convergence information from _analyze_convergence
+        output_node : str, optional
+            Node name for plot title
+        """
+        import matplotlib.pyplot as plt
+        
+        if 'relative_changes' in convergence_info and 'time_points' in convergence_info:
+            relative_changes = convergence_info['relative_changes']
+            time_points = convergence_info['time_points']
+            
+            if relative_changes and len(relative_changes) > 0:
+                plt.figure(figsize=(8, 5))
+                plt.scatter(time_points[1:], relative_changes, alpha=0.7)
+                plt.xlabel('Simulation Steps')
+                plt.ylabel('Relative Change of Score in %')
+                
+                node_name = output_node if output_node else 'All Nodes'
+                plt.title(f'Convergence Analysis - {node_name}')
+                plt.grid(True, alpha=0.3)
+                
+                # Add horizontal line at 1% for reference
+                plt.axhline(y=1.0, color='r', linestyle='--', alpha=0.5, label='1% threshold')
+                
+                # Add final convergence value as text
+                final_change = convergence_info['final_relative_change']
+                plt.text(0.02, 0.98, f'Final: {final_change:.2f}%', 
+                        transform=plt.gca().transAxes, verticalalignment='top',
+                        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+                
+                plt.legend()
+                plt.tight_layout()
+                plt.show()
+    
+    def _calculate_node_convergence(self, trajectory: np.ndarray, node_idx: int, time_points: List[int]) -> List[float]:
+        """
+        Calculate convergence for a specific node.
+        
+        Parameters:
+        -----------
+        trajectory : np.ndarray
+            Trajectory data
+        node_idx : int
+            Node index to analyze
+        time_points : List[int]
+            Time points for convergence analysis
+            
+        Returns:
+        --------
+        List[float]
+            Relative changes in percentage
+        """
+        scores = []
+        
+        # Calculate running averages at different time points
+        for n in time_points:
+            if n <= len(trajectory):
+                # Take average from start to time point n
+                avg_value = np.mean(trajectory[:n, node_idx])
+                scores.append(avg_value)
+        
+        # Calculate relative changes between consecutive scores
+        relative_changes = []
+        for i in range(1, len(scores)):
+            diff = scores[i] - scores[i-1]
+            relative_change = 100 * abs(diff)  # Convert to percentage
+            relative_changes.append(relative_change)
+        
+        return relative_changes
     
     def set_experimental_conditions(self, stimuli: List[str] = None, 
                                    stimuli_efficacy: List[float] = None,

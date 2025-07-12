@@ -92,7 +92,7 @@ class SimulationEvaluator:
     
     def objective_function(self, cij_vector: np.ndarray) -> float:
         """
-        Calculate objective function (SSE) for given parameters
+        Calculate objective function (MSE) for given parameters
         
         Parameters:
         -----------
@@ -102,7 +102,7 @@ class SimulationEvaluator:
         Returns:
         --------
         float
-            Sum of squared errors across all experiments
+            Mean squared error across all experiments
         """
         # print(f"\n--- Evaluating objective function ---")
         # print(f"Received cij_vector: {cij_vector}")
@@ -164,13 +164,16 @@ class SimulationEvaluator:
                 print("  Objective function penalty: Experiment simulation did not succeed.")
                 return 1e10
         
-        # 5. Add small regularization term to prevent degenerate solutions
-        regularization = 1e-6 * np.sum(np.square(cij_vector))
-        total_sse += regularization
+        # 5. Calculate MSE by dividing by number of experiments
+        mse = total_sse / len(self.experiments)
         
-        # print(f"\nTotal SSE: {total_sse}")
+        # # 6. Add small regularization term to prevent degenerate solutions
+        # regularization = 1e-6 * np.sum(np.square(cij_vector))
+        # mse += regularization
+        
+        # print(f"\nTotal MSE: {mse}")
         # print(f"--- Finished objective function evaluation ---\n")
-        return total_sse
+        return mse
     
     def _vector_to_cij_matrix(self, cij_vector: np.ndarray) -> np.ndarray:
         """

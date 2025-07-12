@@ -85,7 +85,7 @@ class ParameterOptimizer:
                 'updating': 'deferred',
                 'workers': -1,
                 'early_stopping': False,  # Control early stopping for DE only
-                'success_threshold': 0.01  # SSE threshold for DE early stopping
+                'success_threshold': 0.01  # MSE threshold for DE early stopping
             },
             'pso_params': {
                 'n_particles': 30,
@@ -104,8 +104,26 @@ class ParameterOptimizer:
             'discrete_params': {
                 'threshold': 0.5
             },
+            'steady_state': {
+            # 'method': 'tsmc',
+            #     'tsmc_params': {
+            #         'epsilon': 0.05, # range of transition probability [Default=0.001]
+            #         'r': 0.1, # range of accuracy (most sensitive) [Default=0.025]
+            #         's': 0.85, # probability to acquire defined accuracy [Default=0.95]
+            #         'p_mir': 0.01, # perturbation in Miranda's & Parga's scheme [Default=0.001, 0.1%]
+            #         'initial_nsteps': 100, # initial simulation steps [Recommended at 100 steps for n < 100]
+            #         'max_iterations': 1000, # maximum convergence iterations [Default=5000]
+            #         'freeze_self_loop': True # whether to treat self-loop as a fixed node
+            #     },
+            'method': 'monte_carlo',
+                'monte_carlo_params': {
+                    'n_runs': 2,
+                    'n_steps': 5000,
+                    'p_noise': 0.05
+                }
+            },
             'max_try': 1,  # Maximum number of attempts if optimization fails
-            'success_threshold': 0.01,  # An SSE below this is always a success (global)
+            'success_threshold': 0.01,  # An MSE below this is always a success (global)
             'display_rules_every': 0  # Display optimized rules every n iterations (0 = disabled)
         }
         
@@ -153,13 +171,13 @@ class ParameterOptimizer:
                     best_result = result
                     best_result.success = True 
                     print(f"\nSuccessful optimization found in attempt {attempt + 1}")
-                    print(f"  - SSE: {best_score:.6f}")
+                    print(f"  - MSE: {best_score:.6f}")
                     if not result.success:
-                        print(f"  (Run considered successful based on SSE < {success_threshold})")
+                        print(f"  (Run considered successful based on MSE < {success_threshold})")
                     break  # Stop trying if we have a successful result
 
                 else:
-                    print(f"Optimization attempt {attempt + 1} did not succeed: {result.message} (SSE: {result.fun:.6f})")
+                    print(f"Optimization attempt {attempt + 1} did not succeed: {result.message} (MSE: {result.fun:.6f})")
                     print(f"Optimized rules: {self._get_current_optimized_rules(result.x)}")
                     if result.fun < best_score:
                         best_score = result.fun
@@ -171,7 +189,7 @@ class ParameterOptimizer:
         if best_result is None:
             raise OptimizationError("All optimization attempts failed.")
 
-        print(f"\n--- Optimization finished. Best SSE found: {best_result.fun:.6f} ---")
+        print(f"\n--- Optimization finished. Best MSE found: {best_result.fun:.6f} ---")
 
         # Update self.pbn with the final parameters only if we have valid parameters
         if hasattr(best_result, 'x') and best_result.x is not None:
@@ -212,7 +230,7 @@ class ParameterOptimizer:
             if early_stopping:
                 success_threshold = self.config.get('success_threshold', 0.01)
                 print(f"DE early stopping enabled:")
-                print(f"  - Success threshold (SSE): {success_threshold}")
+                print(f"  - Success threshold (MSE): {success_threshold}")
                 if 'atol' in de_params and de_params['atol'] > 0:
                     print(f"  - Absolute tolerance: {de_params['atol']}")
                 if 'tol' in de_params and de_params['tol'] > 0:
@@ -283,17 +301,17 @@ class ParameterOptimizer:
             rules = self._get_current_optimized_rules(xk)
             
             if rules:
-                print(f"DE Iter {self._iteration_count}: Best SSE: {self._last_best_score:.6f} - Time: {elapsed_time:.1f}s")
+                print(f"DE Iter {self._iteration_count}: Best MSE: {self._last_best_score:.6f} - Time: {elapsed_time:.1f}s")
                 print("  Current optimized rules:")
                 for rule in rules:
                     print(f"    {rule}")
                 print()  # Add blank line for readability
         elif self.verbose:
             # Verbose mode: show iteration details only when not displaying rules
-            print(f"Iteration {self._iteration_count}: Current SSE: {current_score:.6f}, Best SSE so far: {self._last_best_score:.6f}, Convergence: {convergence:.4f}")
+            print(f"Iteration {self._iteration_count}: Current MSE: {current_score:.6f}, Best MSE so far: {self._last_best_score:.6f}, Convergence: {convergence:.4f}")
         elif not should_display_rules:
             # Non-verbose mode: show progress bar
-            sys.stdout.write(f'\r[{bar}] {progress:.1f}% | Iter: {self._iteration_count}/{self._max_iter} | Best SSE: {self._last_best_score:.6f} | Conv: {convergence:.4f}')
+            sys.stdout.write(f'\r[{bar}] {progress:.1f}% | Iter: {self._iteration_count}/{self._max_iter} | Best MSE: {self._last_best_score:.6f} | Conv: {convergence:.4f}')
             sys.stdout.flush()
 
         # Early stopping logic
@@ -303,11 +321,11 @@ class ParameterOptimizer:
             success_threshold = self.config.get('success_threshold', 0.01)
             if current_score < success_threshold:
                 if self.verbose or should_display_rules: 
-                    print(f"\nDE early stopping: SSE below success threshold: {success_threshold}")
+                    print(f"\nDE early stopping: MSE below success threshold: {success_threshold}")
                 else:
                     # Clear progress line before printing early stop message
                     sys.stdout.write('\r' + ' ' * 120 + '\r')
-                    print(f"DE early stopping: SSE below success threshold: {success_threshold}")
+                    print(f"DE early stopping: MSE below success threshold: {success_threshold}")
                 return True
 
     def _get_current_optimized_rules(self, current_params: np.ndarray) -> List[str]:
@@ -441,7 +459,7 @@ class ParameterOptimizer:
                 rules = self._get_current_optimized_rules(self._pso_best_position)
                 
                 if rules:
-                    print(f"PSO Iter {self._pso_iteration_count}: Best SSE: {self._pso_best_cost:.6f} - Time: {elapsed_time:.1f}s")
+                    print(f"PSO Iter {self._pso_iteration_count}: Best MSE: {self._pso_best_cost:.6f} - Time: {elapsed_time:.1f}s")
                     print("  Current optimized rules:")
                     for rule in rules:
                         print(f"    {rule}")
@@ -449,11 +467,11 @@ class ParameterOptimizer:
             elif self.verbose:
                 # Verbose mode: show iteration details
                 current_best = min(costs)
-                print(f"PSO Iteration {self._pso_iteration_count}: Current best SSE: {current_best:.6f}, Global best SSE: {self._pso_best_cost:.6f}")
+                print(f"PSO Iteration {self._pso_iteration_count}: Current best MSE: {current_best:.6f}, Global best MSE: {self._pso_best_cost:.6f}")
             elif not should_display_rules:
                 # Non-verbose mode: show progress bar (similar to DE)
                 elapsed_time = time.time() - self._start_time
-                sys.stdout.write(f'\r[{bar}] {progress:.1f}% | Iter: {self._pso_iteration_count}/{iters} | Best SSE: {self._pso_best_cost:.6f} | Time: {elapsed_time:.1f}s')
+                sys.stdout.write(f'\r[{bar}] {progress:.1f}% | Iter: {self._pso_iteration_count}/{iters} | Best MSE: {self._pso_best_cost:.6f} | Time: {elapsed_time:.1f}s')
                 sys.stdout.flush()
             
             return np.array(costs)
@@ -548,7 +566,7 @@ class ParameterOptimizer:
     def plot_optimization_history(self, result: OptimizeResult, save_path: Optional[str] = None, 
                                  show_stagnation: bool = False, log_scale: bool = False, sorted: bool = False):
         """
-        Plot the optimization history (SSE over iterations).
+        Plot the optimization history (MSE over iterations).
         
         Parameters:
         -----------
@@ -561,7 +579,7 @@ class ParameterOptimizer:
         log_scale : bool, optional
             Whether to use logarithmic scale for y-axis
         sorted: bool, optional
-            Whether to sort the optimization history by SSE
+            Whether to sort the optimization history by MSE
         """
         try:
             import matplotlib.pyplot as plt
@@ -577,7 +595,7 @@ class ParameterOptimizer:
         if sorted:
             history = np.sort(history)
         plt.figure(figsize=(10, 6))
-        plt.plot(history, 'b-', linewidth=2, label='SSE')
+        plt.plot(history, 'b-', linewidth=2, label='MSE')
         
         if log_scale:
             plt.yscale('log')
@@ -588,13 +606,13 @@ class ParameterOptimizer:
                 plt.axvspan(start, end, alpha=0.3, color='red', label='Stagnation' if start == stagnation_periods[0][0] else "")
         
         plt.xlabel('Iteration')
-        plt.ylabel('Sum of Squared Errors (SSE)')
+        plt.ylabel('Mean Squared Error (MSE)')
         plt.title(f'Optimization History (Method: {result.get("method", "unknown")})')
         plt.grid(True, alpha=0.3)
         plt.legend()
         
         # Add text box with final statistics
-        stats_text = f'Final SSE: {result.fun:.6f}\nIterations: {result.nit}\nSuccess: {result.success}'
+        stats_text = f'Final MSE: {result.fun:.6f}\nIterations: {result.nit}\nSuccess: {result.success}'
         plt.text(0.02, 0.98, stats_text, transform=plt.gca().transAxes, 
                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
         
@@ -659,3 +677,129 @@ class ParameterOptimizer:
             optimized_pbn.update_cumulative_probabilities()
             
         return optimized_pbn 
+
+    def test_steady_states(self, test_experiments=None, show_plot=False, convergence_threshold=1.0):
+        """
+        Test steady state calculation methods for each experiment condition.
+        Uses the optimizer's existing configuration and reports timing and convergence.
+        
+        Parameters:
+        -----------
+        test_experiments : list, optional
+            List of experiment dictionaries to test. If None, uses self.evaluator.experiments
+        show_plot : bool, default=False
+            Whether to display convergence plots for each experiment
+        convergence_threshold : float, default=1.0
+            Threshold for considering convergence successful (in percentage)
+        """
+        print("=== Steady State Methods Testing ===")
+        
+        experiments = test_experiments or self.evaluator.experiments
+        
+        if not experiments:
+            print("No experiments available for testing.")
+            return
+            
+        # Get steady state config from optimizer
+        ss_config = self.config.get('steady_state', self._default_config()['steady_state'])
+        method = ss_config.get('method', 'tsmc')
+        
+        print(f"Testing {len(experiments)} experimental conditions using {method.upper()} method...")
+        print(f"Steady state config: {ss_config}")
+        if method == 'monte_carlo':
+            print(f"Convergence threshold: {convergence_threshold}%")
+        print()
+        
+        results = []
+        converged_experiments = 0
+        
+        for i, experiment in enumerate(experiments):
+            print(f"Experiment {i+1}: ", end="")
+            
+            # Display experimental conditions briefly
+            stimuli_str = ",".join(experiment['stimuli']) if experiment['stimuli'] else "None"
+            inhibitors_str = ",".join(experiment['inhibitors']) if experiment['inhibitors'] else "None"
+            print(f"Stimuli={stimuli_str}, Inhibitors={inhibitors_str}")
+            
+            start_time = time.time()
+            success = False
+            converged = False
+            
+            try:
+                # Set experimental conditions
+                self.evaluator.steady_state_calc.set_experimental_conditions(
+                    stimuli=experiment['stimuli'],
+                    stimuli_efficacy=experiment['stimuli_efficacy'],
+                    inhibitors=experiment['inhibitors'],
+                    inhibitors_efficacy=experiment['inhibitors_efficacy']
+                )
+                
+                # Run steady state calculation using optimizer's config
+                if method == 'tsmc':
+                    params = ss_config.get('tsmc_params', {})
+                    result = self.evaluator.steady_state_calc.compute_stationary_tsmc(**params)
+                else:  # monte_carlo
+                    params = ss_config.get('monte_carlo_params', {})
+                    
+                    # Use convergence analysis for Monte Carlo
+                    params_with_convergence = params.copy()
+                    params_with_convergence['analyze_convergence'] = True
+                    params_with_convergence['show_plot'] = show_plot
+                    
+                    # Pick a measured node for convergence analysis if available
+                    output_node = None
+                    if experiment['measurements']:
+                        output_node = list(experiment['measurements'].keys())[0]
+                        params_with_convergence['output_node'] = output_node
+                    
+                    result, convergence_info = self.evaluator.steady_state_calc.compute_stationary_mc(**params_with_convergence)
+                    
+                    # Check convergence success
+                    final_change = convergence_info['final_relative_change']
+                    converged = final_change <= convergence_threshold
+                    if converged:
+                        converged_experiments += 1
+                
+                elapsed_time = time.time() - start_time
+                success = True
+                
+                # Print results
+                if method == 'monte_carlo':
+                    convergence_status = "✓ Converged" if converged else "✗ Not converged"
+                    print(f"  Time: {elapsed_time:.3f}s, Final change: {final_change:.2f}%, {convergence_status}")
+                else:
+                    print(f"  Time: {elapsed_time:.3f}s")
+                
+                # Reset conditions
+                self.evaluator.steady_state_calc.reset_network_conditions()
+                
+                results.append({
+                    'experiment_id': experiment.get('id', i+1),
+                    'success': success,
+                    'time': elapsed_time,
+                    'method': method,
+                    'converged': converged if method == 'monte_carlo' else None,
+                    'final_change': final_change if method == 'monte_carlo' else None
+                })
+                
+            except Exception as e:
+                elapsed_time = time.time() - start_time
+                print(f"  FAILED after {elapsed_time:.3f}s: {str(e)}")
+                results.append({
+                    'experiment_id': experiment.get('id', i+1),
+                    'success': False,
+                    'time': elapsed_time,
+                    'method': method,
+                    'error': str(e)
+                })
+        
+        # Summary
+        successes = sum(1 for r in results if r['success'])
+        total_time = sum(r['time'] for r in results)
+        
+        print(f"\nSummary: {successes}/{len(results)} experiments successful, total time: {total_time:.3f}s")
+        
+        if method == 'monte_carlo':
+            print(f"Convergence: {converged_experiments}/{len(results)} experiments converged (threshold: {convergence_threshold}%)")
+        
+        return results 
