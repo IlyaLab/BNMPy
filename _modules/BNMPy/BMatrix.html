@@ -389,7 +389,7 @@
         
     <span class="c1"># create a Boolean network object</span>
     <span class="n">network</span> <span class="o">=</span> <span class="n">BooleanNetwork</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">truth_table</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span>
-            <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">)</span>
+            <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">,</span> <span class="n">equations</span><span class="o">=</span><span class="n">equations</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">network</span></div>
 
 
@@ -406,7 +406,7 @@
 <span class="sd">    - If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">.booleanNetwork</span><span class="w"> </span><span class="kn">import</span> <span class="n">BooleanNetwork</span>
-    <span class="n">equations</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">network_string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)]</span>
+    <span class="n">equations</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">network_string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
     <span class="n">ngenes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span>
     <span class="n">gene_dict</span> <span class="o">=</span> <span class="n">get_gene_dict</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span>
     <span class="n">upstream_genes</span> <span class="o">=</span> <span class="n">get_upstream_genes</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span>
@@ -430,8 +430,8 @@
             <span class="n">x0</span><span class="p">[</span><span class="n">gene_index</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
             <span class="n">connectivity_matrix</span><span class="p">[</span><span class="n">gene_index</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
     
-    <span class="n">network</span> <span class="o">=</span> <span class="n">BooleanNetwork</span><span class="p">(</span> <span class="n">ngenes</span> <span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">truth_table</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span>
-            <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">)</span>
+    <span class="n">network</span> <span class="o">=</span> <span class="n">BooleanNetwork</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">truth_table</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span>
+            <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">,</span> <span class="n">equations</span><span class="o">=</span><span class="n">equations</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">network</span></div>
 
 
@@ -565,6 +565,7 @@
     <span class="c1"># Create and return the PBN</span>
     <span class="n">network</span> <span class="o">=</span> <span class="n">ProbabilisticBN</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">nf</span><span class="p">,</span> <span class="n">truth_table</span><span class="p">,</span> <span class="n">cij</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">)</span>
     <span class="n">network</span><span class="o">.</span><span class="n">gene_functions</span> <span class="o">=</span> <span class="n">gene_funcs</span>  <span class="c1"># Store the function strings</span>
+    <span class="n">network</span><span class="o">.</span><span class="n">equations</span> <span class="o">=</span> <span class="n">all_equations</span>  <span class="c1"># Store the expanded equations</span>
     <span class="k">return</span> <span class="n">network</span></div>
 
 
@@ -591,7 +592,7 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">.PBN</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProbabilisticBN</span>
     
     <span class="c1"># Split the string into lines</span>
-    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">network_string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)]</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">network_string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
     
     <span class="c1"># Parse gene names and organize functions by gene</span>
     <span class="n">gene_funcs</span> <span class="o">=</span> <span class="p">{}</span>
@@ -693,12 +694,13 @@
     <span class="c1"># Create and return the PBN</span>
     <span class="n">network</span> <span class="o">=</span> <span class="n">ProbabilisticBN</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">nf</span><span class="p">,</span> <span class="n">truth_table</span><span class="p">,</span> <span class="n">cij</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">)</span>
     <span class="n">network</span><span class="o">.</span><span class="n">gene_functions</span> <span class="o">=</span> <span class="n">gene_funcs</span>  <span class="c1"># Store the function strings</span>
+    <span class="n">network</span><span class="o">.</span><span class="n">equations</span> <span class="o">=</span> <span class="n">all_equations</span>  <span class="c1"># Store the expanded equations</span>
     <span class="k">return</span> <span class="n">network</span></div>
 
 
 <div class="viewcode-block" id="rename_nodes">
 <a class="viewcode-back" href="../../bmatrix.html#BNMPy.BMatrix.rename_nodes">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">rename_nodes</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">mapping</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">rename_nodes</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">mapping</span><span class="p">,</span> <span class="n">expand_complexes</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rename nodes in a boolean network based on a mapping.</span>
 
@@ -709,11 +711,12 @@
 <span class="sd">    mapping : str or dict</span>
 <span class="sd">        Excel file path with &#39;Node&#39; and &#39;NewName&#39; columns, or dictionary with</span>
 <span class="sd">        original names as keys and new names as values</span>
-
+<span class="sd">    expand_complexes : bool, optional</span>
+<span class="sd">        Whether to expand complex nodes into their components. Default is False.</span>
 <span class="sd">    Returns:</span>
 <span class="sd">    --------</span>
 <span class="sd">    str</span>
-<span class="sd">        Updated network string with renamed nodes and expanded complexes</span>
+<span class="sd">        Updated network string with renamed nodes and optionally expanded complexes</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Load network from file if needed</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">network</span><span class="p">):</span>
@@ -738,12 +741,15 @@
                 <span class="n">new_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">original_node</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">new_name</span><span class="p">:</span>
                 <span class="k">continue</span>
+            
             <span class="k">if</span> <span class="s1">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">new_name</span><span class="p">:</span>
-                <span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="n">comp</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">new_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">comp</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
-                <span class="n">complex_nodes</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+                <span class="k">if</span> <span class="n">expand_complexes</span><span class="p">:</span>
+                    <span class="c1"># Parse components for expansion</span>
+                    <span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="n">comp</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">new_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">comp</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+                    <span class="k">if</span> <span class="n">components</span><span class="p">:</span>
+                        <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+                        <span class="n">complex_nodes</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+                <span class="c1"># If expand_complexes=False, skip complex nodes (keep original name)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_name</span><span class="p">]</span>
                 <span class="n">single_node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_name</span>
@@ -753,21 +759,23 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">original_node</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">new_name</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
-                <span class="n">complex_nodes</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+                <span class="k">if</span> <span class="n">expand_complexes</span><span class="p">:</span>
+                    <span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">new_name</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+                    <span class="k">if</span> <span class="n">components</span><span class="p">:</span>
+                        <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+                        <span class="n">complex_nodes</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+                <span class="c1"># If expand_complexes=False, skip complex nodes (keep original name)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">new_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">new_name</span><span class="p">:</span>
                     <span class="k">continue</span>
                 <span class="k">if</span> <span class="s1">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">new_name</span><span class="p">:</span>
-                    <span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="n">comp</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">new_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">comp</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
-                        <span class="k">continue</span>
-                    <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
-                    <span class="n">complex_nodes</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+                    <span class="k">if</span> <span class="n">expand_complexes</span><span class="p">:</span>
+                        <span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="n">comp</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">new_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">comp</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+                        <span class="k">if</span> <span class="n">components</span><span class="p">:</span>
+                            <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+                            <span class="n">complex_nodes</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">components</span>
+                    <span class="c1"># If expand_complexes=False, skip complex nodes (keep original name)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_name</span><span class="p">]</span>
                     <span class="n">single_node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_name</span>
@@ -788,31 +796,88 @@
             <span class="n">equation_dict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">rule</span>
 
     <span class="n">new_equations</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">original_node</span><span class="p">,</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">equation_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">new_rule</span> <span class="o">=</span> <span class="n">rule</span>
-        <span class="c1"># Replace complexes</span>
-        <span class="k">for</span> <span class="n">complex_node</span><span class="p">,</span> <span class="n">components</span> <span class="ow">in</span> <span class="n">complex_nodes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">complex_node</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">complex_node</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span>
-            <span class="n">replacement</span> <span class="o">=</span> <span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="s1">&#39; &amp; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">components</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span>
-            <span class="n">new_rule</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">replacement</span><span class="p">,</span> <span class="n">new_rule</span><span class="p">)</span>
-        <span class="c1"># Replace single nodes</span>
-        <span class="k">for</span> <span class="n">old_node</span><span class="p">,</span> <span class="n">new_node</span> <span class="ow">in</span> <span class="n">single_node_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">old_node</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">new_node</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">old_node</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span>
-            <span class="n">new_rule</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">new_node</span><span class="p">,</span> <span class="n">new_rule</span><span class="p">)</span>
-        <span class="c1"># Left side</span>
-        <span class="k">if</span> <span class="n">original_node</span> <span class="ow">in</span> <span class="n">node_mapping</span><span class="p">:</span>
-            <span class="n">new_nodes</span> <span class="o">=</span> <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">new_node</span> <span class="ow">in</span> <span class="n">new_nodes</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">new_node</span><span class="p">:</span>
+    
+    <span class="k">if</span> <span class="n">expand_complexes</span><span class="p">:</span>
+        <span class="c1"># Track which component equations have been created to avoid duplicates</span>
+        <span class="n">processed_components</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        
+        <span class="c1"># 1 Process complex expansions only</span>
+        <span class="k">for</span> <span class="n">original_node</span><span class="p">,</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">equation_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">original_node</span> <span class="ow">in</span> <span class="n">node_mapping</span><span class="p">:</span>
+                <span class="c1"># This is a complex node that should be expanded</span>
+                <span class="n">new_rule</span> <span class="o">=</span> <span class="n">rule</span>
+                <span class="c1"># Replace complexes with their expanded forms</span>
+                <span class="k">for</span> <span class="n">complex_node</span><span class="p">,</span> <span class="n">components</span> <span class="ow">in</span> <span class="n">complex_nodes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">complex_node</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">complex_node</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span>
+                    <span class="n">replacement</span> <span class="o">=</span> <span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="s1">&#39; &amp; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">components</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span>
+                    <span class="n">new_rule</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">replacement</span><span class="p">,</span> <span class="n">new_rule</span><span class="p">)</span>
+                
+                <span class="c1"># Replace single nodes</span>
+                <span class="k">for</span> <span class="n">old_node</span><span class="p">,</span> <span class="n">new_node</span> <span class="ow">in</span> <span class="n">single_node_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">old_node</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">new_node</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">old_node</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span>
+                    <span class="n">new_rule</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">new_node</span><span class="p">,</span> <span class="n">new_rule</span><span class="p">)</span>
+                
+                <span class="c1"># Create equations for new components</span>
+                <span class="n">new_nodes</span> <span class="o">=</span> <span class="n">node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">new_node</span> <span class="ow">in</span> <span class="n">new_nodes</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">new_node</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="c1"># Only create equation if this component hasn&#39;t been processed yet</span>
+                    <span class="c1"># and doesn&#39;t already exist as an original node</span>
+                    <span class="k">if</span> <span class="n">new_node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">processed_components</span> <span class="ow">and</span> <span class="n">new_node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">equation_dict</span><span class="p">:</span>
+                        <span class="n">new_equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_node</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">new_rule</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">processed_components</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+        
+        <span class="c1"># 2 Process remaining nodes (including renamed original nodes)</span>
+        <span class="k">for</span> <span class="n">original_node</span><span class="p">,</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">equation_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">original_node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_mapping</span><span class="p">:</span>
+                <span class="c1"># This is not a complex node, process normally</span>
+                <span class="n">new_rule</span> <span class="o">=</span> <span class="n">rule</span>
+                <span class="c1"># Replace complexes with their expanded forms</span>
+                <span class="k">for</span> <span class="n">complex_node</span><span class="p">,</span> <span class="n">components</span> <span class="ow">in</span> <span class="n">complex_nodes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">complex_node</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">complex_node</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span>
+                    <span class="n">replacement</span> <span class="o">=</span> <span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="s1">&#39; &amp; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">components</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span>
+                    <span class="n">new_rule</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">replacement</span><span class="p">,</span> <span class="n">new_rule</span><span class="p">)</span>
+                
+                <span class="c1"># Replace single nodes</span>
+                <span class="k">for</span> <span class="n">old_node</span><span class="p">,</span> <span class="n">new_node</span> <span class="ow">in</span> <span class="n">single_node_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">old_node</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">new_node</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">old_node</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span>
+                    <span class="n">new_rule</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">new_node</span><span class="p">,</span> <span class="n">new_rule</span><span class="p">)</span>
+                
+                <span class="c1"># Handle left side</span>
+                <span class="k">if</span> <span class="n">original_node</span> <span class="ow">in</span> <span class="n">single_node_mapping</span><span class="p">:</span>
+                    <span class="n">renamed_node</span> <span class="o">=</span> <span class="n">single_node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span>
+                    <span class="n">new_equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">renamed_node</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">new_rule</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">original_node</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">new_rule</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Simple rename - no complex expansion</span>
+        <span class="k">for</span> <span class="n">original_node</span><span class="p">,</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">equation_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">new_rule</span> <span class="o">=</span> <span class="n">rule</span>
+            <span class="c1"># Only replace single nodes (no complex expansion)</span>
+            <span class="k">for</span> <span class="n">old_node</span><span class="p">,</span> <span class="n">new_node</span> <span class="ow">in</span> <span class="n">single_node_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">old_node</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">new_node</span><span class="p">:</span>
                     <span class="k">continue</span>
-                <span class="n">new_equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_node</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">new_rule</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">new_equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">original_node</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">new_rule</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">old_node</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;\b&#39;</span>
+                <span class="n">new_rule</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">new_node</span><span class="p">,</span> <span class="n">new_rule</span><span class="p">)</span>
+            
+            <span class="c1"># Handle left side</span>
+            <span class="k">if</span> <span class="n">original_node</span> <span class="ow">in</span> <span class="n">single_node_mapping</span><span class="p">:</span>
+                <span class="n">renamed_node</span> <span class="o">=</span> <span class="n">single_node_mapping</span><span class="p">[</span><span class="n">original_node</span><span class="p">]</span>
+                <span class="n">new_equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">renamed_node</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">new_rule</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">original_node</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">new_rule</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># reorder the equations alphabetically</span>
+    <span class="n">new_equations</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_equations</span><span class="p">)</span></div>
 
