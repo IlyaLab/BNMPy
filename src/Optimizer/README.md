@@ -7,7 +7,7 @@ A Python implementation of PBN parameter optimization based on the optPBN framew
 The optimizer is part of BNMPy. Required dependencies:
 
 ```bash
-pip install numpy scipy pandas pyswarms matplotlib
+pip install numpy scipy pandas pyswarms matplotlib networkx
 ```
 
 ## Usage
@@ -20,6 +20,8 @@ from BNMPy.BMatrix import load_pbn_from_string
 
 # Load or create your PBN
 pbn = load_pbn_from_string(...)
+
+# Compress 
 
 # Initialize optimizer with efficacy-enabled experimental data
 optimizer = ParameterOptimizer(pbn, "experiments.csv", nodes_to_optimize=['Cas3'], verbose=False)
@@ -188,6 +190,52 @@ optimizer.plot_optimization_history(
     log_scale=True          # Use logarithmic scale
 )
 ```
+
+## Model Compression
+
+The Optimizer module includes model compression functionality to simplify Boolean Networks before optimization. Currently supports Boolean Networks only. This will allow to:
+
+1. **Remove non-observable nodes**: Nodes that don't influence any measured species
+2. **Remove non-controllable nodes**: Nodes that aren't influenced by any perturbed species
+3. **Collapse linear paths**: Simplify cascades of intermediate nodes that don't branch
+4. **Visualize compression results**: Show which nodes and edges were removed
+
+### Example
+
+Compression can automatically extract measured and perturbed nodes from experimental data:
+
+```python
+from BNMPy.Optimizer import ParameterOptimizer, extract_experiment_nodes
+from BNMPy.Optimizer.model_compressor import compress_model
+from BNMPy.BMatrix import load_network_from_file
+
+# Load network and experimental data
+network = load_network_from_file("network.txt")
+
+# Extract nodes from experimental data
+measured_nodes, perturbed_nodes = extract_experiment_nodes("experiments.csv")
+
+# Compress network using experimental information
+compressed_network, compression_info = compress_model(
+    network,
+    measured_nodes=measured_nodes,
+    perturbed_nodes=perturbed_nodes
+)
+
+# Visualize compression results
+from BNMPy.vis import vis_compression_comparison
+vis_compression_comparison(
+    network,
+    compressed_network,
+    compression_info,
+    "compression_results.html"
+)
+
+# Run optimization on compressed network
+optimizer = ParameterOptimizer(compressed_network, "experiments.csv")
+result = optimizer.optimize(method='differential_evolution')
+```
+
 
 ## References
 

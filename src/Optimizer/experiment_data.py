@@ -281,6 +281,46 @@ class ExperimentData:
         
         return summary
 
+    @staticmethod
+    def extract_experiment_nodes(csv_file):
+        """
+        Extract measured and perturbed nodes from experimental CSV file.
+        
+        Parameters:
+        -----------
+        csv_file : str
+            Path to CSV file with experimental data
+            
+        Returns:
+        --------
+        Tuple[Set[str], Set[str]]
+            - measured_nodes: Set of node names that appear in Measured_nodes columns
+            - perturbed_nodes: Set of node names that appear in Stimuli or Inhibitors columns
+        """
+        df = pd.read_csv(csv_file)
+        measured_nodes = set()
+        perturbed_nodes = set()
+        
+        for _, row in df.iterrows():
+            # Extract measured nodes
+            if 'Measured_nodes' in row and not pd.isna(row['Measured_nodes']):
+                nodes = ExperimentData._parse_node_list(row['Measured_nodes'])
+                measured_nodes.update(nodes)
+            
+            # Extract stimuli (perturbed nodes)
+            if 'Stimuli' in row and not pd.isna(row['Stimuli']):
+                nodes = ExperimentData._parse_node_list(row['Stimuli'])
+                perturbed_nodes.update(nodes)
+            
+            # Extract inhibitors (perturbed nodes)
+            if 'Inhibitors' in row and not pd.isna(row['Inhibitors']):
+                nodes = ExperimentData._parse_node_list(row['Inhibitors'])
+                perturbed_nodes.update(nodes)
+        
+        print(f"   Extracted {len(measured_nodes)} measured nodes: {measured_nodes}")
+        print(f"   Extracted {len(perturbed_nodes)} perturbed nodes: {perturbed_nodes}")
+
+        return measured_nodes, perturbed_nodes
 
 if __name__ == "__main__":
     # Test with existing Trairatphisan data if available
