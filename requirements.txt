@@ -2,6 +2,7 @@ pandas
 numpy
 typing
 dataclasses
+networkx
 
 # Optimizer
 scipy == 1.15.2

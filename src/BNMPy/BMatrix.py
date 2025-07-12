@@ -348,7 +348,7 @@ def load_network_from_file(filename, initial_state=None):
         
     # create a Boolean network object
     network = BooleanNetwork(ngenes, connectivity_matrix, truth_table, x0,
-            nodeDict=gene_dict)
+            nodeDict=gene_dict, equations=equations)
     return network
 
 def load_network_from_string(network_string, initial_state=None):
@@ -362,7 +362,7 @@ def load_network_from_string(network_string, initial_state=None):
     - If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed
     """
     from .booleanNetwork import BooleanNetwork
-    equations = [x.strip() for x in network_string.strip().split('\n')]
+    equations = [x.strip() for x in network_string.strip().split('\n') if x.strip()]
     ngenes = len(equations)
     gene_dict = get_gene_dict(equations)
     upstream_genes = get_upstream_genes(equations)
@@ -386,8 +386,8 @@ def load_network_from_string(network_string, initial_state=None):
             x0[gene_index] = int(value)
             connectivity_matrix[gene_index, :] = -1
     
-    network = BooleanNetwork( ngenes , connectivity_matrix, truth_table, x0,
-            nodeDict=gene_dict)
+    network = BooleanNetwork(ngenes, connectivity_matrix, truth_table, x0,
+            nodeDict=gene_dict, equations=equations)
     return network
 
 def load_pbn_from_file(filename, initial_state=None):
@@ -518,6 +518,7 @@ def load_pbn_from_file(filename, initial_state=None):
     # Create and return the PBN
     network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0, nodeDict=gene_dict)
     network.gene_functions = gene_funcs  # Store the function strings
+    network.equations = all_equations  # Store the expanded equations
     return network
 
 def load_pbn_from_string(network_string, initial_state=None):
@@ -541,7 +542,7 @@ def load_pbn_from_string(network_string, initial_state=None):
     from .PBN import ProbabilisticBN
     
     # Split the string into lines
-    lines = [x.strip() for x in network_string.strip().split('\n')]
+    lines = [x.strip() for x in network_string.strip().split('\n') if x.strip()]
     
     # Parse gene names and organize functions by gene
     gene_funcs = {}
@@ -643,9 +644,10 @@ def load_pbn_from_string(network_string, initial_state=None):
     # Create and return the PBN
     network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0, nodeDict=gene_dict)
     network.gene_functions = gene_funcs  # Store the function strings
+    network.equations = all_equations  # Store the expanded equations
     return network
 
-def rename_nodes(network, mapping):
+def rename_nodes(network, mapping, expand_complexes=False):
     """
     Rename nodes in a boolean network based on a mapping.
 
@@ -656,11 +658,12 @@ def rename_nodes(network, mapping):
     mapping : str or dict
         Excel file path with 'Node' and 'NewName' columns, or dictionary with
         original names as keys and new names as values
-
+    expand_complexes : bool, optional
+        Whether to expand complex nodes into their components. Default is False.
     Returns:
     --------
     str
-        Updated network string with renamed nodes and expanded complexes
+        Updated network string with renamed nodes and optionally expanded complexes
     """
     # Load network from file if needed
     if os.path.isfile(network):
@@ -685,12 +688,15 @@ def rename_nodes(network, mapping):
                 new_name = str(new_name).strip()
             if not original_node or not new_name:
                 continue
+            
             if ',' in new_name:
-                components = [comp.strip() for comp in new_name.split(',') if comp.strip()]
-                if not components:
-                    continue
-                node_mapping[original_node] = components
-                complex_nodes[original_node] = components
+                if expand_complexes:
+                    # Parse components for expansion
+                    components = [comp.strip() for comp in new_name.split(',') if comp.strip()]
+                    if components:
+                        node_mapping[original_node] = components
+                        complex_nodes[original_node] = components
+                # If expand_complexes=False, skip complex nodes (keep original name)
             else:
                 node_mapping[original_node] = [new_name]
                 single_node_mapping[original_node] = new_name
@@ -700,21 +706,23 @@ def rename_nodes(network, mapping):
             if not original_node:
                 continue
             if isinstance(new_name, list):
-                components = [str(comp).strip() for comp in new_name if str(comp).strip()]
-                if not components:
-                    continue
-                node_mapping[original_node] = components
-                complex_nodes[original_node] = components
+                if expand_complexes:
+                    components = [str(comp).strip() for comp in new_name if str(comp).strip()]
+                    if components:
+                        node_mapping[original_node] = components
+                        complex_nodes[original_node] = components
+                # If expand_complexes=False, skip complex nodes (keep original name)
             else:
                 new_name = str(new_name).strip()
                 if not new_name:
                     continue
                 if ',' in new_name:
-                    components = [comp.strip() for comp in new_name.split(',') if comp.strip()]
-                    if not components:
-                        continue
-                    node_mapping[original_node] = components
-                    complex_nodes[original_node] = components
+                    if expand_complexes:
+                        components = [comp.strip() for comp in new_name.split(',') if comp.strip()]
+                        if components:
+                            node_mapping[original_node] = components
+                            complex_nodes[original_node] = components
+                    # If expand_complexes=False, skip complex nodes (keep original name)
                 else:
                     node_mapping[original_node] = [new_name]
                     single_node_mapping[original_node] = new_name
@@ -735,31 +743,88 @@ def rename_nodes(network, mapping):
             equation_dict[node] = rule
 
     new_equations = []
-
-    for original_node, rule in equation_dict.items():
-        new_rule = rule
-        # Replace complexes
-        for complex_node, components in complex_nodes.items():
-            if not complex_node or not components:
-                continue
-            pattern = r'\b' + re.escape(complex_node) + r'\b'
-            replacement = '(' + ' & '.join(components) + ')'
-            new_rule = re.sub(pattern, replacement, new_rule)
-        # Replace single nodes
-        for old_node, new_node in single_node_mapping.items():
-            if not old_node or not new_node:
-                continue
-            pattern = r'\b' + re.escape(old_node) + r'\b'
-            new_rule = re.sub(pattern, new_node, new_rule)
-        # Left side
-        if original_node in node_mapping:
-            new_nodes = node_mapping[original_node]
-            for new_node in new_nodes:
-                if not new_node:
+    
+    if expand_complexes:
+        # Track which component equations have been created to avoid duplicates
+        processed_components = set()
+        
+        # 1 Process complex expansions only
+        for original_node, rule in equation_dict.items():
+            if original_node in node_mapping:
+                # This is a complex node that should be expanded
+                new_rule = rule
+                # Replace complexes with their expanded forms
+                for complex_node, components in complex_nodes.items():
+                    if not complex_node or not components:
+                        continue
+                    pattern = r'\b' + re.escape(complex_node) + r'\b'
+                    replacement = '(' + ' & '.join(components) + ')'
+                    new_rule = re.sub(pattern, replacement, new_rule)
+                
+                # Replace single nodes
+                for old_node, new_node in single_node_mapping.items():
+                    if not old_node or not new_node:
+                        continue
+                    pattern = r'\b' + re.escape(old_node) + r'\b'
+                    new_rule = re.sub(pattern, new_node, new_rule)
+                
+                # Create equations for new components
+                new_nodes = node_mapping[original_node]
+                for new_node in new_nodes:
+                    if not new_node:
+                        continue
+                    # Only create equation if this component hasn't been processed yet
+                    # and doesn't already exist as an original node
+                    if new_node not in processed_components and new_node not in equation_dict:
+                        new_equations.append(f"{new_node} = {new_rule}")
+                        processed_components.add(new_node)
+        
+        # 2 Process remaining nodes (including renamed original nodes)
+        for original_node, rule in equation_dict.items():
+            if original_node not in node_mapping:
+                # This is not a complex node, process normally
+                new_rule = rule
+                # Replace complexes with their expanded forms
+                for complex_node, components in complex_nodes.items():
+                    if not complex_node or not components:
+                        continue
+                    pattern = r'\b' + re.escape(complex_node) + r'\b'
+                    replacement = '(' + ' & '.join(components) + ')'
+                    new_rule = re.sub(pattern, replacement, new_rule)
+                
+                # Replace single nodes
+                for old_node, new_node in single_node_mapping.items():
+                    if not old_node or not new_node:
+                        continue
+                    pattern = r'\b' + re.escape(old_node) + r'\b'
+                    new_rule = re.sub(pattern, new_node, new_rule)
+                
+                # Handle left side
+                if original_node in single_node_mapping:
+                    renamed_node = single_node_mapping[original_node]
+                    new_equations.append(f"{renamed_node} = {new_rule}")
+                else:
+                    new_equations.append(f"{original_node} = {new_rule}")
+    else:
+        # Simple rename - no complex expansion
+        for original_node, rule in equation_dict.items():
+            new_rule = rule
+            # Only replace single nodes (no complex expansion)
+            for old_node, new_node in single_node_mapping.items():
+                if not old_node or not new_node:
                     continue
-                new_equations.append(f"{new_node} = {new_rule}")
-        else:
-            new_equations.append(f"{original_node} = {new_rule}")
+                pattern = r'\b' + re.escape(old_node) + r'\b'
+                new_rule = re.sub(pattern, new_node, new_rule)
+            
+            # Handle left side
+            if original_node in single_node_mapping:
+                renamed_node = single_node_mapping[original_node]
+                new_equations.append(f"{renamed_node} = {new_rule}")
+            else:
+                new_equations.append(f"{original_node} = {new_rule}")
+    
+    # reorder the equations alphabetically
+    new_equations.sort(key=lambda x: x.split('=')[0])
 
     return '\n'.join(new_equations)
 
