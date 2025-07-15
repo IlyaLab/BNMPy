@@ -54,18 +54,16 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="BNMPy.BMatrix.load_network_from_file">
 <span class="sig-prename descclassname"><span class="pre">BNMPy.BMatrix.</span></span><span class="sig-name descname"><span class="pre">load_network_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/BMatrix.html#load_network_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.BMatrix.load_network_from_file" title="Link to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Given a file representing a boolean network, this generates a BooleanNetwork object.</p>
+<dd><p>Given a file representing a boolean network, this generates a BooleanNetwork object.</p>
 <p>Formatting:</p>
-</div></blockquote>
-<dl class="simple">
-<dt>gene = equation</dt><dd><ul class="simple">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gene</span> <span class="o">=</span> <span class="n">equation</span>
+</pre></div>
+</div>
+<ul class="simple">
 <li><p>all genes must have their own equation in a line (sometimes the equation is just A = A)</p></li>
 <li><p>each equation must have an equal sign and a space before and after it</p></li>
 <li><p>If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed</p></li>
 </ul>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -84,12 +82,14 @@
 <dt class="sig sig-object py" id="BNMPy.BMatrix.load_pbn_from_file">
 <span class="sig-prename descclassname"><span class="pre">BNMPy.BMatrix.</span></span><span class="sig-name descname"><span class="pre">load_pbn_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/BMatrix.html#load_pbn_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.BMatrix.load_pbn_from_file" title="Link to this definition">¶</a></dt>
 <dd><p>Given a file representing a probabilistic boolean network, this generates a ProbabilisticBN object.</p>
-<p>File format example:
-x1 = (x1 | x2 | x3) &amp; (!x1 | x2 | x3), 0.6
+<p>File format example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>x1 = (x1 | x2 | x3) &amp; (!x1 | x2 | x3), 0.6
 x1 = (x1 | x2 | x3) &amp; (x1 | !x2 | !x3) &amp; (!x1 | x2 | x3), 0.4
 x2 = (x1 | x2 | x3) &amp; (x1 | !x2 | !x3) &amp; (!x1 | !x2 | x3)
 x3 = (!x1 &amp; x2 &amp; x3) | (x1 &amp; !x2 &amp; x3) | (x1 &amp; x2 &amp; !x3) | (x1 &amp; x2 &amp; x3), 0.5
-x3 = (x1 &amp; x2 &amp; x3), 0.5</p>
+x3 = (x1 &amp; x2 &amp; x3), 0.5
+</pre></div>
+</div>
 <p>Each line has format: node = boolean_function, probability
 The probability part can be omitted if there is only one function for that gene.
 The boolean_function can also be a constant value (0 or 1), meaning that the gene is set as mutated/perturbed</p>
