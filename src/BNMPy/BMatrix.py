@@ -311,9 +311,9 @@ def load_network_from_file(filename, initial_state=None):
     """
     Given a file representing a boolean network, this generates a BooleanNetwork object.
 
-    Formatting:
+    Formatting::
    
-    `gene = equation`
+        gene = equation
    
     - all genes must have their own equation in a line (sometimes the equation is just A = A)
     - each equation must have an equal sign and a space before and after it
@@ -396,14 +396,14 @@ def load_pbn_from_file(filename, initial_state=None):
     """
     Given a file representing a probabilistic boolean network, this generates a ProbabilisticBN object.
 
-    File format example:
-    ```
-    x1 = (x1 | x2 | x3) & (!x1 | x2 | x3), 0.6
-    x1 = (x1 | x2 | x3) & (x1 | !x2 | !x3) & (!x1 | x2 | x3), 0.4
-    x2 = (x1 | x2 | x3) & (x1 | !x2 | !x3) & (!x1 | !x2 | x3)
-    x3 = (!x1 & x2 & x3) | (x1 & !x2 & x3) | (x1 & x2 & !x3) | (x1 & x2 & x3), 0.5
-    x3 = (x1 & x2 & x3), 0.5
-    ```
+    File format example::
+    
+        x1 = (x1 | x2 | x3) & (!x1 | x2 | x3), 0.6
+        x1 = (x1 | x2 | x3) & (x1 | !x2 | !x3) & (!x1 | x2 | x3), 0.4
+        x2 = (x1 | x2 | x3) & (x1 | !x2 | !x3) & (!x1 | !x2 | x3)
+        x3 = (!x1 & x2 & x3) | (x1 & !x2 & x3) | (x1 & x2 & !x3) | (x1 & x2 & x3), 0.5
+        x3 = (x1 & x2 & x3), 0.5
+    
 
     Each line has format: node = boolean_function, probability
     The probability part can be omitted if there is only one function for that gene.
