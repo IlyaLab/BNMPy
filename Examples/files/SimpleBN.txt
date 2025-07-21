@@ -1,0 +1,6 @@
+A = A
+B = C
+C = !E
+D = A | B
+E = C & D
+F = !A & B
