@@ -349,6 +349,7 @@ def load_network_from_file(filename, initial_state=None):
     # create a Boolean network object
     network = BooleanNetwork(ngenes, connectivity_matrix, truth_table, x0,
             nodeDict=gene_dict, equations=equations)
+    print(f"Network loaded successfully. There are {ngenes} genes in the network.")
     return network
 
 def load_network_from_string(network_string, initial_state=None):
@@ -388,6 +389,7 @@ def load_network_from_string(network_string, initial_state=None):
     
     network = BooleanNetwork(ngenes, connectivity_matrix, truth_table, x0,
             nodeDict=gene_dict, equations=equations)
+    print(f"Network loaded successfully. There are {ngenes} genes in the network.")
     return network
 
 def load_pbn_from_file(filename, initial_state=None):
@@ -519,6 +521,7 @@ def load_pbn_from_file(filename, initial_state=None):
     network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0, nodeDict=gene_dict)
     network.gene_functions = gene_funcs  # Store the function strings
     network.equations = all_equations  # Store the expanded equations
+    print(f"PBN loaded successfully. There are {ngenes} genes in the network.")
     return network
 
 def load_pbn_from_string(network_string, initial_state=None):
@@ -645,6 +648,7 @@ def load_pbn_from_string(network_string, initial_state=None):
     network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0, nodeDict=gene_dict)
     network.gene_functions = gene_funcs  # Store the function strings
     network.equations = all_equations  # Store the expanded equations
+    print(f"PBN loaded successfully. There are {ngenes} genes in the network.")
     return network
 
 def rename_nodes(network, mapping, expand_complexes=False):

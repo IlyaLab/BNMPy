@@ -147,3 +147,48 @@ def add_genes_to_network(bn, gene_list, input_format='symbol',
     new_equations = new_equations.split('\n')
     return merge_network(bn, new_equations, outer_joiner)
 
+
+def merge_PBN_string(original_string, KG_string, prob=0.5):
+    """
+    Merge the original model and the KG model to a PBN
+    prob: probability of the equations from the original model
+    """
+    # Parse equations from both models
+    original_equations = {}
+    for line in original_string.strip().split('\n'):
+        if '=' in line:
+            target, rule = line.split('=', 1)
+            original_equations[target.strip()] = rule.strip()
+    
+    kg_equations = {}
+    for line in KG_string.strip().split('\n'):
+        if '=' in line:
+            target, rule = line.split('=', 1)
+            kg_equations[target.strip()] = rule.strip()
+    
+    # Merge equations
+    merged_equations = []
+    all_targets = set(original_equations.keys()) | set(kg_equations.keys())
+    
+    for target in all_targets:
+        if target in original_equations and target in kg_equations:
+            if original_equations[target] == kg_equations[target]:
+                # Both models have the same equation for this target
+                merged_equations.append(f"{target} = {original_equations[target]}, 1")
+            else:
+                # Use both with specified probabilities
+                merged_equations.append(f"{target} = {original_equations[target]}, {prob}")
+                merged_equations.append(f"{target} = {kg_equations[target]}, {1-prob}")
+        elif target in original_equations:
+            # Only original model has this target
+            merged_equations.append(f"{target} = {original_equations[target]}, 1")
+            print(f"Only original model has this target: {target}")
+        else:
+            # Only KG model has this target
+            print("Only KG model has this target:", target)
+            merged_equations.append(f"{target} = {kg_equations[target]}, 1")
+    
+    # remove equation with prob = 0
+    merged_equations = [eq for eq in merged_equations if eq.split(',')[1] != ' 0']
+    merged_string = '\n'.join(merged_equations)
+    return merged_string

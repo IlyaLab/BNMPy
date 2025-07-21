@@ -75,11 +75,6 @@ class ProbabilisticBN(object):
         """
         Update cumulative probabilities for each node's functions.
         This is used for efficient function selection during simulation.
-        
-        The method:
-        1. Validates probability distributions
-        2. Computes cumulative probabilities
-        3. Stores them for efficient sampling
         """
         self.cij_cumsum = []
         
@@ -88,13 +83,21 @@ class ProbabilisticBN(object):
             probs = self.cij[i, :self.nf[i]]
             
             # Validate probabilities
-            if not np.isclose(np.sum(probs), 1.0, rtol=1e-5):
-                # If probabilities don't sum to 1, normalize them
-                probs = probs / np.sum(probs)
-                self.cij[i, :self.nf[i]] = probs
+            valid_probs = probs[probs >= 0]
+
+            if len(valid_probs) == 0 or np.sum(valid_probs) <= 1e-5:
+                # Use uniform distribution
+                valid_probs = np.ones(self.nf[i]) / self.nf[i]
+            else:
+                # normalize probabilities
+                valid_probs = valid_probs / np.sum(valid_probs)
             
+            # Update Cij
+            self.cij[i, :self.nf[i]] = valid_probs
+
             # Compute cumulative probabilities
-            cumsum = np.cumsum(probs)
+            cumsum = np.cumsum(valid_probs)
+            
             # Ensure last value is exactly 1.0
             cumsum[-1] = 1.0
             self.cij_cumsum.append(cumsum)
@@ -187,6 +190,7 @@ class ProbabilisticBN(object):
     def knockdown(self, key, value, efficacy=1.0):
         """
         Sets a specific node with partial efficacy for experimental perturbation.
+        E.g., when using a drug to inhibit a gene, the efficacy is the probability of the drug being effective.
         
         Parameters:
         -----------
@@ -293,6 +297,16 @@ class ProbabilisticBN(object):
         return np.searchsorted(cumsum, r)
 
     def update(self, iterations=1):
+        """
+        Update the network directly.
+        Select a function for each node based on its probability distribution.
+        Then, update the network state based on the selected function.
+
+        Parameters:
+        -----------
+        iterations : int, optional (default=1)
+            Number of iterations to simulate
+        """
         
         y = np.zeros( (iterations + 1, self.N ) , dtype=np.int8  )
         temp = np.array(  [2**i for i in range(self.N-1, -1, -1) ] ) 

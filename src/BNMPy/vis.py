@@ -215,6 +215,7 @@ def create_matplotlib_visualization(logic_rules, removed_nodes=None, removed_edg
     perturbed_node_list = [n for n in normal_nodes if n in perturbed_nodes]
     measured_node_list = [n for n in normal_nodes if n in measured_nodes and n not in perturbed_nodes]
     input_nodes = []
+    output_nodes = []
     intermediate_nodes = []
     
     for node in normal_nodes:
@@ -230,38 +231,45 @@ def create_matplotlib_visualization(logic_rules, removed_nodes=None, removed_edg
                 rule = logic_rules[node]
                 if rule.strip() == node:
                     is_input = True
-            elif isinstance(logic_rules.get(node), list):
-                rules = logic_rules[node]
-                if all(rule.strip() == node for rule in rules):
-                    is_input = True
         
         # Also consider nodes with no incoming edges as inputs
-        if not is_input and G.in_degree(node) == 0:
+        if G.in_degree(node) == 0:
             is_input = True
         
+        # Check if node is output
+        is_output = False
+        if not measured_nodes:
+            if G.out_degree(node) == 0 and not is_input:
+                is_output = True
+                
+
         # Categorize
         if is_input:
             input_nodes.append(node)
+        elif is_output:
+            output_nodes.append(node)
         else:
             intermediate_nodes.append(node)
     
     # Draw different node types with proper color scheme
-    if perturbed_node_list:
-        nx.draw_networkx_nodes(G, pos, nodelist=perturbed_node_list, node_color='red', 
-                             node_size=500, alpha=0.8, label='Perturbed', edgecolors='black')
-    if measured_node_list:
-        nx.draw_networkx_nodes(G, pos, nodelist=measured_node_list, node_color='orange', 
-                             node_size=500, alpha=0.8, label='Measured', edgecolors='black')
     if input_nodes:
         nx.draw_networkx_nodes(G, pos, nodelist=input_nodes, node_color='lightgreen', 
                              node_size=500, alpha=0.8, label='Input', edgecolors='black')
+    if output_nodes:
+        nx.draw_networkx_nodes(G, pos, nodelist=output_nodes, node_color='yellow', 
+                             node_size=500, alpha=0.8, label='Output', edgecolors='black')
     if intermediate_nodes:
         nx.draw_networkx_nodes(G, pos, nodelist=intermediate_nodes, node_color='lightblue', 
                              node_size=500, alpha=0.8, label='Intermediate', edgecolors='black')
     if removed_node_list:
         nx.draw_networkx_nodes(G, pos, nodelist=removed_node_list, node_color='lightgrey', 
                              node_size=500, alpha=0.6, label='Removed', edgecolors='black')
-    
+    if perturbed_node_list:
+        nx.draw_networkx_nodes(G, pos, nodelist=perturbed_node_list, node_color='red', 
+                             node_size=500, alpha=0.8, label='Perturbed', edgecolors='black')
+    if measured_node_list:
+        nx.draw_networkx_nodes(G, pos, nodelist=measured_node_list, node_color='orange', 
+                             node_size=500, alpha=0.8, label='Measured', edgecolors='black')
     # Draw edges
     normal_edges = [(u, v) for u, v in G.edges() if (u, v) not in removed_edges]
     removed_edge_list = [(u, v) for u, v in G.edges() if (u, v) in removed_edges]
@@ -281,7 +289,7 @@ def create_matplotlib_visualization(logic_rules, removed_nodes=None, removed_edg
     plt.tight_layout()
     
     # Add legend if there are different node types
-    if perturbed_node_list or measured_node_list or input_nodes or intermediate_nodes or removed_node_list:
+    if perturbed_node_list or measured_node_list or input_nodes or intermediate_nodes or output_nodes or removed_node_list:
         plt.legend(loc='upper right', bbox_to_anchor=(1, 1))
     
     plt.show()
@@ -321,218 +329,218 @@ def vis_network(source, output_html="network_graph.html", interactive=False,
     # Set removed nodes and edges to empty sets if not provided
     removed_nodes = removed_nodes or set()
     removed_edges = removed_edges or set()
+    measured_nodes = measured_nodes or set()
+    perturbed_nodes = perturbed_nodes or set()
 
     # For non-interactive mode, use matplotlib visualization
     if not interactive:
-        try:
-            return create_matplotlib_visualization(logic_rules, removed_nodes, removed_edges, 
+        return create_matplotlib_visualization(logic_rules, removed_nodes, removed_edges, 
                                                   measured_nodes, perturbed_nodes)
-        except Exception as e:
-            print(f"Warning: Matplotlib visualization failed: {e}")
-            return None
 
     # For interactive mode, use pyvis
-    try:
-        # Check if this is PBN (multiple rules per node)
-        is_pbn = isinstance(list(logic_rules.values())[0], list) if logic_rules else False
-        
-        if is_pbn:
-            # Build graph for PBN
-            g = build_igraph_pbn(logic_rules, edge_probabilities)
-        else:
-            # Build graph for BN
-            g = build_igraph(logic_rules)
-        
-        # Create pyvis network with proper configuration
-        net = Network(
-            height='1000px', 
-            width='1200px', 
-            bgcolor='#ffffff',
-            font_color='black',
-            directed=True
-        )
-        
-        # Set network options to match the working example
-        net.set_options("""
-        var options = {
-            "configure": {
-                "enabled": false
+    # Check if this is PBN (multiple rules per node)
+    is_pbn = isinstance(list(logic_rules.values())[0], list) if logic_rules else False
+    
+    if is_pbn:
+        # Build graph for PBN
+        g = build_igraph_pbn(logic_rules, edge_probabilities)
+    else:
+        # Build graph for BN
+        g = build_igraph(logic_rules)
+    
+    # Create pyvis network with proper configuration
+    net = Network(
+        height='1000px', 
+        width='1200px', 
+        bgcolor='#ffffff',
+        font_color='black',
+        directed=True
+    )
+    
+    # Set network options to match the working example
+    net.set_options("""
+    var options = {
+        "configure": {
+            "enabled": false
+        },
+        "edges": {
+            "color": {
+                "inherit": true
             },
-            "edges": {
-                "color": {
-                    "inherit": true
-                },
-                "smooth": {
-                    "enabled": true,
-                    "type": "dynamic"
-                }
-            },
-            "interaction": {
-                "dragNodes": true,
-                "hideEdgesOnDrag": false,
-                "hideNodesOnDrag": false
-            },
-            "physics": {
+            "smooth": {
                 "enabled": true,
-                "stabilization": {
-                    "enabled": true,
-                    "fit": true,
-                    "iterations": 1000,
-                    "onlyDynamicEdges": false,
-                    "updateInterval": 50
-                }
+                "type": "dynamic"
+            }
+        },
+        "interaction": {
+            "dragNodes": true,
+            "hideEdgesOnDrag": false,
+            "hideNodesOnDrag": false
+        },
+        "physics": {
+            "enabled": true,
+            "stabilization": {
+                "enabled": true,
+                "fit": true,
+                "iterations": 1000,
+                "onlyDynamicEdges": false,
+                "updateInterval": 50
             }
         }
-        """)
+    }
+    """)
 
-        # Add nodes to the PyVis network
-        nodes_added = []
-        for v in g.vs:
-            node_name = v["name"]
-            upstream_count = len([pred for pred in g.predecessors(v.index) if pred != v.index])
-            downstream_count = len([succ for succ in g.successors(v.index) if succ != v.index])
+    # Add nodes to the PyVis network
+    nodes_added = []
+    for v in g.vs:
+        node_name = v["name"]
+        upstream_count = len([pred for pred in g.predecessors(v.index) if pred != v.index])
+        downstream_count = len([succ for succ in g.successors(v.index) if succ != v.index])
+        
+        # Set color based on removal status and node type
+        if node_name in removed_nodes:
+            color = "lightgrey"
+            font_color = "grey"
+            nodes_added.append(f"{node_name} (removed)")
+        elif node_name in perturbed_nodes:
+            color = "red"
+            font_color = "white"
+            nodes_added.append(f"{node_name} (perturbed)")
+        elif node_name in measured_nodes:
+            color = "orange"
+            font_color = "black"
+            nodes_added.append(f"{node_name} (measured)")
+        else:
+            # Check if node is input based on logic rules or connectivity
+            is_input = False
             
-            # Set color based on removal status and node type
-            if node_name in removed_nodes:
-                color = "lightgrey"
-                font_color = "grey"
-                nodes_added.append(f"{node_name} (removed)")
-            elif node_name in perturbed_nodes:
-                color = "red"
-                font_color = "white"
-                nodes_added.append(f"{node_name} (perturbed)")
-            elif node_name in measured_nodes:
-                color = "orange"
-                font_color = "black"
-                nodes_added.append(f"{node_name} (measured)")
-            else:
-                # Check if node is input based on logic rules or connectivity
-                is_input = False
-                
-                # Determine if it's an input (self-referential rule or no incoming edges)
-                if isinstance(logic_rules.get(node_name), str):
-                    rule = logic_rules[node_name]
-                    # Input nodes typically have rules like "NodeName = NodeName"
-                    if rule.strip() == node_name:
-                        is_input = True
-                elif isinstance(logic_rules.get(node_name), list):
-                    # For PBN, check if all rules are self-referential
-                    rules = logic_rules[node_name]
-                    if all(rule.strip() == node_name for rule in rules):
-                        is_input = True
-                
-                # Also consider nodes with no incoming edges as inputs
-                if not is_input and upstream_count == 0:
+            # self-referential rule or no incoming edges
+            if isinstance(logic_rules.get(node_name), str):
+                rule = logic_rules[node_name]
+                if rule.strip() == node_name:
                     is_input = True
-                
-                # Set colors based on node type
-                if is_input:
-                    color = "lightgreen"  # Light green for inputs
-                    font_color = "black"
-                    nodes_added.append(f"{node_name} (input)")
-                else:
-                    color = "lightblue"  # Light blue for intermediate nodes
-                    font_color = "black"
-                    nodes_added.append(f"{node_name} (intermediate)")
-
-            net.add_node(
-                v.index, 
-                label=node_name, 
-                title=node_name, 
-                color=color, 
-                size=40,
-                font={'size': 20, 'color': font_color}
-            )
-
-        # Add edges to the PyVis network
-        edges_added = []
-        for e in g.es:
-            src, tgt = e.tuple
-            src_name = g.vs[src]["name"]
-            tgt_name = g.vs[tgt]["name"]
+            elif isinstance(logic_rules.get(node_name), list):
+                # For PBN, check if all rules are self-referential
+                rules = logic_rules[node_name]
+                if all(rule.strip() == node_name for rule in rules):
+                    is_input = True
             
-            rule_label = e["label"]
+            # Also consider nodes with no incoming edges as inputs
+            if upstream_count == 0:
+                is_input = True
             
-            # Check if edge was removed
-            edge_removed = (src_name, tgt_name) in removed_edges
+            # Check if node is output
+            is_output = False
+            if not measured_nodes:
+                if downstream_count == 0 and not is_input:
+                    is_output = True
             
-            # Get probability if available
-            edge_prob = e["probability"] if "probability" in e.attributes() else 1.0
-            
-            # Create hover title with rule and probability
-            if is_pbn and edge_prob < 1.0:
-                edge_title = f"{tgt_name} = {rule_label}, p={edge_prob:.3f}"
+            # Set colors based on node type
+            if is_input:
+                color = "lightgreen"  # Light green for inputs
+                font_color = "black"
+                nodes_added.append(f"{node_name} (input)")
+            elif is_output:
+                color = "yellow"  # Yellow for outputs
+                font_color = "black"
+                nodes_added.append(f"{node_name} (output)")
             else:
-                edge_title = f"{tgt_name} = {rule_label}"
-            
-            # Set edge color and style based on rule type and removal status
-            if edge_removed:
-                edge_color = "lightgrey"
-                edge_width = 1
-                edge_alpha = 0.3
-                edges_added.append(f"{src_name}->{tgt_name} (removed)")
-            elif rule_label.startswith("!(") and src_name in rule_label:
-                edge_color = "grey"
-                edge_width = 2
-                edge_alpha = edge_prob if is_pbn else 1.0
-                edges_added.append(f"{src_name}->{tgt_name} (inhibitory)")
-            elif rule_label.startswith("! (") and src_name in rule_label:
-                edge_color = "grey" 
-                edge_width = 2
-                edge_alpha = edge_prob if is_pbn else 1.0
-                edges_added.append(f"{src_name}->{tgt_name} (inhibitory)")
-            elif "! (" in rule_label and src_name in rule_label:
-                edge_color = "grey"
-                edge_width = 2
-                edge_alpha = edge_prob if is_pbn else 1.0
-                edges_added.append(f"{src_name}->{tgt_name} (inhibitory)")
-            elif f"!{src_name}" in rule_label or f"! {src_name}" in rule_label:
-                edge_color = "blue"
-                edge_width = 2
-                edge_alpha = edge_prob if is_pbn else 1.0
-                edges_added.append(f"{src_name}->{tgt_name} (direct inhibitory)")
-            else:
-                edge_color = "red"
-                edge_width = 2
-                edge_alpha = edge_prob if is_pbn else 1.0
-                edges_added.append(f"{src_name}->{tgt_name} (activating)")
-            
-            # For PBN, adjust edge width and transparency based on probability
-            if is_pbn and not edge_removed:
-                edge_width = max(1, int(edge_prob * 4))  # Scale width by probability
-                # Convert alpha to hex color for transparency
-                alpha_hex = format(int(edge_alpha * 255), '02x')
-                if edge_color == "red":
-                    edge_color = f"#ff0000{alpha_hex}"
-                elif edge_color == "blue":
-                    edge_color = f"#0000ff{alpha_hex}"
-                elif edge_color == "grey":
-                    edge_color = f"#808080{alpha_hex}"
+                color = "lightblue"  # Light blue for intermediate nodes
+                font_color = "black"
+                nodes_added.append(f"{node_name} (intermediate)")
 
-            net.add_edge(
-                src, 
-                tgt, 
-                title=edge_title, 
-                color=edge_color, 
-                width=edge_width
-            )
+        net.add_node(
+            v.index, 
+            label=node_name, 
+            title=node_name, 
+            color=color, 
+            size=40,
+            font={'size': 20, 'color': font_color}
+        )
 
-        # Save the network
-        try:
-            net.save_graph(output_html)
-            print(f"Network visualization saved to {output_html}")
+    # Add edges to the PyVis network
+    edges_added = []
+    for e in g.es:
+        src, tgt = e.tuple
+        src_name = g.vs[src]["name"]
+        tgt_name = g.vs[tgt]["name"]
+        
+        rule_label = e["label"]
+        
+        # Check if edge was removed
+        edge_removed = (src_name, tgt_name) in removed_edges
+        
+        # Get probability if available
+        edge_prob = e["probability"] if "probability" in e.attributes() else 1.0
+        
+        # Create hover title with rule and probability
+        if is_pbn and edge_prob < 1.0:
+            edge_title = f"{tgt_name} = {rule_label}, p={edge_prob:.3f}"
+        else:
+            edge_title = f"{tgt_name} = {rule_label}"
+        
+        # Set edge color and style based on rule type and removal status
+        if edge_removed:
+            edge_color = "lightgrey"
+            edge_width = 1
+            edge_alpha = 0.3
+            edges_added.append(f"{src_name}->{tgt_name} (removed)")
+        elif rule_label.startswith("!(") and src_name in rule_label:
+            edge_color = "grey"
+            edge_width = 2
+            edge_alpha = edge_prob if is_pbn else 1.0
+            edges_added.append(f"{src_name}->{tgt_name} (inhibitory)")
+        elif rule_label.startswith("! (") and src_name in rule_label:
+            edge_color = "grey" 
+            edge_width = 2
+            edge_alpha = edge_prob if is_pbn else 1.0
+            edges_added.append(f"{src_name}->{tgt_name} (inhibitory)")
+        elif "! (" in rule_label and src_name in rule_label:
+            edge_color = "grey"
+            edge_width = 2
+            edge_alpha = edge_prob if is_pbn else 1.0
+            edges_added.append(f"{src_name}->{tgt_name} (inhibitory)")
+        elif f"!{src_name}" in rule_label or f"! {src_name}" in rule_label:
+            edge_color = "blue"
+            edge_width = 2
+            edge_alpha = edge_prob if is_pbn else 1.0
+            edges_added.append(f"{src_name}->{tgt_name} (direct inhibitory)")
+        else:
+            edge_color = "red"
+            edge_width = 2
+            edge_alpha = edge_prob if is_pbn else 1.0
+            edges_added.append(f"{src_name}->{tgt_name} (activating)")
+        
+        # For PBN, adjust edge width and transparency based on probability
+        if is_pbn and not edge_removed:
+            edge_width = max(1, int(edge_prob * 4))  # Scale width by probability
+            # Convert alpha to hex color for transparency
+            alpha_hex = format(int(edge_alpha * 255), '02x')
+            if edge_color == "red":
+                edge_color = f"#ff0000{alpha_hex}"
+            elif edge_color == "blue":
+                edge_color = f"#0000ff{alpha_hex}"
+            elif edge_color == "grey":
+                edge_color = f"#808080{alpha_hex}"
 
-        except Exception as e:
-            print(f"Warning: PyVis HTML generation failed: {e}")
+        net.add_edge(
+            src, 
+            tgt, 
+            title=edge_title, 
+            color=edge_color, 
+            width=edge_width
+        )
 
-    except Exception as e:
-        print(f"Warning: Visualization error: {e}")
+    # Save the network
+    net.save_graph(output_html)
+    print(f"Network visualization saved to {output_html}")
+
 
 
 
 def vis_compression_comparison(original_network, compressed_network, 
                              compression_info, output_html="compression_comparison.html",
-                             interactive=False, measured_nodes=None, perturbed_nodes=None):
+                             interactive=False):
     """
     Visualize the original network with removed/collapsed nodes highlighted.
     
@@ -542,8 +550,6 @@ def vis_compression_comparison(original_network, compressed_network,
         compression_info: Dictionary with compression information
         output_html (str): Output HTML file name
         interactive (bool): If True, return network visualization in interactive html file
-        measured_nodes (set): Set of node names that are measured (shown in orange)
-        perturbed_nodes (set): Set of node names that are perturbed (shown in red)
     """
     # Collect all removed nodes from compression info
     removed_nodes = set()
@@ -561,14 +567,11 @@ def vis_compression_comparison(original_network, compressed_network,
             # All intermediate nodes (exclude first and last)
             removed_nodes.update(path[1:-1])
     
-    # Alternative approach: find nodes that are in original but not in compressed
-    original_nodes = set(original_network.nodeDict.keys())
-    compressed_nodes = set(compressed_network.nodeDict.keys())
-    missing_nodes = original_nodes - compressed_nodes
-    removed_nodes.update(missing_nodes)
-    
     # Get removed edges
     removed_edges = compression_info.get('removed_edges', set())
+    
+    measured_nodes = compression_info.get('measured_nodes', set())
+    perturbed_nodes = compression_info.get('perturbed_nodes', set())
     
     # print(f"Visualizing compression comparison:")
     # print(f"  Original network nodes: {len(original_network.nodeDict)}")
@@ -579,6 +582,8 @@ def vis_compression_comparison(original_network, compressed_network,
     # print(f"  Nodes marked as removed: {len(removed_nodes)}")
     # print(f"  Removed nodes: {sorted(removed_nodes)}")
     # print(f"  Removed edges: {len(removed_edges)}")
+    # print(f"  Measured nodes: {sorted(measured_nodes)}")
+    # print(f"  Perturbed nodes: {sorted(perturbed_nodes)}")
     
     # Use the original network for visualization with removed nodes marked
     return vis_network(

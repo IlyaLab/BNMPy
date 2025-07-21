@@ -7,7 +7,7 @@ Includes parameter optimization, model compression, experimental data handling, 
 
 from .parameter_optimizer import ParameterOptimizer
 from .simulation_evaluator import SimulationEvaluator
-from .experiment_data import ExperimentData
+from .experiment_data import ExperimentData, extract_experiment_nodes
 from .model_compressor import ModelCompressor, compress_model
 from .result_evaluation import ResultEvaluator, evaluate_optimization_result
 
@@ -15,6 +15,7 @@ __all__ = [
     'ParameterOptimizer',
     'SimulationEvaluator', 
     'ExperimentData',
+    'extract_experiment_nodes',
     'ModelCompressor',
     'compress_model',
     'ResultEvaluator',

@@ -94,6 +94,8 @@ class SteadyStateCalculator:
     def compute_steady_state(self, method: str = 'tsmc', **kwargs) -> np.ndarray:
         """
         steady-state calculation
+        If BN, run deterministic steady-state calculation.
+        If PBN, run Two-State Markov Chain or Monte Carlo.
         
         Parameters:
         -----------
@@ -106,6 +108,9 @@ class SteadyStateCalculator:
         --------
         np.ndarray : Steady-state probabilities for each node
         """
+        if not self.is_pbn:
+            return self.compute_stationary_deterministic(**kwargs)
+        
         if method == 'tsmc':
             return self.compute_stationary_tsmc(**kwargs)
         elif method == 'monte_carlo':
@@ -334,8 +339,7 @@ class SteadyStateCalculator:
                              n_steps: int = 1000,
                              p_noise: float = 0,
                              analyze_convergence: bool = False,
-                             output_node: str = None,
-                             show_plot: bool = True) -> Union[np.ndarray, Tuple[np.ndarray, Dict]]:
+                             output_node: str = None) -> Union[np.ndarray, Tuple[np.ndarray, Dict]]:
         """
         Monte Carlo steady-state calculation, handle input nodes and constant nodes
         
@@ -351,8 +355,6 @@ class SteadyStateCalculator:
             Whether to perform convergence analysis and show plot
         output_node : str, optional
             Node name for convergence analysis. If None, uses all nodes.
-        show_plot : bool, default=True
-            Whether to display convergence plot when analyze_convergence=True
             
         Returns:
         --------
@@ -367,9 +369,8 @@ class SteadyStateCalculator:
             # Single long run for convergence analysis
             steady_state, convergence_info = self._compute_mc_with_convergence(n_steps, p_noise, output_node)
             
-            # Display convergence plot if requested
-            if show_plot:
-                self._convergence_plot(convergence_info, output_node, show_plot)
+            # convergence plot
+            self._convergence_plot(convergence_info, output_node)
             
             return steady_state, convergence_info
         else:
@@ -477,7 +478,7 @@ class SteadyStateCalculator:
                 'converged': final_relative_change < 1.0,  # Less than 1% change
                 'node_analyzed': output_node,
                 'relative_changes': node_scores,
-                'time_points': time_points
+                'time_points': [i*2 for i in time_points]
             }
         else:
             # Analyze all nodes and take maximum
@@ -646,46 +647,77 @@ class SteadyStateCalculator:
             'max_connectivity': np.max(self.K) if len(self.K) > 0 else 0
         }
 
-    def compute_stationary_deterministic(self, max_steps: int = 1000) -> Union[np.ndarray, None]:
+    def compute_stationary_deterministic(self,n_runs: int = 100,n_steps: int = 1000) -> Dict[str, List[np.ndarray] | List[List[np.ndarray]]]:
         """
-        Find deterministic steady state (attractors) for Boolean networks
-        TODO: need more discussion on this
+        Find attractors (fixed points and cycles) in a synchronous
+        Boolean network via random restarts.
+
+        Returns
+        -------
+        {
+            "fixed_points": [state_vec, ...],                  # each np.ndarray (0/1)
+            "cyclic_attractors"      : [[state_vec1, state_vec2, ...],    # one list per cycle
+                            ...]
+        }
         """
-        # Store original state
-        self._save_network_state()
-        
-        # Try different initial conditions
-        for _ in range(10):  # Try up to 10 random initial conditions
-            initial_state = (np.random.rand(self.N) > 0.5).astype(np.int8)
-            self.network.setInitialValues(initial_state)
-            
-            # Track states to detect cycles
-            state_history = []
-            
-            for step in range(max_steps):
-                current_state = self.network.nodes.copy()
-                state_tuple = tuple(current_state)
-                
-                if state_tuple in state_history:
-                    # Found a cycle
-                    cycle_start = state_history.index(state_tuple)
-                    cycle = state_history[cycle_start:]
-                    
-                    if len(cycle) == 1:
-                        # Fixed point found
-                        self._restore_network_state()
-                        return current_state.astype(float)
-                    else:
-                        # Limit cycle - return average
-                        cycle_states = np.array([list(s) for s in cycle])
-                        self._restore_network_state()
-                        return np.mean(cycle_states, axis=0)
-                
-                state_history.append(state_tuple)
-                
-                # Update network using existing method
+        fixed_points: List[np.ndarray] = []
+        cycles: List[List[np.ndarray]] = []
+
+        def _canonical_cycle(cycle: List[Tuple[int, ...]]) -> Tuple[Tuple[int, ...], ...]:
+            """Return a rotation-invariant representation of a cycle."""
+            # choose lexicographically smallest rotation
+            rotations = [cycle[i:] + cycle[:i] for i in range(len(cycle))]
+            return tuple(min(rotations))
+
+        seen_fixed: set[Tuple[int, ...]] = set()
+        seen_cycles: set[Tuple[Tuple[int, ...], ...]] = set()
+
+        self._save_network_state()  # keep original state
+
+        for _ in range(n_runs):
+            # random start
+            init = (np.random.rand(self.N) > 0.5).astype(np.int8)
+            self.network.setInitialValues(init)
+
+            history: List[Tuple[int, ...]] = []
+
+            for _ in range(n_steps):
+                state = tuple(self.network.nodes.copy())
+
+                if state in history:   
+                    start_idx = history.index(state)
+                    cycle = history[start_idx:]  # list[tuple]
+
+                    if len(cycle) == 1:          # fixed point
+                        if state not in seen_fixed:
+                            fixed_points.append(np.array(state))
+                            seen_fixed.add(state)
+                    else:                        # limit cycle
+                        can = _canonical_cycle(cycle)
+                        if can not in seen_cycles:
+                            cycles.append([np.array(s) for s in cycle])
+                            seen_cycles.add(can)
+                    break  # stop this trajectory
+
+                history.append(state)
                 self.network.update(1)
-        
-        # Restore original state and return None if no attractor found
+
         self._restore_network_state()
-        return None
+        print(f"Found {len(fixed_points)} fixed points and {len(cycles)} cyclic attractors")
+        print("--------------------------------")
+        if len(fixed_points) > 0:
+            print("Fixed points: ")
+            for i, fixed_point in enumerate(fixed_points):
+                print(f"Fixed point {i+1}: {fixed_point.tolist()}")
+        else:
+            print("No fixed points found")
+        print("--------------------------------")
+        if len(cycles) > 0:
+            print("Cyclic attractors: ")
+            for i, cycle in enumerate(cycles):
+                print(f"Cyclic attractor {i+1}: {[component.tolist() for component in cycle]}")
+        else:
+            print("No cyclic attractors found")
+        print("--------------------------------")
+        print(f"Node order: {self.network.nodeDict.keys()}")
+        return {"fixed_points": fixed_points, "cyclic_attractors": cycles}
