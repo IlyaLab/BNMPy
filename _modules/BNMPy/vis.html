@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BNMPy.vis &#8212; BNMPy 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=279e0f84" />
+    <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BNMPy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BNMPy.vis</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for BNMPy.vis</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">igraph</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ig</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyvis.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">Network</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+
+<div class="viewcode-block" id="read_logic_rules">
+<a class="viewcode-back" href="../../vis.html#BNMPy.vis.read_logic_rules">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_logic_rules</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads logic rules from a file path or from a string containing rules.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        source (str): Path to the file or the string containing logic rules.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Mapping from variable names to their logic rules.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logic_rules</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Try to open as a file</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+        <span class="c1"># If not a file, treat as string</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">logic_rules</span><span class="p">[</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">logic_rules</span></div>
+
+
+
+<div class="viewcode-block" id="extract_logic_rules_from_network">
+<a class="viewcode-back" href="../../vis.html#BNMPy.vis.extract_logic_rules_from_network">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_logic_rules_from_network</span><span class="p">(</span><span class="n">network</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract logic rules from a BooleanNetwork or PBN object using stored equations.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        network: BooleanNetwork or ProbabilisticBN object</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Mapping from variable names to their logic rules (for BN) or list of rules (for PBN)</span>
+<span class="sd">        dict: Mapping from edges to probabilities (for PBN) or empty dict (for BN)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logic_rules</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">edge_probabilities</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="s1">&#39;equations&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">network</span><span class="o">.</span><span class="n">equations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="s1">&#39;cij&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="s1">&#39;gene_functions&#39;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">network</span><span class="o">.</span><span class="n">equations</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;=&#39;</span> <span class="ow">in</span> <span class="n">equation</span><span class="p">:</span>
+                    <span class="n">parts</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">node_name</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                        <span class="n">rule</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                        
+                        <span class="c1"># For PBN, collect all rules for each node</span>
+                        <span class="k">if</span> <span class="n">node_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">logic_rules</span><span class="p">:</span>
+                            <span class="n">logic_rules</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">logic_rules</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rule</span><span class="p">)</span>
+            
+            <span class="c1"># Extract probability information for PBN</span>
+            <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">node_idx</span> <span class="ow">in</span> <span class="n">network</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">node_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">network</span><span class="o">.</span><span class="n">nf</span><span class="p">):</span>
+                    <span class="n">num_funcs</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">nf</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">num_funcs</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="c1"># Multiple functions - extract probabilities</span>
+                        <span class="k">for</span> <span class="n">func_offset</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_funcs</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="n">func_offset</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">network</span><span class="o">.</span><span class="n">cij</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]):</span>
+                                <span class="n">probability</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">cij</span><span class="p">[</span><span class="n">node_idx</span><span class="p">,</span> <span class="n">func_offset</span><span class="p">]</span>
+                                <span class="k">if</span> <span class="n">probability</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                                    <span class="c1"># Map probability to specific rule</span>
+                                    <span class="k">if</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">logic_rules</span> <span class="ow">and</span> <span class="n">func_offset</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">logic_rules</span><span class="p">[</span><span class="n">node_name</span><span class="p">]):</span>
+                                        <span class="n">rule</span> <span class="o">=</span> <span class="n">logic_rules</span><span class="p">[</span><span class="n">node_name</span><span class="p">][</span><span class="n">func_offset</span><span class="p">]</span>
+                                        <span class="n">edge_probabilities</span><span class="p">[(</span><span class="n">node_name</span><span class="p">,</span> <span class="n">rule</span><span class="p">)]</span> <span class="o">=</span> <span class="n">probability</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Single function - probability is 1.0</span>
+                        <span class="k">if</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">logic_rules</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">logic_rules</span><span class="p">[</span><span class="n">node_name</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">rule</span> <span class="o">=</span> <span class="n">logic_rules</span><span class="p">[</span><span class="n">node_name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="n">edge_probabilities</span><span class="p">[(</span><span class="n">node_name</span><span class="p">,</span> <span class="n">rule</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># This is a BN - use stored equations directly</span>
+            <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">network</span><span class="o">.</span><span class="n">equations</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;=&#39;</span> <span class="ow">in</span> <span class="n">equation</span><span class="p">:</span>
+                    <span class="n">parts</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">node_name</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                        <span class="n">rule</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                        <span class="n">logic_rules</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">rule</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No logic rules provided.&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">logic_rules</span><span class="p">,</span> <span class="n">edge_probabilities</span></div>
+
+
+
+<div class="viewcode-block" id="build_igraph_pbn">
+<a class="viewcode-back" href="../../vis.html#BNMPy.vis.build_igraph_pbn">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_igraph_pbn</span><span class="p">(</span><span class="n">logic_rules</span><span class="p">,</span> <span class="n">edge_probabilities</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build igraph for PBN with multiple rules per node.&quot;&quot;&quot;</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">ig</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">node_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    
+    <span class="c1"># Collect all node names</span>
+    <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">rules</span> <span class="ow">in</span> <span class="n">logic_rules</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">node_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rules</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">rules</span><span class="p">:</span>
+                <span class="n">node_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[A-Za-z0-9_]+\b&#39;</span><span class="p">,</span> <span class="n">rule</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">node_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[A-Za-z0-9_]+\b&#39;</span><span class="p">,</span> <span class="n">rules</span><span class="p">))</span>
+    
+    <span class="n">node_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">node_names</span><span class="p">)</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="n">node_names</span><span class="p">)</span>
+    
+    <span class="c1"># Add edges for each rule</span>
+    <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">rules</span> <span class="ow">in</span> <span class="n">logic_rules</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rules</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="c1"># PBN with multiple rules</span>
+            <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">rules</span><span class="p">:</span>
+                <span class="n">inputs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[A-Za-z0-9_]+\b&#39;</span><span class="p">,</span> <span class="n">rule</span><span class="p">))</span>
+                <span class="n">prob</span> <span class="o">=</span> <span class="n">edge_probabilities</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">node_name</span><span class="p">,</span> <span class="n">rule</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">input_node</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+                    <span class="n">g</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">rule</span><span class="p">,</span> <span class="n">probability</span><span class="o">=</span><span class="n">prob</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># BN with single rule</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[A-Za-z0-9_]+\b&#39;</span><span class="p">,</span> <span class="n">rules</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">input_node</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">rules</span><span class="p">,</span> <span class="n">probability</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">g</span></div>
+
+
+
+<div class="viewcode-block" id="build_igraph">
+<a class="viewcode-back" href="../../vis.html#BNMPy.vis.build_igraph">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_igraph</span><span class="p">(</span><span class="n">logic_rules</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build igraph for BN with single rule per node.&quot;&quot;&quot;</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">ig</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">node_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">logic_rules</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="c1"># Also collect all appearing variables</span>
+    <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">logic_rules</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">node_names</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[A-Za-z0-9_]+\b&#39;</span><span class="p">,</span> <span class="n">rule</span><span class="p">))</span>
+
+    <span class="n">node_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">node_names</span><span class="p">)</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="n">node_names</span><span class="p">)</span>
+
+    <span class="c1"># Add directed edges</span>
+    <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">logic_rules</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[A-Za-z0-9_]+\b&#39;</span><span class="p">,</span> <span class="n">rule</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">input_node</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">rule</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">g</span></div>
+
+
+
+<div class="viewcode-block" id="create_matplotlib_visualization">
+<a class="viewcode-back" href="../../vis.html#BNMPy.vis.create_matplotlib_visualization">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_matplotlib_visualization</span><span class="p">(</span><span class="n">logic_rules</span><span class="p">,</span> <span class="n">removed_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">removed_edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                                  <span class="n">measured_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">perturbed_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a matplotlib-based visualization for Jupyter notebooks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">removed_nodes</span> <span class="o">=</span> <span class="n">removed_nodes</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">removed_edges</span> <span class="o">=</span> <span class="n">removed_edges</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">measured_nodes</span> <span class="o">=</span> <span class="n">measured_nodes</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">perturbed_nodes</span> <span class="o">=</span> <span class="n">perturbed_nodes</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">()</span>
+    
+    <span class="c1"># Create networkx graph</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    
+    <span class="c1"># Add all nodes mentioned in rules</span>
+    <span class="n">all_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">logic_rules</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="c1"># PBN case</span>
+        <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">rules</span> <span class="ow">in</span> <span class="n">logic_rules</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">all_nodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">rules</span><span class="p">:</span>
+                <span class="n">all_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[A-Za-z0-9_]+\b&#39;</span><span class="p">,</span> <span class="n">rule</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># BN case</span>
+        <span class="n">all_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">logic_rules</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">logic_rules</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">all_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[A-Za-z0-9_]+\b&#39;</span><span class="p">,</span> <span class="n">rule</span><span class="p">))</span>
+    
+    <span class="c1"># Add nodes with attributes</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">all_nodes</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">removed</span><span class="o">=</span><span class="n">node</span> <span class="ow">in</span> <span class="n">removed_nodes</span><span class="p">)</span>
+    
+    <span class="c1"># Add edges</span>
+    <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">rules</span> <span class="ow">in</span> <span class="n">logic_rules</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rules</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="c1"># PBN case</span>
+            <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">rules</span><span class="p">:</span>
+                <span class="n">inputs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[A-Za-z0-9_]+\b&#39;</span><span class="p">,</span> <span class="n">rule</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">input_node</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">input_node</span> <span class="o">!=</span> <span class="n">target</span><span class="p">:</span>
+                        <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">rule</span><span class="o">=</span><span class="n">rule</span><span class="p">,</span> <span class="n">removed</span><span class="o">=</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span> <span class="ow">in</span> <span class="n">removed_edges</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># BN case</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b[A-Za-z0-9_]+\b&#39;</span><span class="p">,</span> <span class="n">rules</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">input_node</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">input_node</span> <span class="o">!=</span> <span class="n">target</span><span class="p">:</span>
+                    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">rule</span><span class="o">=</span><span class="n">rules</span><span class="p">,</span> <span class="n">removed</span><span class="o">=</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span> <span class="ow">in</span> <span class="n">removed_edges</span><span class="p">)</span>
+    
+    <span class="c1"># Create visualization</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    
+    <span class="c1"># Use spring layout for better visualization</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    
+    <span class="c1"># First, separate nodes into removed and normal nodes</span>
+    <span class="n">removed_node_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">removed_nodes</span><span class="p">]</span>
+    <span class="n">normal_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">removed_nodes</span><span class="p">]</span>
+    
+    <span class="c1"># Categorize nodes based on provided sets and connectivity</span>
+    <span class="n">perturbed_node_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">normal_nodes</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">perturbed_nodes</span><span class="p">]</span>
+    <span class="n">measured_node_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">normal_nodes</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">measured_nodes</span> <span class="ow">and</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">perturbed_nodes</span><span class="p">]</span>
+    <span class="n">input_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">output_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">intermediate_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">normal_nodes</span><span class="p">:</span>
+        <span class="c1"># Skip if already categorized as perturbed or measured</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">perturbed_nodes</span> <span class="ow">or</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">measured_nodes</span><span class="p">:</span>
+            <span class="k">continue</span>
+            
+        <span class="c1"># Check if it&#39;s an input node (self-referential rule or no incoming edges)</span>
+        <span class="n">is_input</span> <span class="o">=</span> <span class="kc">False</span>
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">logic_rules</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">logic_rules</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">),</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="n">logic_rules</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">rule</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="n">node</span><span class="p">:</span>
+                    <span class="n">is_input</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="c1"># Also consider nodes with no incoming edges as inputs</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">is_input</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="c1"># Check if node is output</span>
+        <span class="n">is_output</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">measured_nodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_input</span><span class="p">:</span>
+                <span class="n">is_output</span> <span class="o">=</span> <span class="kc">True</span>
+                
+
+        <span class="c1"># Categorize</span>
+        <span class="k">if</span> <span class="n">is_input</span><span class="p">:</span>
+            <span class="n">input_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">is_output</span><span class="p">:</span>
+            <span class="n">output_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">intermediate_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    
+    <span class="c1"># Draw different node types with proper color scheme</span>
+    <span class="k">if</span> <span class="n">input_nodes</span><span class="p">:</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">input_nodes</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="s1">&#39;lightgreen&#39;</span><span class="p">,</span> 
+                             <span class="n">node_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">output_nodes</span><span class="p">:</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">output_nodes</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="s1">&#39;yellow&#39;</span><span class="p">,</span> 
+                             <span class="n">node_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Output&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">intermediate_nodes</span><span class="p">:</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">intermediate_nodes</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="s1">&#39;lightblue&#39;</span><span class="p">,</span> 
+                             <span class="n">node_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Intermediate&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">removed_node_list</span><span class="p">:</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">removed_node_list</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="s1">&#39;lightgrey&#39;</span><span class="p">,</span> 
+                             <span class="n">node_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Removed&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">perturbed_node_list</span><span class="p">:</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">perturbed_node_list</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> 
+                             <span class="n">node_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Perturbed&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">measured_node_list</span><span class="p">:</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">measured_node_list</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="s1">&#39;orange&#39;</span><span class="p">,</span> 
+                             <span class="n">node_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Measured&#39;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+    <span class="c1"># Draw edges</span>
+    <span class="n">normal_edges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">()</span> <span class="k">if</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">removed_edges</span><span class="p">]</span>
+    <span class="n">removed_edge_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">()</span> <span class="k">if</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">removed_edges</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">normal_edges</span><span class="p">:</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">edgelist</span><span class="o">=</span><span class="n">normal_edges</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> 
+                             <span class="n">arrows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">arrowsize</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">removed_edge_list</span><span class="p">:</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">edgelist</span><span class="o">=</span><span class="n">removed_edge_list</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> 
+                             <span class="n">arrows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">arrowsize</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># Draw labels</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_labels</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">font_weight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Boolean Network Visualization&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    
+    <span class="c1"># Add legend if there are different node types</span>
+    <span class="k">if</span> <span class="n">perturbed_node_list</span> <span class="ow">or</span> <span class="n">measured_node_list</span> <span class="ow">or</span> <span class="n">input_nodes</span> <span class="ow">or</span> <span class="n">intermediate_nodes</span> <span class="ow">or</span> <span class="n">output_nodes</span> <span class="ow">or</span> <span class="n">removed_node_list</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="vis_network">
+<a class="viewcode-back" href="../../vis.html#BNMPy.vis.vis_network">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">vis_network</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">output_html</span><span class="o">=</span><span class="s2">&quot;network_graph.html&quot;</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                   <span class="n">removed_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">removed_edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">measured_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">perturbed_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Visualize the logic graph using PyVis and igraph.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        source: Logic rules (dict), file path (str), network string (str), </span>
+<span class="sd">                BooleanNetwork object, or ProbabilisticBN object</span>
+<span class="sd">        output_html (str): Output HTML file name.</span>
+<span class="sd">        interactive (bool): If True, return the network visualization in interactive html file</span>
+<span class="sd">        removed_nodes (set): Set of node names that were removed (shown in grey)</span>
+<span class="sd">        removed_edges (set): Set of edge tuples that were removed (shown in grey)</span>
+<span class="sd">        measured_nodes (set): Set of node names that are measured (shown in orange)</span>
+<span class="sd">        perturbed_nodes (set): Set of node names that are perturbed (shown in red)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Handle different input types</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s1">&#39;nodeDict&#39;</span><span class="p">):</span>  <span class="c1"># BooleanNetwork or ProbabilisticBN</span>
+        <span class="n">logic_rules</span><span class="p">,</span> <span class="n">edge_probabilities</span> <span class="o">=</span> <span class="n">extract_logic_rules_from_network</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">logic_rules</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="n">edge_probabilities</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># String or file path</span>
+        <span class="n">logic_rules</span> <span class="o">=</span> <span class="n">read_logic_rules</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">edge_probabilities</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Check if logic_rules is empty</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">logic_rules</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No logic rules provided.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Set removed nodes and edges to empty sets if not provided</span>
+    <span class="n">removed_nodes</span> <span class="o">=</span> <span class="n">removed_nodes</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">removed_edges</span> <span class="o">=</span> <span class="n">removed_edges</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">measured_nodes</span> <span class="o">=</span> <span class="n">measured_nodes</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">perturbed_nodes</span> <span class="o">=</span> <span class="n">perturbed_nodes</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="c1"># For non-interactive mode, use matplotlib visualization</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">interactive</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">create_matplotlib_visualization</span><span class="p">(</span><span class="n">logic_rules</span><span class="p">,</span> <span class="n">removed_nodes</span><span class="p">,</span> <span class="n">removed_edges</span><span class="p">,</span> 
+                                                  <span class="n">measured_nodes</span><span class="p">,</span> <span class="n">perturbed_nodes</span><span class="p">)</span>
+
+    <span class="c1"># For interactive mode, use pyvis</span>
+    <span class="c1"># Check if this is PBN (multiple rules per node)</span>
+    <span class="n">is_pbn</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">logic_rules</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span> <span class="k">if</span> <span class="n">logic_rules</span> <span class="k">else</span> <span class="kc">False</span>
+    
+    <span class="k">if</span> <span class="n">is_pbn</span><span class="p">:</span>
+        <span class="c1"># Build graph for PBN</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">build_igraph_pbn</span><span class="p">(</span><span class="n">logic_rules</span><span class="p">,</span> <span class="n">edge_probabilities</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Build graph for BN</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">build_igraph</span><span class="p">(</span><span class="n">logic_rules</span><span class="p">)</span>
+    
+    <span class="c1"># Create pyvis network with proper configuration</span>
+    <span class="n">net</span> <span class="o">=</span> <span class="n">Network</span><span class="p">(</span>
+        <span class="n">height</span><span class="o">=</span><span class="s1">&#39;1000px&#39;</span><span class="p">,</span> 
+        <span class="n">width</span><span class="o">=</span><span class="s1">&#39;1200px&#39;</span><span class="p">,</span> 
+        <span class="n">bgcolor</span><span class="o">=</span><span class="s1">&#39;#ffffff&#39;</span><span class="p">,</span>
+        <span class="n">font_color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
+        <span class="n">directed</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># Set network options to match the working example</span>
+    <span class="n">net</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    var options = {</span>
+<span class="s2">        &quot;configure&quot;: {</span>
+<span class="s2">            &quot;enabled&quot;: false</span>
+<span class="s2">        },</span>
+<span class="s2">        &quot;edges&quot;: {</span>
+<span class="s2">            &quot;color&quot;: {</span>
+<span class="s2">                &quot;inherit&quot;: true</span>
+<span class="s2">            },</span>
+<span class="s2">            &quot;smooth&quot;: {</span>
+<span class="s2">                &quot;enabled&quot;: true,</span>
+<span class="s2">                &quot;type&quot;: &quot;dynamic&quot;</span>
+<span class="s2">            }</span>
+<span class="s2">        },</span>
+<span class="s2">        &quot;interaction&quot;: {</span>
+<span class="s2">            &quot;dragNodes&quot;: true,</span>
+<span class="s2">            &quot;hideEdgesOnDrag&quot;: false,</span>
+<span class="s2">            &quot;hideNodesOnDrag&quot;: false</span>
+<span class="s2">        },</span>
+<span class="s2">        &quot;physics&quot;: {</span>
+<span class="s2">            &quot;enabled&quot;: true,</span>
+<span class="s2">            &quot;stabilization&quot;: {</span>
+<span class="s2">                &quot;enabled&quot;: true,</span>
+<span class="s2">                &quot;fit&quot;: true,</span>
+<span class="s2">                &quot;iterations&quot;: 1000,</span>
+<span class="s2">                &quot;onlyDynamicEdges&quot;: false,</span>
+<span class="s2">                &quot;updateInterval&quot;: 50</span>
+<span class="s2">            }</span>
+<span class="s2">        }</span>
+<span class="s2">    }</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Add nodes to the PyVis network</span>
+    <span class="n">nodes_added</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">:</span>
+        <span class="n">node_name</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="n">upstream_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">pred</span> <span class="k">for</span> <span class="n">pred</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="k">if</span> <span class="n">pred</span> <span class="o">!=</span> <span class="n">v</span><span class="o">.</span><span class="n">index</span><span class="p">])</span>
+        <span class="n">downstream_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">succ</span> <span class="k">for</span> <span class="n">succ</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="k">if</span> <span class="n">succ</span> <span class="o">!=</span> <span class="n">v</span><span class="o">.</span><span class="n">index</span><span class="p">])</span>
+        
+        <span class="c1"># Set color based on removal status and node type</span>
+        <span class="k">if</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">removed_nodes</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;lightgrey&quot;</span>
+            <span class="n">font_color</span> <span class="o">=</span> <span class="s2">&quot;grey&quot;</span>
+            <span class="n">nodes_added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2"> (removed)&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">perturbed_nodes</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span>
+            <span class="n">font_color</span> <span class="o">=</span> <span class="s2">&quot;white&quot;</span>
+            <span class="n">nodes_added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2"> (perturbed)&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">measured_nodes</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;orange&quot;</span>
+            <span class="n">font_color</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span>
+            <span class="n">nodes_added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2"> (measured)&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Check if node is input based on logic rules or connectivity</span>
+            <span class="n">is_input</span> <span class="o">=</span> <span class="kc">False</span>
+            
+            <span class="c1"># self-referential rule or no incoming edges</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">logic_rules</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node_name</span><span class="p">),</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="n">logic_rules</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">rule</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="n">node_name</span><span class="p">:</span>
+                    <span class="n">is_input</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">logic_rules</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node_name</span><span class="p">),</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="c1"># For PBN, check if all rules are self-referential</span>
+                <span class="n">rules</span> <span class="o">=</span> <span class="n">logic_rules</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="n">node_name</span> <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">rules</span><span class="p">):</span>
+                    <span class="n">is_input</span> <span class="o">=</span> <span class="kc">True</span>
+            
+            <span class="c1"># Also consider nodes with no incoming edges as inputs</span>
+            <span class="k">if</span> <span class="n">upstream_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">is_input</span> <span class="o">=</span> <span class="kc">True</span>
+            
+            <span class="c1"># Check if node is output</span>
+            <span class="n">is_output</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">measured_nodes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">downstream_count</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_input</span><span class="p">:</span>
+                    <span class="n">is_output</span> <span class="o">=</span> <span class="kc">True</span>
+            
+            <span class="c1"># Set colors based on node type</span>
+            <span class="k">if</span> <span class="n">is_input</span><span class="p">:</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;lightgreen&quot;</span>  <span class="c1"># Light green for inputs</span>
+                <span class="n">font_color</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span>
+                <span class="n">nodes_added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2"> (input)&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">is_output</span><span class="p">:</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;yellow&quot;</span>  <span class="c1"># Yellow for outputs</span>
+                <span class="n">font_color</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span>
+                <span class="n">nodes_added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2"> (output)&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;lightblue&quot;</span>  <span class="c1"># Light blue for intermediate nodes</span>
+                <span class="n">font_color</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span>
+                <span class="n">nodes_added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2"> (intermediate)&quot;</span><span class="p">)</span>
+
+        <span class="n">net</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">v</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> 
+            <span class="n">label</span><span class="o">=</span><span class="n">node_name</span><span class="p">,</span> 
+            <span class="n">title</span><span class="o">=</span><span class="n">node_name</span><span class="p">,</span> 
+            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> 
+            <span class="n">size</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
+            <span class="n">font</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="n">font_color</span><span class="p">}</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Add edges to the PyVis network</span>
+    <span class="n">edges_added</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">es</span><span class="p">:</span>
+        <span class="n">src</span><span class="p">,</span> <span class="n">tgt</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">tuple</span>
+        <span class="n">src_name</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">src</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="n">tgt_name</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">vs</span><span class="p">[</span><span class="n">tgt</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        
+        <span class="n">rule_label</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
+        
+        <span class="c1"># Check if edge was removed</span>
+        <span class="n">edge_removed</span> <span class="o">=</span> <span class="p">(</span><span class="n">src_name</span><span class="p">,</span> <span class="n">tgt_name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">removed_edges</span>
+        
+        <span class="c1"># Get probability if available</span>
+        <span class="n">edge_prob</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="s2">&quot;probability&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;probability&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">attributes</span><span class="p">()</span> <span class="k">else</span> <span class="mf">1.0</span>
+        
+        <span class="c1"># Create hover title with rule and probability</span>
+        <span class="k">if</span> <span class="n">is_pbn</span> <span class="ow">and</span> <span class="n">edge_prob</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="n">edge_title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tgt_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">rule_label</span><span class="si">}</span><span class="s2">, p=</span><span class="si">{</span><span class="n">edge_prob</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">edge_title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tgt_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">rule_label</span><span class="si">}</span><span class="s2">&quot;</span>
+        
+        <span class="c1"># Set edge color and style based on rule type and removal status</span>
+        <span class="k">if</span> <span class="n">edge_removed</span><span class="p">:</span>
+            <span class="n">edge_color</span> <span class="o">=</span> <span class="s2">&quot;lightgrey&quot;</span>
+            <span class="n">edge_width</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">edge_alpha</span> <span class="o">=</span> <span class="mf">0.3</span>
+            <span class="n">edges_added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">src_name</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">tgt_name</span><span class="si">}</span><span class="s2"> (removed)&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">rule_label</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;!(&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">src_name</span> <span class="ow">in</span> <span class="n">rule_label</span><span class="p">:</span>
+            <span class="n">edge_color</span> <span class="o">=</span> <span class="s2">&quot;grey&quot;</span>
+            <span class="n">edge_width</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="n">edge_alpha</span> <span class="o">=</span> <span class="n">edge_prob</span> <span class="k">if</span> <span class="n">is_pbn</span> <span class="k">else</span> <span class="mf">1.0</span>
+            <span class="n">edges_added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">src_name</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">tgt_name</span><span class="si">}</span><span class="s2"> (inhibitory)&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">rule_label</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;! (&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">src_name</span> <span class="ow">in</span> <span class="n">rule_label</span><span class="p">:</span>
+            <span class="n">edge_color</span> <span class="o">=</span> <span class="s2">&quot;grey&quot;</span> 
+            <span class="n">edge_width</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="n">edge_alpha</span> <span class="o">=</span> <span class="n">edge_prob</span> <span class="k">if</span> <span class="n">is_pbn</span> <span class="k">else</span> <span class="mf">1.0</span>
+            <span class="n">edges_added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">src_name</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">tgt_name</span><span class="si">}</span><span class="s2"> (inhibitory)&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s2">&quot;! (&quot;</span> <span class="ow">in</span> <span class="n">rule_label</span> <span class="ow">and</span> <span class="n">src_name</span> <span class="ow">in</span> <span class="n">rule_label</span><span class="p">:</span>
+            <span class="n">edge_color</span> <span class="o">=</span> <span class="s2">&quot;grey&quot;</span>
+            <span class="n">edge_width</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="n">edge_alpha</span> <span class="o">=</span> <span class="n">edge_prob</span> <span class="k">if</span> <span class="n">is_pbn</span> <span class="k">else</span> <span class="mf">1.0</span>
+            <span class="n">edges_added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">src_name</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">tgt_name</span><span class="si">}</span><span class="s2"> (inhibitory)&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="sa">f</span><span class="s2">&quot;!</span><span class="si">{</span><span class="n">src_name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">rule_label</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;! </span><span class="si">{</span><span class="n">src_name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">rule_label</span><span class="p">:</span>
+            <span class="n">edge_color</span> <span class="o">=</span> <span class="s2">&quot;blue&quot;</span>
+            <span class="n">edge_width</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="n">edge_alpha</span> <span class="o">=</span> <span class="n">edge_prob</span> <span class="k">if</span> <span class="n">is_pbn</span> <span class="k">else</span> <span class="mf">1.0</span>
+            <span class="n">edges_added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">src_name</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">tgt_name</span><span class="si">}</span><span class="s2"> (direct inhibitory)&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">edge_color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span>
+            <span class="n">edge_width</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="n">edge_alpha</span> <span class="o">=</span> <span class="n">edge_prob</span> <span class="k">if</span> <span class="n">is_pbn</span> <span class="k">else</span> <span class="mf">1.0</span>
+            <span class="n">edges_added</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">src_name</span><span class="si">}</span><span class="s2">-&gt;</span><span class="si">{</span><span class="n">tgt_name</span><span class="si">}</span><span class="s2"> (activating)&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># For PBN, adjust edge width and transparency based on probability</span>
+        <span class="k">if</span> <span class="n">is_pbn</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">edge_removed</span><span class="p">:</span>
+            <span class="n">edge_width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">edge_prob</span> <span class="o">*</span> <span class="mi">4</span><span class="p">))</span>  <span class="c1"># Scale width by probability</span>
+            <span class="c1"># Convert alpha to hex color for transparency</span>
+            <span class="n">alpha_hex</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">edge_alpha</span> <span class="o">*</span> <span class="mi">255</span><span class="p">),</span> <span class="s1">&#39;02x&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">edge_color</span> <span class="o">==</span> <span class="s2">&quot;red&quot;</span><span class="p">:</span>
+                <span class="n">edge_color</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;#ff0000</span><span class="si">{</span><span class="n">alpha_hex</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">elif</span> <span class="n">edge_color</span> <span class="o">==</span> <span class="s2">&quot;blue&quot;</span><span class="p">:</span>
+                <span class="n">edge_color</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;#0000ff</span><span class="si">{</span><span class="n">alpha_hex</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">elif</span> <span class="n">edge_color</span> <span class="o">==</span> <span class="s2">&quot;grey&quot;</span><span class="p">:</span>
+                <span class="n">edge_color</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;#808080</span><span class="si">{</span><span class="n">alpha_hex</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">net</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span>
+            <span class="n">src</span><span class="p">,</span> 
+            <span class="n">tgt</span><span class="p">,</span> 
+            <span class="n">title</span><span class="o">=</span><span class="n">edge_title</span><span class="p">,</span> 
+            <span class="n">color</span><span class="o">=</span><span class="n">edge_color</span><span class="p">,</span> 
+            <span class="n">width</span><span class="o">=</span><span class="n">edge_width</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Save the network</span>
+    <span class="n">net</span><span class="o">.</span><span class="n">save_graph</span><span class="p">(</span><span class="n">output_html</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Network visualization saved to </span><span class="si">{</span><span class="n">output_html</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="vis_compression_comparison">
+<a class="viewcode-back" href="../../vis.html#BNMPy.vis.vis_compression_comparison">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">vis_compression_comparison</span><span class="p">(</span><span class="n">original_network</span><span class="p">,</span> <span class="n">compressed_network</span><span class="p">,</span> 
+                             <span class="n">compression_info</span><span class="p">,</span> <span class="n">output_html</span><span class="o">=</span><span class="s2">&quot;compression_comparison.html&quot;</span><span class="p">,</span>
+                             <span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Visualize the original network with removed/collapsed nodes highlighted.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        original_network: Original BooleanNetwork or ProbabilisticBN</span>
+<span class="sd">        compressed_network: Compressed network (not used for visualization)</span>
+<span class="sd">        compression_info: Dictionary with compression information</span>
+<span class="sd">        output_html (str): Output HTML file name</span>
+<span class="sd">        interactive (bool): If True, return network visualization in interactive html file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Collect all removed nodes from compression info</span>
+    <span class="n">removed_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    
+    <span class="c1"># Add explicitly removed nodes</span>
+    <span class="n">removed_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">compression_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;removed_non_observable&#39;</span><span class="p">,</span> <span class="nb">set</span><span class="p">()))</span>
+    <span class="n">removed_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">compression_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;removed_non_controllable&#39;</span><span class="p">,</span> <span class="nb">set</span><span class="p">()))</span>
+    
+    <span class="c1"># Add all removed nodes from the general tracking</span>
+    <span class="n">removed_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">compression_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;removed_nodes&#39;</span><span class="p">,</span> <span class="nb">set</span><span class="p">()))</span>
+    
+    <span class="c1"># Add intermediate nodes from collapsed paths</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">compression_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;collapsed_paths&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># All intermediate nodes (exclude first and last)</span>
+            <span class="n">removed_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    
+    <span class="c1"># Get removed edges</span>
+    <span class="n">removed_edges</span> <span class="o">=</span> <span class="n">compression_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;removed_edges&#39;</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
+    
+    <span class="n">measured_nodes</span> <span class="o">=</span> <span class="n">compression_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_nodes&#39;</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
+    <span class="n">perturbed_nodes</span> <span class="o">=</span> <span class="n">compression_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;perturbed_nodes&#39;</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
+    
+    <span class="c1"># print(f&quot;Visualizing compression comparison:&quot;)</span>
+    <span class="c1"># print(f&quot;  Original network nodes: {len(original_network.nodeDict)}&quot;)</span>
+    <span class="c1"># print(f&quot;  Compressed network nodes: {len(compressed_network.nodeDict)}&quot;)</span>
+    <span class="c1"># print(f&quot;  Nodes in original: {sorted(original_nodes)}&quot;)</span>
+    <span class="c1"># print(f&quot;  Nodes in compressed: {sorted(compressed_nodes)}&quot;)</span>
+    <span class="c1"># print(f&quot;  Missing nodes: {sorted(missing_nodes)}&quot;)</span>
+    <span class="c1"># print(f&quot;  Nodes marked as removed: {len(removed_nodes)}&quot;)</span>
+    <span class="c1"># print(f&quot;  Removed nodes: {sorted(removed_nodes)}&quot;)</span>
+    <span class="c1"># print(f&quot;  Removed edges: {len(removed_edges)}&quot;)</span>
+    <span class="c1"># print(f&quot;  Measured nodes: {sorted(measured_nodes)}&quot;)</span>
+    <span class="c1"># print(f&quot;  Perturbed nodes: {sorted(perturbed_nodes)}&quot;)</span>
+    
+    <span class="c1"># Use the original network for visualization with removed nodes marked</span>
+    <span class="k">return</span> <span class="n">vis_network</span><span class="p">(</span>
+        <span class="n">original_network</span><span class="p">,</span> 
+        <span class="n">output_html</span><span class="p">,</span> 
+        <span class="n">interactive</span><span class="p">,</span> 
+        <span class="n">removed_nodes</span><span class="o">=</span><span class="n">removed_nodes</span><span class="p">,</span>
+        <span class="n">removed_edges</span><span class="o">=</span><span class="n">removed_edges</span><span class="p">,</span>
+        <span class="n">measured_nodes</span><span class="o">=</span><span class="n">measured_nodes</span><span class="p">,</span>
+        <span class="n">perturbed_nodes</span><span class="o">=</span><span class="n">perturbed_nodes</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">BNMPy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BNMPy.vis</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, IlyaLab.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

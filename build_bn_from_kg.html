@@ -71,6 +71,13 @@ joiner - “&amp;”, “|”, or “inhibitor_wins”</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.build_bn_from_kg.merge_PBN_string">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.build_bn_from_kg.</span></span><span class="sig-name descname"><span class="pre">merge_PBN_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">original_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">KG_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/build_bn_from_kg.html#merge_PBN_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.build_bn_from_kg.merge_PBN_string" title="Link to this definition">¶</a></dt>
+<dd><p>Merge the original model and the KG model to a PBN
+prob: probability of the equations from the original model</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="BNMPy.build_bn_from_kg.merge_network">
 <span class="sig-prename descclassname"><span class="pre">BNMPy.build_bn_from_kg.</span></span><span class="sig-name descname"><span class="pre">merge_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_equations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_joiner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&amp;'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/build_bn_from_kg.html#merge_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.build_bn_from_kg.merge_network" title="Link to this definition">¶</a></dt>
 <dd><p>Merges a BooleanNetwork object with a string or list of equations.</p>
@@ -91,6 +98,7 @@ joiner - “&amp;”, “|”, or “inhibitor_wins”</p>
 <li><a class="reference internal" href="#">BNMPy.build_bn_from_kg</a><ul>
 <li><a class="reference internal" href="#BNMPy.build_bn_from_kg.add_genes_to_network"><code class="docutils literal notranslate"><span class="pre">add_genes_to_network()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.build_bn_from_kg.load_signor_network"><code class="docutils literal notranslate"><span class="pre">load_signor_network()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.build_bn_from_kg.merge_PBN_string"><code class="docutils literal notranslate"><span class="pre">merge_PBN_string()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.build_bn_from_kg.merge_network"><code class="docutils literal notranslate"><span class="pre">merge_network()</span></code></a></li>
 </ul>
 </li>

@@ -115,11 +115,6 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update cumulative probabilities for each node&#39;s functions.</span>
 <span class="sd">        This is used for efficient function selection during simulation.</span>
-<span class="sd">        </span>
-<span class="sd">        The method:</span>
-<span class="sd">        1. Validates probability distributions</span>
-<span class="sd">        2. Computes cumulative probabilities</span>
-<span class="sd">        3. Stores them for efficient sampling</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cij_cumsum</span> <span class="o">=</span> <span class="p">[]</span>
         
@@ -128,13 +123,21 @@
             <span class="n">probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cij</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">nf</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
             
             <span class="c1"># Validate probabilities</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">probs</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
-                <span class="c1"># If probabilities don&#39;t sum to 1, normalize them</span>
-                <span class="n">probs</span> <span class="o">=</span> <span class="n">probs</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">cij</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">nf</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">probs</span>
+            <span class="n">valid_probs</span> <span class="o">=</span> <span class="n">probs</span><span class="p">[</span><span class="n">probs</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_probs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">valid_probs</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1e-5</span><span class="p">:</span>
+                <span class="c1"># Use uniform distribution</span>
+                <span class="n">valid_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nf</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">nf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># normalize probabilities</span>
+                <span class="n">valid_probs</span> <span class="o">=</span> <span class="n">valid_probs</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">valid_probs</span><span class="p">)</span>
             
+            <span class="c1"># Update Cij</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cij</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">nf</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">valid_probs</span>
+
             <span class="c1"># Compute cumulative probabilities</span>
-            <span class="n">cumsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span>
+            <span class="n">cumsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">valid_probs</span><span class="p">)</span>
+            
             <span class="c1"># Ensure last value is exactly 1.0</span>
             <span class="n">cumsum</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cij_cumsum</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cumsum</span><span class="p">)</span></div>
@@ -242,6 +245,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">knockdown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">efficacy</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sets a specific node with partial efficacy for experimental perturbation.</span>
+<span class="sd">        E.g., when using a drug to inhibit a gene, the efficacy is the probability of the drug being effective.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters:</span>
 <span class="sd">        -----------</span>
@@ -363,6 +367,16 @@
 <div class="viewcode-block" id="ProbabilisticBN.update">
 <a class="viewcode-back" href="../../PBN.html#BNMPy.PBN.ProbabilisticBN.update">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the network directly.</span>
+<span class="sd">        Select a function for each node based on its probability distribution.</span>
+<span class="sd">        Then, update the network state based on the selected function.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        iterations : int, optional (default=1)</span>
+<span class="sd">            Number of iterations to simulate</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span> <span class="p">(</span><span class="n">iterations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="p">)</span> <span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span>  <span class="p">)</span>
         <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>  <span class="p">[</span><span class="mi">2</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span> <span class="p">)</span> 

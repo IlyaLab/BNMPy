@@ -39,6 +39,7 @@
  <a href="#A"><strong>A</strong></a>
  | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
+ | <a href="#E"><strong>E</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#K"><strong>K</strong></a>
@@ -49,6 +50,7 @@
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
 </div>
@@ -84,8 +86,6 @@
         <li><a href="build_bn_from_kg.html#module-BNMPy.build_bn_from_kg">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     BNMPy.PBN
 
@@ -93,6 +93,8 @@
         <li><a href="PBN.html#module-BNMPy.PBN">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     BNMPy.steady_state
 
@@ -100,7 +102,18 @@
         <li><a href="steady_state.html#module-BNMPy.steady_state">module</a>
 </li>
       </ul></li>
+      <li>
+    BNMPy.vis
+
+      <ul>
+        <li><a href="vis.html#module-BNMPy.vis">module</a>
+</li>
+      </ul></li>
       <li><a href="booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork">BooleanNetwork (class in BNMPy.booleanNetwork)</a>
+</li>
+      <li><a href="vis.html#BNMPy.vis.build_igraph">build_igraph() (in module BNMPy.vis)</a>
+</li>
+      <li><a href="vis.html#BNMPy.vis.build_igraph_pbn">build_igraph_pbn() (in module BNMPy.vis)</a>
 </li>
       <li><a href="booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.buildK">buildK() (BNMPy.booleanNetwork.BooleanNetwork method)</a>
 
@@ -118,13 +131,23 @@
 </li>
       <li><a href="steady_state.html#BNMPy.steady_state.SteadyStateCalculator.compute_stationary_mc">compute_stationary_mc() (BNMPy.steady_state.SteadyStateCalculator method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="steady_state.html#BNMPy.steady_state.SteadyStateCalculator.compute_stationary_tsmc">compute_stationary_tsmc() (BNMPy.steady_state.SteadyStateCalculator method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="steady_state.html#BNMPy.steady_state.SteadyStateCalculator.compute_steady_state">compute_steady_state() (BNMPy.steady_state.SteadyStateCalculator method)</a>
 </li>
       <li><a href="PBN.html#BNMPy.PBN.ProbabilisticBN.copy">copy() (BNMPy.PBN.ProbabilisticBN method)</a>
+</li>
+      <li><a href="vis.html#BNMPy.vis.create_matplotlib_visualization">create_matplotlib_visualization() (in module BNMPy.vis)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="vis.html#BNMPy.vis.extract_logic_rules_from_network">extract_logic_rules_from_network() (in module BNMPy.vis)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -230,6 +253,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="build_bn_from_kg.html#BNMPy.build_bn_from_kg.merge_network">merge_network() (in module BNMPy.build_bn_from_kg)</a>
 </li>
+      <li><a href="build_bn_from_kg.html#BNMPy.build_bn_from_kg.merge_PBN_string">merge_PBN_string() (in module BNMPy.build_bn_from_kg)</a>
+</li>
       <li>
     module
 
@@ -243,6 +268,8 @@
         <li><a href="PBN.html#module-BNMPy.PBN">BNMPy.PBN</a>
 </li>
         <li><a href="steady_state.html#module-BNMPy.steady_state">BNMPy.steady_state</a>
+</li>
+        <li><a href="vis.html#module-BNMPy.vis">BNMPy.vis</a>
 </li>
       </ul></li>
   </ul></td>
@@ -259,10 +286,12 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="bmatrix.html#BNMPy.BMatrix.rename_nodes">rename_nodes() (in module BNMPy.BMatrix)</a>
+      <li><a href="vis.html#BNMPy.vis.read_logic_rules">read_logic_rules() (in module BNMPy.vis)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="bmatrix.html#BNMPy.BMatrix.rename_nodes">rename_nodes() (in module BNMPy.BMatrix)</a>
+</li>
       <li><a href="steady_state.html#BNMPy.steady_state.SteadyStateCalculator.reset_network_conditions">reset_network_conditions() (BNMPy.steady_state.SteadyStateCalculator method)</a>
 </li>
   </ul></td>
@@ -332,6 +361,18 @@
 </li>
       </ul></li>
       <li><a href="booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.updateUntilAttractorIsReached">updateUntilAttractorIsReached() (BNMPy.booleanNetwork.BooleanNetwork method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="vis.html#BNMPy.vis.vis_compression_comparison">vis_compression_comparison() (in module BNMPy.vis)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="vis.html#BNMPy.vis.vis_network">vis_network() (in module BNMPy.vis)</a>
 </li>
   </ul></td>
 </tr></table>

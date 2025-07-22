@@ -71,10 +71,13 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.PBN.ProbabilisticBN.undoKnockouts" title="BNMPy.PBN.ProbabilisticBN.undoKnockouts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">undoKnockouts</span></code></a>()</p></td>
 <td><p>Undoes all knockouts and knockdowns.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.PBN.ProbabilisticBN.update_cumulative_probabilities" title="BNMPy.PBN.ProbabilisticBN.update_cumulative_probabilities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_cumulative_probabilities</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.PBN.ProbabilisticBN.update" title="BNMPy.PBN.ProbabilisticBN.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update</span></code></a>([iterations])</p></td>
+<td><p>Update the network directly.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.PBN.ProbabilisticBN.update_cumulative_probabilities" title="BNMPy.PBN.ProbabilisticBN.update_cumulative_probabilities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_cumulative_probabilities</span></code></a>()</p></td>
 <td><p>Update cumulative probabilities for each node's functions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.PBN.ProbabilisticBN.update_noise" title="BNMPy.PBN.ProbabilisticBN.update_noise"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_noise</span></code></a>(p[, iterations])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.PBN.ProbabilisticBN.update_noise" title="BNMPy.PBN.ProbabilisticBN.update_noise"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_noise</span></code></a>(p[, iterations])</p></td>
 <td><p>Update the network with noise parameter p over a given number of iterations.</p></td>
 </tr>
 </tbody>
@@ -102,10 +105,7 @@
 <tr class="row-odd"><td><p><strong>stateToWrite</strong></p></td>
 <td></td>
 </tr>
-<tr class="row-even"><td><p><strong>update</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>writeNetworkHistory</strong></p></td>
+<tr class="row-even"><td><p><strong>writeNetworkHistory</strong></p></td>
 <td></td>
 </tr>
 </tbody>
@@ -156,7 +156,8 @@ Required for optimization to avoid modifying original network.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="BNMPy.PBN.ProbabilisticBN.knockdown">
 <span class="sig-name descname"><span class="pre">knockdown</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">efficacy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/PBN.html#ProbabilisticBN.knockdown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.PBN.ProbabilisticBN.knockdown" title="Link to this definition">¶</a></dt>
-<dd><p>Sets a specific node with partial efficacy for experimental perturbation.</p>
+<dd><p>Sets a specific node with partial efficacy for experimental perturbation.
+E.g., when using a drug to inhibit a gene, the efficacy is the probability of the drug being effective.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -191,17 +192,16 @@ Required for optimization to avoid modifying original network.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="BNMPy.PBN.ProbabilisticBN.update">
 <span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/PBN.html#ProbabilisticBN.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.PBN.ProbabilisticBN.update" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Update the network directly.
+Select a function for each node based on its probability distribution.
+Then, update the network state based on the selected function.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="BNMPy.PBN.ProbabilisticBN.update_cumulative_probabilities">
 <span class="sig-name descname"><span class="pre">update_cumulative_probabilities</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/PBN.html#ProbabilisticBN.update_cumulative_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.PBN.ProbabilisticBN.update_cumulative_probabilities" title="Link to this definition">¶</a></dt>
 <dd><p>Update cumulative probabilities for each node’s functions.
 This is used for efficient function selection during simulation.</p>
-<p>The method:
-1. Validates probability distributions
-2. Computes cumulative probabilities
-3. Stores them for efficient sampling</p>
 </dd></dl>
 
 <dl class="py method">

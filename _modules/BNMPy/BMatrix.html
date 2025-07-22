@@ -392,6 +392,7 @@
     <span class="c1"># create a Boolean network object</span>
     <span class="n">network</span> <span class="o">=</span> <span class="n">BooleanNetwork</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">truth_table</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span>
             <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">,</span> <span class="n">equations</span><span class="o">=</span><span class="n">equations</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Network loaded successfully. There are </span><span class="si">{</span><span class="n">ngenes</span><span class="si">}</span><span class="s2"> genes in the network.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">network</span></div>
 
 
@@ -434,6 +435,7 @@
     
     <span class="n">network</span> <span class="o">=</span> <span class="n">BooleanNetwork</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">truth_table</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span>
             <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">,</span> <span class="n">equations</span><span class="o">=</span><span class="n">equations</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Network loaded successfully. There are </span><span class="si">{</span><span class="n">ngenes</span><span class="si">}</span><span class="s2"> genes in the network.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">network</span></div>
 
 
@@ -570,6 +572,7 @@
     <span class="n">network</span> <span class="o">=</span> <span class="n">ProbabilisticBN</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">nf</span><span class="p">,</span> <span class="n">truth_table</span><span class="p">,</span> <span class="n">cij</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">)</span>
     <span class="n">network</span><span class="o">.</span><span class="n">gene_functions</span> <span class="o">=</span> <span class="n">gene_funcs</span>  <span class="c1"># Store the function strings</span>
     <span class="n">network</span><span class="o">.</span><span class="n">equations</span> <span class="o">=</span> <span class="n">all_equations</span>  <span class="c1"># Store the expanded equations</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PBN loaded successfully. There are </span><span class="si">{</span><span class="n">ngenes</span><span class="si">}</span><span class="s2"> genes in the network.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">network</span></div>
 
 
@@ -699,6 +702,7 @@
     <span class="n">network</span> <span class="o">=</span> <span class="n">ProbabilisticBN</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">connectivity_matrix</span><span class="p">,</span> <span class="n">nf</span><span class="p">,</span> <span class="n">truth_table</span><span class="p">,</span> <span class="n">cij</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">nodeDict</span><span class="o">=</span><span class="n">gene_dict</span><span class="p">)</span>
     <span class="n">network</span><span class="o">.</span><span class="n">gene_functions</span> <span class="o">=</span> <span class="n">gene_funcs</span>  <span class="c1"># Store the function strings</span>
     <span class="n">network</span><span class="o">.</span><span class="n">equations</span> <span class="o">=</span> <span class="n">all_equations</span>  <span class="c1"># Store the expanded equations</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PBN loaded successfully. There are </span><span class="si">{</span><span class="n">ngenes</span><span class="si">}</span><span class="s2"> genes in the network.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">network</span></div>
 
 

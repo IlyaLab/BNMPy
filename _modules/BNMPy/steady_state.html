@@ -134,6 +134,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_steady_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;tsmc&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        steady-state calculation</span>
+<span class="sd">        If BN, run deterministic steady-state calculation.</span>
+<span class="sd">        If PBN, run Two-State Markov Chain or Monte Carlo.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters:</span>
 <span class="sd">        -----------</span>
@@ -146,6 +148,9 @@
 <span class="sd">        --------</span>
 <span class="sd">        np.ndarray : Steady-state probabilities for each node</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_pbn</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_stationary_deterministic</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
         <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;tsmc&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_stationary_tsmc</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;monte_carlo&#39;</span><span class="p">:</span>
@@ -378,36 +383,246 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_stationary_mc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                              <span class="n">n_runs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> 
                              <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
-                             <span class="n">p_noise</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+                             <span class="n">p_noise</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                             <span class="n">analyze_convergence</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                             <span class="n">output_node</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Monte Carlo steady-state calculation, handle input nodes and constant nodes</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        n_runs : int, default=10</span>
+<span class="sd">            Number of independent Monte Carlo runs</span>
+<span class="sd">        n_steps : int, default=1000</span>
+<span class="sd">            Number of simulation steps per run</span>
+<span class="sd">        p_noise : float, default=0</span>
+<span class="sd">            Noise probability for simulation</span>
+<span class="sd">        analyze_convergence : bool, default=False</span>
+<span class="sd">            Whether to perform convergence analysis and show plot</span>
+<span class="sd">        output_node : str, optional</span>
+<span class="sd">            Node name for convergence analysis. If None, uses all nodes.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        np.ndarray or Tuple[np.ndarray, Dict]</span>
+<span class="sd">            If analyze_convergence is False: steady-state probabilities</span>
+<span class="sd">            If analyze_convergence is True: (steady_state, convergence_info)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Store original state</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_save_network_state</span><span class="p">()</span>
         
-        <span class="n">steady_states</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">analyze_convergence</span><span class="p">:</span>
+            <span class="c1"># Single long run for convergence analysis</span>
+            <span class="n">steady_state</span><span class="p">,</span> <span class="n">convergence_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_mc_with_convergence</span><span class="p">(</span><span class="n">n_steps</span><span class="p">,</span> <span class="n">p_noise</span><span class="p">,</span> <span class="n">output_node</span><span class="p">)</span>
+            
+            <span class="c1"># convergence plot</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_convergence_plot</span><span class="p">(</span><span class="n">convergence_info</span><span class="p">,</span> <span class="n">output_node</span><span class="p">)</span>
+            
+            <span class="k">return</span> <span class="n">steady_state</span><span class="p">,</span> <span class="n">convergence_info</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Standard multiple runs approach</span>
+            <span class="n">steady_states</span> <span class="o">=</span> <span class="p">[]</span>
+            
+            <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_runs</span><span class="p">):</span>
+                <span class="c1"># Random initial state</span>
+                <span class="n">initial_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="p">:</span>
+                        <span class="n">initial_state</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">setInitialValues</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
+                
+                <span class="c1"># Run simulation</span>
+                <span class="n">trajectory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">update_noise</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p_noise</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="n">n_steps</span><span class="p">)</span>
+                
+                <span class="c1"># Take second half as steady state</span>
+                <span class="n">steady_portion</span> <span class="o">=</span> <span class="n">trajectory</span><span class="p">[</span><span class="n">n_steps</span><span class="o">//</span><span class="mi">2</span><span class="p">:]</span>
+                <span class="n">mean_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">steady_portion</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">steady_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean_state</span><span class="p">)</span>
+            
+            <span class="c1"># Restore original state</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_restore_network_state</span><span class="p">()</span>
+            
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">steady_states</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_mc_with_convergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">p_noise</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">output_node</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute Monte Carlo steady state with convergence analysis.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        n_steps : int</span>
+<span class="sd">            Number of simulation steps</span>
+<span class="sd">        p_noise : float</span>
+<span class="sd">            Noise probability</span>
+<span class="sd">        output_node : str, optional</span>
+<span class="sd">            Node name for convergence analysis</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        Tuple[np.ndarray, Dict]</span>
+<span class="sd">            (steady_state, convergence_info)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Random initial state</span>
+        <span class="n">initial_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="p">:</span>
+                <span class="n">initial_state</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">setInitialValues</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
         
-        <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_runs</span><span class="p">):</span>
-            <span class="c1"># Random initial state</span>
-            <span class="n">initial_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="p">:</span>
-                    <span class="n">initial_state</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">setInitialValues</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
-            
-            <span class="c1"># Run simulation</span>
-            <span class="n">trajectory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">update_noise</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p_noise</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="n">n_steps</span><span class="p">)</span>
-            
-            <span class="c1"># Take second half as steady state</span>
-            <span class="n">steady_portion</span> <span class="o">=</span> <span class="n">trajectory</span><span class="p">[</span><span class="n">n_steps</span><span class="o">//</span><span class="mi">2</span><span class="p">:]</span>
-            <span class="n">mean_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">steady_portion</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="n">steady_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean_state</span><span class="p">)</span>
+        <span class="c1"># Run single long trajectory</span>
+        <span class="n">trajectory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">update_noise</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p_noise</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="n">n_steps</span><span class="p">)</span>
+        
+        <span class="c1"># Take second half for steady state calculation</span>
+        <span class="n">steady_portion</span> <span class="o">=</span> <span class="n">trajectory</span><span class="p">[</span><span class="n">n_steps</span><span class="o">//</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="n">steady_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">steady_portion</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        
+        <span class="c1"># Convergence analysis on second half</span>
+        <span class="n">convergence_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analyze_convergence</span><span class="p">(</span><span class="n">steady_portion</span><span class="p">,</span> <span class="n">output_node</span><span class="p">)</span>
         
         <span class="c1"># Restore original state</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_restore_network_state</span><span class="p">()</span>
         
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">steady_states</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
-
+        <span class="k">return</span> <span class="n">steady_state</span><span class="p">,</span> <span class="n">convergence_info</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_analyze_convergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">output_node</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Analyze convergence of Monte Carlo trajectory.</span>
+<span class="sd">        </span>
+<span class="sd">        Based on the approach in steady_state_convergence.py:</span>
+<span class="sd">        - Calculate running averages at different time points</span>
+<span class="sd">        - Compute relative changes between consecutive averages</span>
+<span class="sd">        - Report final relative change as convergence measure</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        trajectory : np.ndarray</span>
+<span class="sd">            Trajectory data (second half of simulation)</span>
+<span class="sd">        output_node : str, optional</span>
+<span class="sd">            Node name for convergence analysis. If None, analyzes all nodes.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        Dict</span>
+<span class="sd">            Convergence analysis results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">trajectory</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;final_relative_change&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;converged&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+        
+        <span class="c1"># Define time points for convergence analysis</span>
+        <span class="n">traj_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">trajectory</span><span class="p">)</span>
+        <span class="n">step_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">traj_length</span> <span class="o">//</span> <span class="mi">30</span><span class="p">)</span>  <span class="c1"># About 30 time points</span>
+        <span class="n">time_points</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">step_size</span><span class="p">,</span> <span class="n">traj_length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">step_size</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">output_node</span> <span class="ow">and</span> <span class="n">output_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">:</span>
+            <span class="c1"># Analyze specific node</span>
+            <span class="n">node_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">output_node</span><span class="p">]</span>
+            <span class="n">node_scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_node_convergence</span><span class="p">(</span><span class="n">trajectory</span><span class="p">,</span> <span class="n">node_idx</span><span class="p">,</span> <span class="n">time_points</span><span class="p">)</span>
+            <span class="n">final_relative_change</span> <span class="o">=</span> <span class="n">node_scores</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">node_scores</span> <span class="k">else</span> <span class="mf">0.0</span>
+            
+            <span class="n">convergence_info</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;final_relative_change&#39;</span><span class="p">:</span> <span class="n">final_relative_change</span><span class="p">,</span>
+                <span class="s1">&#39;converged&#39;</span><span class="p">:</span> <span class="n">final_relative_change</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># Less than 1% change</span>
+                <span class="s1">&#39;node_analyzed&#39;</span><span class="p">:</span> <span class="n">output_node</span><span class="p">,</span>
+                <span class="s1">&#39;relative_changes&#39;</span><span class="p">:</span> <span class="n">node_scores</span><span class="p">,</span>
+                <span class="s1">&#39;time_points&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="mi">2</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">time_points</span><span class="p">]</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Analyze all nodes and take maximum</span>
+            <span class="n">all_relative_changes</span> <span class="o">=</span> <span class="p">[]</span>
+            
+            <span class="k">for</span> <span class="n">node_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node_idx</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="p">:</span>  <span class="c1"># Skip input nodes</span>
+                    <span class="n">node_scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_node_convergence</span><span class="p">(</span><span class="n">trajectory</span><span class="p">,</span> <span class="n">node_idx</span><span class="p">,</span> <span class="n">time_points</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">node_scores</span><span class="p">:</span>
+                        <span class="n">all_relative_changes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">node_scores</span><span class="p">)</span>
+            
+            <span class="n">final_relative_change</span> <span class="o">=</span> <span class="n">all_relative_changes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">all_relative_changes</span> <span class="k">else</span> <span class="mf">0.0</span>
+            
+            <span class="n">convergence_info</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;final_relative_change&#39;</span><span class="p">:</span> <span class="n">final_relative_change</span><span class="p">,</span>
+                <span class="s1">&#39;converged&#39;</span><span class="p">:</span> <span class="n">final_relative_change</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># Less than 1% change</span>
+                <span class="s1">&#39;node_analyzed&#39;</span><span class="p">:</span> <span class="s1">&#39;all_nodes&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;n_nodes_analyzed&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_indices</span><span class="p">)</span>
+            <span class="p">}</span>
+        
+        <span class="k">return</span> <span class="n">convergence_info</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_convergence_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">convergence_info</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">output_node</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Display convergence plot</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        convergence_info : Dict</span>
+<span class="sd">            Convergence information from _analyze_convergence</span>
+<span class="sd">        output_node : str, optional</span>
+<span class="sd">            Node name for plot title</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+        
+        <span class="k">if</span> <span class="s1">&#39;relative_changes&#39;</span> <span class="ow">in</span> <span class="n">convergence_info</span> <span class="ow">and</span> <span class="s1">&#39;time_points&#39;</span> <span class="ow">in</span> <span class="n">convergence_info</span><span class="p">:</span>
+            <span class="n">relative_changes</span> <span class="o">=</span> <span class="n">convergence_info</span><span class="p">[</span><span class="s1">&#39;relative_changes&#39;</span><span class="p">]</span>
+            <span class="n">time_points</span> <span class="o">=</span> <span class="n">convergence_info</span><span class="p">[</span><span class="s1">&#39;time_points&#39;</span><span class="p">]</span>
+            
+            <span class="k">if</span> <span class="n">relative_changes</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">relative_changes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">time_points</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">relative_changes</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Simulation Steps&#39;</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Relative Change of Score in %&#39;</span><span class="p">)</span>
+                
+                <span class="n">node_name</span> <span class="o">=</span> <span class="n">output_node</span> <span class="k">if</span> <span class="n">output_node</span> <span class="k">else</span> <span class="s1">&#39;All Nodes&#39;</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Convergence Analysis - </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+                
+                <span class="c1"># Add horizontal line at 1% for reference</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;1% threshold&#39;</span><span class="p">)</span>
+                
+                <span class="c1"># Add final convergence value as text</span>
+                <span class="n">final_change</span> <span class="o">=</span> <span class="n">convergence_info</span><span class="p">[</span><span class="s1">&#39;final_relative_change&#39;</span><span class="p">]</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.98</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Final: </span><span class="si">{</span><span class="n">final_change</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">%&#39;</span><span class="p">,</span> 
+                        <span class="n">transform</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span>
+                        <span class="n">bbox</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">boxstyle</span><span class="o">=</span><span class="s1">&#39;round&#39;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;wheat&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">))</span>
+                
+                <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_node_convergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">node_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">time_points</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate convergence for a specific node.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        trajectory : np.ndarray</span>
+<span class="sd">            Trajectory data</span>
+<span class="sd">        node_idx : int</span>
+<span class="sd">            Node index to analyze</span>
+<span class="sd">        time_points : List[int]</span>
+<span class="sd">            Time points for convergence analysis</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        List[float]</span>
+<span class="sd">            Relative changes in percentage</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># Calculate running averages at different time points</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">time_points</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">trajectory</span><span class="p">):</span>
+                <span class="c1"># Take average from start to time point n</span>
+                <span class="n">avg_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">trajectory</span><span class="p">[:</span><span class="n">n</span><span class="p">,</span> <span class="n">node_idx</span><span class="p">])</span>
+                <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">avg_value</span><span class="p">)</span>
+        
+        <span class="c1"># Calculate relative changes between consecutive scores</span>
+        <span class="n">relative_changes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="p">)):</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">scores</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">relative_change</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>  <span class="c1"># Convert to percentage</span>
+            <span class="n">relative_changes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">relative_change</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">relative_changes</span>
     
 <div class="viewcode-block" id="SteadyStateCalculator.set_experimental_conditions">
 <a class="viewcode-back" href="../../steady_state.html#BNMPy.steady_state.SteadyStateCalculator.set_experimental_conditions">[docs]</a>
@@ -490,49 +705,80 @@
 
 <div class="viewcode-block" id="SteadyStateCalculator.compute_stationary_deterministic">
 <a class="viewcode-back" href="../../steady_state.html#BNMPy.steady_state.SteadyStateCalculator.compute_stationary_deterministic">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compute_stationary_deterministic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_stationary_deterministic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">n_runs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span><span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">|</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Find deterministic steady state (attractors) for Boolean networks</span>
-<span class="sd">        TODO: need more discussion on this</span>
+<span class="sd">        Find attractors (fixed points and cycles) in a synchronous</span>
+<span class="sd">        Boolean network via random restarts.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        {</span>
+<span class="sd">            &quot;fixed_points&quot;: [state_vec, ...],                  # each np.ndarray (0/1)</span>
+<span class="sd">            &quot;cyclic_attractors&quot;      : [[state_vec1, state_vec2, ...],    # one list per cycle</span>
+<span class="sd">                            ...]</span>
+<span class="sd">        }</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Store original state</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_save_network_state</span><span class="p">()</span>
-        
-        <span class="c1"># Try different initial conditions</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>  <span class="c1"># Try up to 10 random initial conditions</span>
-            <span class="n">initial_state</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">setInitialValues</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
-            
-            <span class="c1"># Track states to detect cycles</span>
-            <span class="n">state_history</span> <span class="o">=</span> <span class="p">[]</span>
-            
-            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_steps</span><span class="p">):</span>
-                <span class="n">current_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-                <span class="n">state_tuple</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">current_state</span><span class="p">)</span>
-                
-                <span class="k">if</span> <span class="n">state_tuple</span> <span class="ow">in</span> <span class="n">state_history</span><span class="p">:</span>
-                    <span class="c1"># Found a cycle</span>
-                    <span class="n">cycle_start</span> <span class="o">=</span> <span class="n">state_history</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">state_tuple</span><span class="p">)</span>
-                    <span class="n">cycle</span> <span class="o">=</span> <span class="n">state_history</span><span class="p">[</span><span class="n">cycle_start</span><span class="p">:]</span>
-                    
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cycle</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                        <span class="c1"># Fixed point found</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_network_state</span><span class="p">()</span>
-                        <span class="k">return</span> <span class="n">current_state</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="c1"># Limit cycle - return average</span>
-                        <span class="n">cycle_states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">cycle</span><span class="p">])</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_network_state</span><span class="p">()</span>
-                        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cycle_states</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-                
-                <span class="n">state_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state_tuple</span><span class="p">)</span>
-                
-                <span class="c1"># Update network using existing method</span>
+        <span class="n">fixed_points</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cycles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_canonical_cycle</span><span class="p">(</span><span class="n">cycle</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Return a rotation-invariant representation of a cycle.&quot;&quot;&quot;</span>
+            <span class="c1"># choose lexicographically smallest rotation</span>
+            <span class="n">rotations</span> <span class="o">=</span> <span class="p">[</span><span class="n">cycle</span><span class="p">[</span><span class="n">i</span><span class="p">:]</span> <span class="o">+</span> <span class="n">cycle</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cycle</span><span class="p">))]</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">rotations</span><span class="p">))</span>
+
+        <span class="n">seen_fixed</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">seen_cycles</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_network_state</span><span class="p">()</span>  <span class="c1"># keep original state</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_runs</span><span class="p">):</span>
+            <span class="c1"># random start</span>
+            <span class="n">init</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">setInitialValues</span><span class="p">(</span><span class="n">init</span><span class="p">)</span>
+
+            <span class="n">history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_steps</span><span class="p">):</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+
+                <span class="k">if</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">history</span><span class="p">:</span>   
+                    <span class="n">start_idx</span> <span class="o">=</span> <span class="n">history</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+                    <span class="n">cycle</span> <span class="o">=</span> <span class="n">history</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:]</span>  <span class="c1"># list[tuple]</span>
+
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cycle</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>          <span class="c1"># fixed point</span>
+                        <span class="k">if</span> <span class="n">state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_fixed</span><span class="p">:</span>
+                            <span class="n">fixed_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
+                            <span class="n">seen_fixed</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>                        <span class="c1"># limit cycle</span>
+                        <span class="n">can</span> <span class="o">=</span> <span class="n">_canonical_cycle</span><span class="p">(</span><span class="n">cycle</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">can</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_cycles</span><span class="p">:</span>
+                            <span class="n">cycles</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">cycle</span><span class="p">])</span>
+                            <span class="n">seen_cycles</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">can</span><span class="p">)</span>
+                    <span class="k">break</span>  <span class="c1"># stop this trajectory</span>
+
+                <span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        
-        <span class="c1"># Restore original state and return None if no attractor found</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_restore_network_state</span><span class="p">()</span>
-        <span class="k">return</span> <span class="kc">None</span></div>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fixed_points</span><span class="p">)</span><span class="si">}</span><span class="s2"> fixed points and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cycles</span><span class="p">)</span><span class="si">}</span><span class="s2"> cyclic attractors&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--------------------------------&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fixed_points</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Fixed points: &quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">fixed_point</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fixed_points</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fixed point </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">fixed_point</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No fixed points found&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--------------------------------&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cycles</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cyclic attractors: &quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cycle</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cycles</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cyclic attractor </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="p">[</span><span class="n">component</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">component</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">cycle</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No cyclic attractors found&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--------------------------------&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node order: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;fixed_points&quot;</span><span class="p">:</span> <span class="n">fixed_points</span><span class="p">,</span> <span class="s2">&quot;cyclic_attractors&quot;</span><span class="p">:</span> <span class="n">cycles</span><span class="p">}</span></div>
 </div>
 
 </pre></div>
