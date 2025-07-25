@@ -647,7 +647,7 @@ class SteadyStateCalculator:
             'max_connectivity': np.max(self.K) if len(self.K) > 0 else 0
         }
 
-    def compute_stationary_deterministic(self,n_runs: int = 100,n_steps: int = 1000) -> Dict[str, List[np.ndarray] | List[List[np.ndarray]]]:
+    def compute_stationary_deterministic(self,n_runs: int = 100,n_steps: int = 1000) -> Dict[str, Union[List[np.ndarray], List[List[np.ndarray]]]]:
         """
         Find attractors (fixed points and cycles) in a synchronous
         Boolean network via random restarts.

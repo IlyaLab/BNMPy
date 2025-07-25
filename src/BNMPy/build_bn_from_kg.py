@@ -77,56 +77,40 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&'):
                 all_relations.append((in_node, gene_name, 'activate'))
         if joiner == 'inhibitor_wins':
             input_nodes_string = ''
-            inhibitor_string = ' & '.join(f'!{x}' for x in inhibitors)
-            upregulator_string = ' | '.join(f'{x}' for x in upregulators)
+            if len(inhibitors) > 1:
+                inhibitor_string = ' & '.join(f'!{x}' for x in inhibitors)
+                inhibitor_string =f'({inhibitor_string})'
+            elif len(inhibitors) == 1:
+                inhibitor_string = f'!{inhibitors[0]}'
+            else:
+                inhibitor_string = ''
+
+            if len(upregulators) > 1:
+                upregulator_string = ' | '.join(f'{x}' for x in upregulators)
+                upregulator_string = f'({upregulator_string})'
+            elif len(upregulators) == 1:
+                upregulator_string = f'{upregulators[0]}'
+            else:
+                upregulator_string = ''
+
             if inhibitor_string and upregulator_string:
-                input_nodes_string = f'({inhibitor_string}) & ({upregulator_string})'
+                input_nodes_string = f'{inhibitor_string} & {upregulator_string}'
             elif inhibitor_string:
                 input_nodes_string = f'{inhibitor_string}'
             elif upregulator_string:
                 input_nodes_string = f'{upregulator_string}'
+            else:
+                input_nodes_string = gene_name
         else:
             input_nodes_string = joiner.join(input_nodes)
+
         if len(input_nodes) == 0:
             input_nodes_string = gene_name
         output_string = f'{gene_name} = {input_nodes_string}'
         bn_lines.append(output_string)
+    # order the equations by key alphabetically
+    bn_lines.sort(key=lambda x: x.split('=')[0])
     return '\n'.join(bn_lines), all_relations
-
-
-def merge_network(bn, new_equations, outer_joiner='&'):
-    """
-    Merges a BooleanNetwork object with a string or list of equations.
-    """
-    if isinstance(new_equations, str):
-        new_equations = new_equations.split('\n')
-    equations = bn.equations
-    old_eq_dict = {}
-    for eq in equations:
-        terms = eq.split('=')
-        key = terms[0].strip()
-        old_eq_dict[key] = terms[1]
-    new_eq_dict = {}
-    for eq in new_equations:
-        terms = eq.split('=')
-        key = terms[0].strip()
-        new_eq_dict[key] = terms[1]
-    # just combine it in a primitive way...
-    combined_keys = set(list(old_eq_dict.keys()) + list(new_eq_dict.keys()))
-    combined_eqs = {}
-    combined_eqs_list = []
-    for key in combined_keys:
-        new_term = ''
-        if key in old_eq_dict and key not in new_eq_dict:
-            new_term = old_eq_dict[key]
-        elif key in new_eq_dict and key not in old_eq_dict:
-            new_term = new_eq_dict[key]
-        else:
-            new_term = f'({old_eq_dict[key]}) {outer_joiner} ({new_eq_dict[key]})'
-        combined_eqs[key] = new_term
-        combined_eqs_list.append(f'{key} = {new_term}')
-    return '\n'.join(combined_eqs_list)
-
 
 def add_genes_to_network(bn, gene_list, input_format='symbol',
         joiner='inhibitor_wins', outer_joiner='&'):
