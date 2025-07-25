@@ -3,6 +3,7 @@ import networkx as nx
 from typing import Set, List, Dict, Tuple, Union, Optional
 from collections import deque
 import copy
+import re
 
 
 class ModelCompressor:
@@ -13,6 +14,9 @@ class ModelCompressor:
     nodes and collapsing linear paths to simplify the network structure.
     """
     
+    # Regex pattern to match single identifier (alias) rules
+    _alias_pat = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
+    
     def __init__(self, network, measured_nodes: Set[str] = None, perturbed_nodes: Set[str] = None):
         """
         Initialize the model compressor.
@@ -22,7 +26,7 @@ class ModelCompressor:
         network : BooleanNetwork
             The Boolean network to compress
         measured_nodes : Set[str], optional
-            Set of node names that are measured/observed
+            Set of node names that are measured/observed. If None, will auto-detect output nodes.
         perturbed_nodes : Set[str], optional  
             Set of node names that are perturbed/controlled
         """
@@ -31,11 +35,16 @@ class ModelCompressor:
             raise ValueError("PBN compression is not currently supported. Please use Boolean Networks only.")
         
         self.network = network
-        self.measured_nodes = measured_nodes or set()
         self.perturbed_nodes = perturbed_nodes or set()
         
         # Build directed graph representation
         self.graph = self._build_graph()
+        
+        # Auto-detect measured nodes if not provided
+        if measured_nodes is None:
+            self.measured_nodes = self._detect_output_nodes()
+        else:
+            self.measured_nodes = measured_nodes
         
         # Track original network structure for restoration
         self.original_structure = self._save_network_structure()
@@ -162,33 +171,50 @@ class ModelCompressor:
         
         # Important nodes that should not be removed
         important_nodes = self.measured_nodes | self.perturbed_nodes
+        complex_nodes = set()
+        for node in self.graph.nodes():
+            if self._is_used_in_complex_rule(node):
+                complex_nodes.add(node)
         
-        # Find all linear paths
+        protected_nodes = important_nodes | complex_nodes
+        
+        # Find all linear paths starting from any node
         for node in self.graph.nodes():
             if node in visited:
                 continue
                 
             # Look for the start of a potential path
-            # A path can start from any node (including important nodes)
-            path = self._trace_linear_path(node, important_nodes, visited)
+            path = self._trace_linear_path(node, protected_nodes, visited)
             
-            if len(path) > 2:  # Only paths with intermediate nodes to remove
-                # Check if this path has collapsible intermediate nodes
-                intermediate_nodes = path[1:-1]  # Exclude first and last
+            if len(path) > 1:  # Only paths with at least one node to remove
+                # Check if this path has collapsible nodes
+                collapsible_nodes = []
+                for i, n in enumerate(path):
+                    if n in protected_nodes:
+                        # If this is the last node, it's okay (endpoint)
+                        if i == len(path) - 1:
+                            break
+                        else:
+                            # Protected node in the middle - can't collapse this path
+                            collapsible_nodes = []
+                            break
+                    else:
+                        collapsible_nodes.append(n)
                 
-                # Only collapse if intermediate nodes are not important
-                if not any(n in important_nodes for n in intermediate_nodes):
+                if collapsible_nodes:
                     collapsible_paths.append(path)
-                    visited.update(path)
+                    visited.update(path[:-1] if path[-1] in protected_nodes else path)
         
         return collapsible_paths
-    
+
     def _trace_linear_path(self, start_node: str, important_nodes: Set[str], visited: Set[str]) -> List[str]:
         """
         Trace a linear path starting from the given node.
         
         A linear path is a sequence of nodes where each node has exactly one output
         (except the last) and exactly one input (except the first).
+        
+        Important nodes and nodes used in complex rules can be endpoints but not intermediate nodes.
         """
         path = [start_node]
         current = start_node
@@ -209,19 +235,23 @@ class ModelCompressor:
                 self.graph.has_edge(next_node, next_node)):  # Avoid self-loops
                 break
             
-            # Check if next node has exactly one input (from current)
-            predecessors = list(self.graph.predecessors(next_node))
-            if len(predecessors) != 1 or predecessors[0] != current:
+            # If we've reached an important node
+            if next_node in important_nodes:
+                path.append(next_node)
+                break
+                
+            # If we've reached a node used in complex rules
+            if self._is_used_in_complex_rule(next_node):
+                path.append(next_node)
+                break
+                
+            # Check if current node is linear (for continuing the path)
+            if not self._is_linear_node(next_node):
                 break
             
             # Add to path and continue
             path.append(next_node)
             current = next_node
-            
-            # Stop if we've reached a node that should be preserved as endpoint
-            # (but include it in the path as the endpoint)
-            if next_node in important_nodes:
-                break
         
         return path
     
@@ -246,119 +276,100 @@ class ModelCompressor:
     def collapse_paths(self, paths: List[List[str]]) -> None:
         """
         Collapse linear paths by removing intermediate nodes and creating direct connections.
-        
-        Parameters:
-        -----------
-        paths : List[List[str]]
-            List of paths to collapse, where each path is a list of node names
+        For each path, update all references to any relay node in the path to the ultimate source.
         """
         self.collapsed_paths = paths.copy()
+        important_nodes = self.measured_nodes | self.perturbed_nodes
         
+        # Also consider nodes used in complex rules as important
+        nodes_in_complex_rules = set()
+        for node in self.graph.nodes():
+            if self._is_used_in_complex_rule(node):
+                nodes_in_complex_rules.add(node)
+        
+        all_important_nodes = important_nodes | nodes_in_complex_rules
+        
+        # Process each path
         for path in paths:
-            if len(path) > 2:
-                # Create direct connection from first to last node
-                first_node = path[0]
-                last_node = path[-1]
+            if len(path) < 2:
+                continue
                 
-                # Get the rule for the last node by tracing through the path
-                final_rule = self._get_collapsed_rule(path)
-                
-                # Update the last node's rule to depend directly on the first node
-                self._update_node_rule(last_node, final_rule)
-                
-                # Mark intermediate nodes for removal
-                intermediate_nodes = path[1:-1]
-                for node in intermediate_nodes:
-                    self.removed_nodes.add(node)
-        
-        # Remove all intermediate nodes at once
-        nodes_to_remove = set()
-        for path in paths:
-            if len(path) > 2:
-                nodes_to_remove.update(path[1:-1])
-        
-        if nodes_to_remove:
-            self.remove_nodes(nodes_to_remove)
-    
-    def _get_collapsed_rule(self, path: List[str]) -> str:
-        """
-        Get the final rule for a collapsed path by tracing through the logic.
-        
-        For a path A->B->C->D, if:
-        - A = Input1
-        - B = A  
-        - C = B
-        - D = C | Input2
-        
-        Then the collapsed rule for D should be: D = Input1 | Input2
-        """
-        if len(path) < 2:
-            return None
-        
-        # Start with the rule of the last node
-        last_node = path[-1]
-        
-        if not hasattr(self.network, 'equations'):
-            return None
-        
-        # Find the equation for the last node
-        last_rule = None
-        for equation in self.network.equations:
-            if equation.startswith(f"{last_node} ="):
-                last_rule = equation.split("=", 1)[1].strip()
-                break
-        
-        if not last_rule:
-            return None
-        
-        # Substitute intermediate nodes with their dependencies
-        # Work backwards through the path
-        current_rule = last_rule
-        
-        for i in range(len(path) - 2, 0, -1):  # From second-to-last to second node
-            node_to_replace = path[i]
+            # Get the ultimate source (the node that should replace all others in the path)
+            src = self._ultimate_source(path[0])
             
-            # Find what this node depends on
-            node_rule = None
-            for equation in self.network.equations:
-                if equation.startswith(f"{node_to_replace} ="):
-                    node_rule = equation.split("=", 1)[1].strip()
-                    break
+            # Determine which nodes in the path should be removed and which preserved
+            nodes_to_replace = []
+            preserved_nodes = []
             
-            if node_rule:
-                # Replace occurrences of this node in the current rule
-                # Handle word boundaries to avoid partial matches
-                import re
-                pattern = r'\b' + re.escape(node_to_replace) + r'\b'
-                
-                # If the node_rule is a single variable, don't add parentheses
-                if re.match(r'^[A-Za-z0-9_]+$', node_rule):
-                    replacement = node_rule
+            for node in path:
+                if node not in all_important_nodes:
+                    nodes_to_replace.append(node)
                 else:
-                    replacement = f"({node_rule})"
+                    preserved_nodes.append(node)
+            
+            # Update rules for preserved nodes at path endpoints
+            for preserved_node in preserved_nodes:
+                # If this preserved node was getting its input from a node in the path,
+                # update it to get input from the ultimate source instead
+                current_rule = self._get_rule(preserved_node).strip()
                 
-                current_rule = re.sub(pattern, replacement, current_rule)
+                # Replace any nodes from this path with the ultimate source
+                new_rule = current_rule
+                for node in nodes_to_replace:
+                    pattern = r'\b' + re.escape(node) + r'\b'
+                    new_rule = re.sub(pattern, src, new_rule)
+                
+                if new_rule != current_rule:
+                    self._update_node_rule(preserved_node, new_rule)
+            
+            # Update all other equations that reference nodes to be replaced
+            for node in nodes_to_replace:
+                # Update all equations that reference this node
+                for i, eq in enumerate(self.network.equations):
+                    lhs, rhs = eq.split('=', 1)
+                    lhs = lhs.strip()
+                    rule = rhs.strip()
+                    
+                    # Skip equations for nodes we're removing
+                    if lhs in nodes_to_replace:
+                        continue
+                    
+                    # Replace this node with the ultimate source
+                    pattern = r'\b' + re.escape(node) + r'\b'
+                    new_rule = re.sub(pattern, src, rule)
+                    
+                    if new_rule != rule:
+                        self.network.equations[i] = f"{lhs} = {new_rule}"
+                        self._update_node_rule(lhs, new_rule)
         
-        # Clean up excessive parentheses
-        current_rule = self._simplify_rule(current_rule)
+        # Remove all nodes that were marked for removal
+        all_nodes_to_remove = set()
         
-        return current_rule
-    
-    def _simplify_rule(self, rule: str) -> str:
-        """Simplify a rule by removing unnecessary parentheses."""
-        import re
+        # Collect all nodes that should be removed from all paths
+        for path in paths:
+            if len(path) < 2:
+                continue
+                
+            for node in path:
+                if node not in all_important_nodes:
+                    all_nodes_to_remove.add(node)
         
-        # Remove outer parentheses around single variables
-        rule = re.sub(r'\(([A-Za-z0-9_]+)\)', r'\1', rule)
+        # Update self.removed_nodes with the actual nodes being removed
+        self.removed_nodes.update(all_nodes_to_remove)
         
-        # Remove double parentheses
-        rule = re.sub(r'\(\(([^)]+)\)\)', r'(\1)', rule)
+        if all_nodes_to_remove:
+            self.remove_nodes(all_nodes_to_remove)
+            # Remove equations for removed nodes
+            if hasattr(self.network, 'equations'):
+                self.network.equations = [eq for eq in self.network.equations 
+                                        if eq.split('=')[0].strip() not in all_nodes_to_remove]
+            # Remove nodes from nodeDict
+            for node in all_nodes_to_remove:
+                if node in self.network.nodeDict:
+                    del self.network.nodeDict[node]
         
-        # Remove spaces around operators for cleaner look
-        rule = re.sub(r'\s*([&|!])\s*', r' \1 ', rule)
-        rule = re.sub(r'\s+', ' ', rule)
-        
-        return rule.strip()
+        self.graph = self._build_graph()
+        self._collapse_alias_nodes()
     
     def _update_node_rule(self, node_name: str, new_rule: str) -> None:
         """Update the rule for a specific node and its connectivity matrix."""
@@ -367,7 +378,8 @@ class ModelCompressor:
         
         # Update the equations list
         for i, equation in enumerate(self.network.equations):
-            if equation.startswith(f"{node_name} ="):
+            eq_parts = equation.split('=', 1)
+            if len(eq_parts) == 2 and eq_parts[0].strip() == node_name:
                 self.network.equations[i] = f"{node_name} = {new_rule}"
                 break
         
@@ -394,22 +406,6 @@ class ModelCompressor:
             
             # Update connection count
             self.network.K[node_idx] = conn_count
-    
-    def _create_direct_connection(self, source: str, target: str) -> None:
-        """Create a direct connection between source and target nodes."""
-        if source not in self.network.nodeDict or target not in self.network.nodeDict:
-            return
-        
-        source_idx = self.network.nodeDict[source]
-        target_idx = self.network.nodeDict[target]
-        
-        # Find an empty slot in the connectivity matrix for the target
-        for j in range(self.network.varF.shape[1]):
-            if self.network.varF[target_idx, j] == -1:
-                self.network.varF[target_idx, j] = source_idx
-                self.network.K[target_idx] = min(self.network.K[target_idx] + 1, 
-                                               self.network.varF.shape[1])
-                break
     
     def remove_nodes(self, nodes_to_remove: Set[str]) -> None:
         """
@@ -549,7 +545,9 @@ class ModelCompressor:
         compression_info = {
             'removed_non_observable': set(),
             'removed_non_controllable': set(),
-            'collapsed_paths': []
+            'collapsed_paths': [],
+            'measured_nodes': self.measured_nodes,
+            'perturbed_nodes': self.perturbed_nodes
         }
         
         # Find nodes to remove
@@ -579,6 +577,8 @@ class ModelCompressor:
                 compression_info['collapsed_paths'] = paths
                 # Rebuild graph after collapsing
                 self.graph = self._build_graph()
+        
+        self._collapse_alias_nodes()
         
         # Identify removed edges by comparing original and final structures
         compression_info['removed_edges'] = self._identify_removed_edges(original_graph)
@@ -637,6 +637,23 @@ class ModelCompressor:
         summary = ["Model Compression Summary:"]
         summary.append("=" * 30)
         
+        # Add information about measured and perturbed nodes
+        measured_nodes = compression_info.get('measured_nodes', set())
+        perturbed_nodes = compression_info.get('perturbed_nodes', set())
+        important_nodes = measured_nodes | perturbed_nodes
+        
+        if measured_nodes:
+            summary.append(f"  Measured nodes: {', '.join(sorted(measured_nodes))}")
+        else:
+            summary.append(f"No measured nodes provided.")
+        
+        if perturbed_nodes:
+            summary.append(f"  Perturbed nodes: {', '.join(sorted(perturbed_nodes))}")
+        else:
+            summary.append(f"No perturbed nodes provided.")
+        
+        summary.append("")  # Empty line for separation
+        
         non_obs = compression_info.get('removed_non_observable', set())
         non_ctrl = compression_info.get('removed_non_controllable', set())
         paths = compression_info.get('collapsed_paths', [])
@@ -652,12 +669,28 @@ class ModelCompressor:
         summary.append(f"Collapsed {len(paths)} linear paths")
         if paths:
             for i, path in enumerate(paths, 1):
-                summary.append(f"  Path {i}: {' -> '.join(path)}")
+                # Show the complete path including the ultimate source
+                if path:
+                    # Get the ultimate source for proper display
+                    src = self._ultimate_source(path[0]) if hasattr(self, '_ultimate_source') else path[0]
+                    # Create the full path display: source -> path nodes -> target
+                    full_path = [src] + path if src not in path else path
+                    summary.append(f"  Path {i}: {' -> '.join(full_path)}")
         
-        total_removed = len(non_obs) + len(non_ctrl) + sum(len(path) - 1 for path in paths)
+        # Calculate total nodes removed correctly
+        # For each path, count only the nodes that are actually removed
+        total_removed_paths = 0
+        for path in paths:
+            if path and path[-1] in important_nodes:
+                # Path ends at important node - only intermediate nodes removed
+                total_removed_paths += len(path) - 1
+            else:
+                # All nodes in path removed
+                total_removed_paths += len(path)
+        
+        total_removed = len(non_obs) + len(non_ctrl) + total_removed_paths
         summary.append(f"\nTotal nodes removed/collapsed: {total_removed}")
         summary.append(f"Final network size: {self.network.N} nodes")
-        summary.append(f"Network type: Boolean Network")
         
         return "\n".join(summary)
     
@@ -687,7 +720,9 @@ class ModelCompressor:
                 'removed_non_controllable': set(), 
                 'collapsed_paths': self.collapsed_paths,
                 'removed_nodes': self.removed_nodes,
-                'removed_edges': self.removed_edges
+                'removed_edges': self.removed_edges,
+                'measured_nodes': self.measured_nodes,
+                'perturbed_nodes': self.perturbed_nodes
             }
             
             vis_compression_comparison(
@@ -701,6 +736,139 @@ class ModelCompressor:
         except ImportError:
             print("Visualization module not available. Please ensure BNMPy.vis is properly installed.")
 
+    def _detect_output_nodes(self) -> Set[str]:
+        """
+        Automatically detect output nodes (nodes with no outgoing edges).
+        
+        Returns:
+        --------
+        Set[str]
+            Set of output node names
+        """
+        output_nodes = set()
+        
+        for node_name in self.graph.nodes():
+            # Check if node has no outgoing edges
+            if self.graph.out_degree(node_name) == 0:
+                output_nodes.add(node_name)
+        
+        return output_nodes
+
+    def _get_rule(self, node_name: str) -> str:
+        """Get the rule (right-hand side) for a given node."""
+        if not hasattr(self.network, 'equations'):
+            return ""
+        
+        for equation in self.network.equations:
+            # Handle equations with extra whitespace around the equals sign
+            eq_parts = equation.split('=', 1)
+            if len(eq_parts) == 2 and eq_parts[0].strip() == node_name:
+                return eq_parts[1].strip()
+        return ""
+
+    def _is_used_in_complex_rule(self, node: str) -> bool:
+        """Return True if node appears in any rule as part of a complex expression (not a pure alias),
+        or if the node's own rule is complex."""
+        # Check if the node's own rule is complex
+        own_rule = self._get_rule(node).strip()
+        if own_rule and not self._alias_pat.fullmatch(own_rule):
+            return True
+            
+        # Check if the node appears in other nodes' complex rules
+        for eq in self.network.equations:
+            lhs, rhs = eq.split('=', 1)
+            rule = rhs.strip()
+            # Node must appear in the rule, and the rule must not be a pure alias
+            if node in rule and not self._alias_pat.fullmatch(rule):
+                return True
+        return False
+
+    def _ultimate_source(self, var: str) -> str:
+        """
+        Follow alias chains (A = B = C ...) until a node is used in a complex rule or not a pure alias.
+        """
+        seen = set()
+        while self._alias_pat.fullmatch(self._get_rule(var).strip()) and var not in seen:
+            # Stop if this node is used in a complex rule
+            if self._is_used_in_complex_rule(var):
+                return var
+            seen.add(var)
+            var = self._get_rule(var).strip()
+        return var
+
+    def _collapse_alias_nodes(self) -> None:
+        """
+        Collapse alias nodes (nodes whose rule is a single identifier) by rewiring
+        their children directly to their parent and removing the alias node.
+        
+        Important nodes (measured/perturbed) and nodes used in complex rules are never collapsed.
+        """
+        nodes_to_remove = set()
+        
+        # Important nodes that should never be collapsed
+        important_nodes = self.measured_nodes | self.perturbed_nodes
+        
+        # Also preserve nodes used in complex rules
+        complex_nodes = set()
+        for node in self.graph.nodes():
+            if self._is_used_in_complex_rule(node):
+                complex_nodes.add(node)
+        
+        # Combined set of nodes that should never be collapsed
+        protected_nodes = important_nodes | complex_nodes
+        
+        for node in list(self.graph.nodes()):
+            if node in nodes_to_remove or node in protected_nodes:
+                continue
+                
+            rule = self._get_rule(node).strip()
+            
+            # Check if this is an alias node (rule is a single identifier)
+            if not self._alias_pat.fullmatch(rule):
+                continue
+                
+            # Check if node has exactly one input and one output
+            if self.graph.in_degree(node) != 1 or self.graph.out_degree(node) != 1:
+                continue
+                
+            # Get parent and children
+            parent = rule  # The node this alias points to
+            children = list(self.graph.successors(node))
+            
+            if not children or parent not in self.graph.nodes():
+                continue
+                
+            child = children[0]
+            
+            # Don't collapse if the child is also a protected node
+            if child in protected_nodes:
+                continue
+            
+            # Update child's rule to point directly to parent
+            child_rule = self._get_rule(child)
+            if child_rule:
+                # Replace occurrences of alias node with parent
+                pattern = r'\b' + re.escape(node) + r'\b'
+                new_rule = re.sub(pattern, parent, child_rule)
+                self._update_node_rule(child, new_rule)
+            
+            # Mark alias node for removal
+            nodes_to_remove.add(node)
+        
+        # Remove all alias nodes
+        if nodes_to_remove:
+            self.remove_nodes(nodes_to_remove)
+            # Remove equations for alias nodes
+            if hasattr(self.network, 'equations'):
+                self.network.equations = [eq for eq in self.network.equations 
+                                        if eq.split('=')[0].strip() not in nodes_to_remove]
+            # Remove nodes from nodeDict
+            for node in nodes_to_remove:
+                if node in self.network.nodeDict:
+                    del self.network.nodeDict[node]
+            
+            # Rebuild graph after removal
+            self.graph = self._build_graph()
 
 def compress_model(network, measured_nodes: Set[str] = None, perturbed_nodes: Set[str] = None,
                   remove_non_observable: bool = True, remove_non_controllable: bool = True,

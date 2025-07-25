@@ -203,8 +203,15 @@ evaluator = evaluate_optimization_result(
     generate_plots=True,
     generate_report=True
 )
-
 ```
+
+#### Evaluation Plots
+
+The `evaluate_optimization_result` function generates several plots to assess optimization quality:
+
+1. **Prediction vs Experimental Plot (`prediction_vs_experimental.png`)**
+2. **Residuals Plot (`residuals.png`)**
+3. **Optimization History Plot (`optimization_history.png`)**
 
 ## Model Compression
 

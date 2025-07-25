@@ -281,54 +281,135 @@ class ExperimentData:
         
         return summary
 
-    @staticmethod
-    def extract_experiment_nodes(csv_file):
-        """
-        Extract measured and perturbed nodes from experimental CSV file.
+def extract_experiment_nodes(csv_file):
+    """
+    Extract measured and perturbed nodes from experimental CSV file.
+    
+    Parameters:
+    -----------
+    csv_file : str
+        Path to CSV file with experimental data
         
-        Parameters:
-        -----------
-        csv_file : str
-            Path to CSV file with experimental data
-            
-        Returns:
-        --------
-        Tuple[Set[str], Set[str]]
-            - measured_nodes: Set of node names that appear in Measured_nodes columns
-            - perturbed_nodes: Set of node names that appear in Stimuli or Inhibitors columns
-        """
-        df = pd.read_csv(csv_file)
-        measured_nodes = set()
-        perturbed_nodes = set()
+    Returns:
+    --------
+    Tuple[Set[str], Set[str]]
+        - measured_nodes: Set of node names that appear in Measured_nodes columns
+        - perturbed_nodes: Set of node names that appear in Stimuli or Inhibitors columns
+    """
+    df = pd.read_csv(csv_file)
+    measured_nodes = set()
+    perturbed_nodes = set()
+    
+    for _, row in df.iterrows():
+        # Extract measured nodes
+        if 'Measured_nodes' in row and not pd.isna(row['Measured_nodes']):
+            nodes = ExperimentData._parse_node_list(row['Measured_nodes'])
+            measured_nodes.update(nodes)
         
-        for _, row in df.iterrows():
-            # Extract measured nodes
-            if 'Measured_nodes' in row and not pd.isna(row['Measured_nodes']):
-                nodes = ExperimentData._parse_node_list(row['Measured_nodes'])
-                measured_nodes.update(nodes)
-            
-            # Extract stimuli (perturbed nodes)
-            if 'Stimuli' in row and not pd.isna(row['Stimuli']):
-                nodes = ExperimentData._parse_node_list(row['Stimuli'])
-                perturbed_nodes.update(nodes)
-            
-            # Extract inhibitors (perturbed nodes)
-            if 'Inhibitors' in row and not pd.isna(row['Inhibitors']):
-                nodes = ExperimentData._parse_node_list(row['Inhibitors'])
-                perturbed_nodes.update(nodes)
+        # Extract stimuli (perturbed nodes)
+        if 'Stimuli' in row and not pd.isna(row['Stimuli']):
+            nodes = ExperimentData._parse_node_list(row['Stimuli'])
+            perturbed_nodes.update(nodes)
         
-        print(f"   Extracted {len(measured_nodes)} measured nodes: {measured_nodes}")
-        print(f"   Extracted {len(perturbed_nodes)} perturbed nodes: {perturbed_nodes}")
+        # Extract inhibitors (perturbed nodes)
+        if 'Inhibitors' in row and not pd.isna(row['Inhibitors']):
+            nodes = ExperimentData._parse_node_list(row['Inhibitors'])
+            perturbed_nodes.update(nodes)
+    
+    print(f"   Extracted {len(measured_nodes)} measured nodes: {measured_nodes}")
+    print(f"   Extracted {len(perturbed_nodes)} perturbed nodes: {perturbed_nodes}")
 
-        return measured_nodes, perturbed_nodes
+    return measured_nodes, perturbed_nodes
 
-if __name__ == "__main__":
-    # Test with existing Trairatphisan data if available
-    try:
-        experiments = ExperimentData.load_from_csv('../../data/Trairatphisan2014_case3.csv')
-        print("Successfully loaded Trairatphisan2014_case3.csv")
-        # print(experiments)
-        summary = ExperimentData.get_experiment_summary(experiments)
-        print("Summary:", summary)
-    except:
-        print("Trairatphisan2014_case3.csv not found")
+def generate_experiments(pbn, experiment_csv: str, config: dict = None, output_csv: str = None, round_to: int = 4) -> pd.DataFrame:
+    """
+    Generate hypothesized experimental values using the current PBN parameters.
+    
+    This function simulates the experiments defined in the CSV file using the current
+    PBN parameters and generates predicted values for the measured nodes.
+    
+    Parameters:
+    -----------
+    experiment_csv : str
+        Path to the experiment CSV file
+    output_csv : str, optional
+        Path to save the generated results. If None, returns DataFrame without saving.
+    round_to : int, optional
+        Number of decimal places to round the predicted values to. Default is 4.
+        
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame with original experiment data plus generated predicted values
+    """
+    # Load experiments
+    experiments = ExperimentData.load_from_csv(experiment_csv)
+    
+    # Initialize steady state calculator
+    from BNMPy.steady_state import SteadyStateCalculator
+    steady_state_calc = SteadyStateCalculator(pbn)
+    
+    # Get steady state configuration
+    default_config = {
+    'steady_state': {
+        'method': 'monte_carlo',
+            'monte_carlo_params': {
+                'n_runs': 3,
+                'n_steps': 5000,
+                'p_noise': 0.05
+            }
+    }
+}
+    ss_config = config.get('steady_state', default_config['steady_state'])
+    results = []
+    
+    for i, experiment in enumerate(experiments):
+        # Set experimental conditions
+        steady_state_calc.set_experimental_conditions(
+            stimuli=experiment['stimuli'],
+            stimuli_efficacy=experiment['stimuli_efficacy'],
+            inhibitors=experiment['inhibitors'],
+            inhibitors_efficacy=experiment['inhibitors_efficacy']
+        )
+        
+        # Calculate steady state
+        method = ss_config.get('method', 'monte_carlo')
+        if method == 'tsmc':
+            params = ss_config.get('tsmc_params', {})
+            steady_state = steady_state_calc.compute_stationary_tsmc(**params)
+        else:  # monte_carlo
+            params = ss_config.get('monte_carlo_params', {})
+            steady_state = steady_state_calc.compute_stationary_mc(**params)
+        
+        # Reset experimental conditions
+        steady_state_calc.reset_network_conditions()
+        
+        # Extract predicted values for measured nodes
+        predicted_values = []
+        for node in experiment['measurements'].keys():
+            node_idx = pbn.nodeDict[node]
+            predicted_values.append(round(steady_state[node_idx], round_to))
+        
+        # Create result row
+        result_row = {
+            'Experiments': experiment['id'],
+            'Stimuli': ','.join(experiment['stimuli']) if experiment['stimuli'] else '',
+            'Stimuli_efficacy': ','.join(map(str, experiment['stimuli_efficacy'])) if experiment['stimuli_efficacy'] else '',
+            'Inhibitors': ','.join(experiment['inhibitors']) if experiment['inhibitors'] else '',
+            'Inhibitors_efficacy': ','.join(map(str, experiment['inhibitors_efficacy'])) if experiment['inhibitors_efficacy'] else '',
+            'Measured_nodes': ','.join(experiment['measurements'].keys()),
+            'Measured_values': ','.join(map(str, experiment['measurements'].values())),
+            'Predicted_values': ','.join(map(str, predicted_values))
+        }
+        
+        results.append(result_row)
+    
+    # Create DataFrame
+    df = pd.DataFrame(results)
+    
+    # Save if output path provided
+    if output_csv:
+        df.to_csv(output_csv, index=False)
+        print(f"Generated experiment results saved to: {output_csv}")
+    
+    return df

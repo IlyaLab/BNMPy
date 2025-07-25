@@ -1,11 +1,11 @@
 import numpy as np
-from typing import Dict, List, Union, Optional, Any
-from dataclasses import dataclass
-from scipy.optimize import differential_evolution, minimize, OptimizeResult
-import pyswarms as ps
-import copy
-import sys
+import pandas as pd
 import time
+import sys
+from typing import Dict, List, Tuple, Optional, Any, Union
+from dataclasses import dataclass
+from scipy.optimize import OptimizeResult
+import pyswarms as ps
 from .simulation_evaluator import SimulationEvaluator
 from .experiment_data import ExperimentData
 
@@ -22,176 +22,159 @@ class OptimizationResult:
     cij_matrix: np.ndarray  # Reshaped parameters as Cij matrix
     convergence_info: Dict[str, Any]  # Additional convergence information
 
-# Custom exception for optimization errors
 class OptimizationError(Exception):
+    """Custom exception for optimization errors"""
     pass
 
 class ParameterOptimizer:
     """
-    PBN Parameter Optimizer
+    Parameter optimization for Probabilistic Boolean Networks using experimental data.
     """
     
     def __init__(self, pbn, experiments, config=None, nodes_to_optimize=None, discrete=False, verbose=False):
         """
-        Initialize the optimizer
+        Initialize the parameter optimizer.
         
         Parameters:
         -----------
         pbn : ProbabilisticBN
-            A BNMPy PBN object
-        experiments : list or Path
-            List of experiment dictionaries or path to csv file
+            BNMPy PBN object
+        experiments : str or list
+            Path to CSV file or list of experiment dictionaries
         config : dict, optional
-            Configuration for the optimizer
+            Configuration parameters for optimization
         nodes_to_optimize : list, optional
-            List of node names to optimize. If None, all nodes are optimized.
-        discrete : bool, optional
-            If True, performs discrete optimization by selecting the best function.
-        verbose : bool, optional
-            If True, enables verbose output during optimization.
+            List of node names to optimize. If None, optimize all nodes.
+        discrete : bool, default=False
+            Whether to perform discrete optimization
+        verbose : bool, default=False
+            Whether to print detailed optimization progress
         """
         self.pbn = pbn
-        self.config = self._default_config()
-        if config:
-            self.config.update(config)
-        if isinstance(experiments, str):
-            experiments = ExperimentData.load_from_csv(experiments)
-        self.evaluator = SimulationEvaluator(pbn, experiments, self.config, nodes_to_optimize)
-        self.discrete = discrete
         self.verbose = verbose
-        self._optimization_history = []
+        self.discrete = discrete
         
-        # For progress tracking
+        # Load experiments if string (CSV file path)
+        if isinstance(experiments, str):
+            self.experiments = ExperimentData.load_from_csv(experiments)
+        else:
+            self.experiments = experiments
+        
+        # Validate experiments
+        ExperimentData.validate_experiments(self.experiments, pbn.nodeDict)
+        
+        # Initialize evaluator
+        self.evaluator = SimulationEvaluator(pbn, self.experiments, config, nodes_to_optimize)
+        
+        # Set configuration
+        self.config = config or self._default_config()
+        
+        # Initialize tracking variables
         self._iteration_count = 0
+        self._max_iter = 0
+        self._start_time = 0
         self._last_best_score = float('inf')
-        self._last_improvement = 0
-        self._stagnation_counter = 0
-        self._max_iter = 0  # For progress bar
+        self._optimization_history = []
 
     def _default_config(self) -> Dict:
-        """Default optimization configuration"""
+        """Default configuration for optimization"""
         return {
+            # Global settings
+            'success_threshold': 0.005,       # Global success threshold for final result evaluation
+            'max_try': 3,                     # Try up to 3 times if optimization fails
+            'display_rules_every': 10,        # Display optimized rules every N iterations (0 = disabled)
+
+            # Differential Evolution parameters
             'de_params': {
                 'strategy': 'best1bin',
                 'maxiter': 500,
                 'popsize': 15,
-                'tol': 0.01, 
-                'atol': 0,  # Absolute tolerance for convergence
+                'tol': 0.01,                  # Relative tolerance for scipy DE convergence
+                'atol': 0,                    # Absolute tolerance for scipy DE convergence
                 'mutation': (0.5, 1),
                 'recombination': 0.7,
-                'seed': None,
-                'disp': False,
                 'init': 'sobol',
                 'updating': 'deferred',
-                'workers': -1,
-                'early_stopping': False,  # Control early stopping for DE only
-                'success_threshold': 0.01  # MSE threshold for DE early stopping
-            },
+                'workers': -1,                # Use all available cores for parallelization
+                'polish': False,              # Disable polish step for faster runs
+                'early_stopping': True,       # Enable early stopping for DE
+                'success_threshold': 0.01     # MSE threshold for DE early stopping
+            },  
+
+            # Particle Swarm Optimization parameters
             'pso_params': {
                 'n_particles': 30,
                 'iters': 100,
                 'options': {'c1': 0.5, 'c2': 0.3, 'w': 0.9},
-                'ftol': - np.inf,  # Function tolerance for early stopping, disable by default
-                'ftol_iter': 10  # Number of iterations to check for stagnation
-            },
-            'local_params': {
-                'method': 'L-BFGS-B',
-                'options': {
-                    'disp': False,
-                    'maxiter': 500
-                }
-            },
-            'discrete_params': {
-                'threshold': 0.5
-            },
+                'ftol': 1e-6,                 # Function tolerance for early stopping
+                'ftol_iter': 15,              # Check stagnation over this many iterations
+            },  
+
+            # Steady state calculation
             'steady_state': {
-            # 'method': 'tsmc',
-            #     'tsmc_params': {
-            #         'epsilon': 0.05, # range of transition probability [Default=0.001]
-            #         'r': 0.1, # range of accuracy (most sensitive) [Default=0.025]
-            #         's': 0.85, # probability to acquire defined accuracy [Default=0.95]
-            #         'p_mir': 0.01, # perturbation in Miranda's & Parga's scheme [Default=0.001, 0.1%]
-            #         'initial_nsteps': 100, # initial simulation steps [Recommended at 100 steps for n < 100]
-            #         'max_iterations': 1000, # maximum convergence iterations [Default=5000]
-            #         'freeze_self_loop': True # whether to treat self-loop as a fixed node
-            #     },
-            'method': 'monte_carlo',
+                'method': 'monte_carlo',
                 'monte_carlo_params': {
-                    'n_runs': 2,
-                    'n_steps': 5000,
-                    'p_noise': 0.05
+                    'n_runs': 3,
+                    'n_steps': 5000
                 }
-            },
-            'max_try': 1,  # Maximum number of attempts if optimization fails
-            'success_threshold': 0.01,  # An MSE below this is always a success (global)
-            'display_rules_every': 0  # Display optimized rules every n iterations (0 = disabled)
+            }
         }
-        
+
     def optimize(self, method: str = 'differential_evolution'):
         """
-        Run the optimization
+        Run parameter optimization using specified method.
         
         Parameters:
         -----------
-        method : str
-            Optimization method to use ('differential_evolution', 'particle_swarm', 'local')
+        method : str, default='differential_evolution'
+            Optimization method ('differential_evolution' or 'particle_swarm')
             
         Returns:
         --------
         OptimizeResult
-            The optimization result object from scipy.optimize
+            Optimization result object
         """
-        bounds = self.evaluator.get_parameter_bounds()
-        if not bounds:
-            raise ValueError("No parameters to optimize. Check nodes_to_optimize.")
-
-        # Get max_try configuration
-        max_try = self.config.get('max_try', 1)
-        success_threshold = self.config.get('success_threshold', 0.01)
+        if method not in ['differential_evolution', 'particle_swarm']:
+            raise ValueError(f"Unsupported method: {method}. Use 'differential_evolution' or 'particle_swarm'")
         
-        print(f"\nRunning optimization using method: {method}")
-        print(f"Maximum attempts: {max_try}")
-
-        # Initialize best_result and best_score before the loop
+        # Get parameter bounds
+        bounds = self.evaluator.get_parameter_bounds()
+        
+        if not bounds:
+            raise OptimizationError("No parameters to optimize")
+        
+        # Try optimization up to max_try times
+        max_try = self.config.get('max_try', 3)
         best_result = None
         best_score = float('inf')
-
+        
         for attempt in range(max_try):
-            print(f"\n--- Attempt {attempt+1}/{max_try} ---")
+            print(f"\nOptimization attempt {attempt + 1}/{max_try}")
+            
             try:
                 result = self._run_single_optimization(method, bounds)
-
-                print(f"Total time: {result.time:.2f} seconds")
-
-                # A run is successful if the optimizer says so OR if the SSE is below our threshold
-                is_successful = result.success or result.fun < success_threshold
-
-                if is_successful:
-                    best_score = result.fun
+                
+                if result.fun < best_score:
                     best_result = result
-                    best_result.success = True 
-                    print(f"\nSuccessful optimization found in attempt {attempt + 1}")
-                    print(f"  - MSE: {best_score:.6f}")
-                    if not result.success:
-                        print(f"  (Run considered successful based on MSE < {success_threshold})")
-                    break  # Stop trying if we have a successful result
-
-                else:
-                    print(f"Optimization attempt {attempt + 1} did not succeed: {result.message} (MSE: {result.fun:.6f})")
-                    print(f"Optimized rules: {self._get_current_optimized_rules(result.x)}")
-                    if result.fun < best_score:
-                        best_score = result.fun
-                        best_result = result
-
+                    best_score = result.fun
+                
+                # Check if we've achieved the success threshold
+                success_threshold = self.config.get('success_threshold', 0.01)
+                if result.fun < success_threshold:
+                    if self.verbose:
+                        print(f"Success threshold achieved: {result.fun:.6f} < {success_threshold}")
+                    break
+                    
             except Exception as e:
-                print(f"An error occurred during optimization attempt {attempt + 1}: {e}")
-
+                print(f"Attempt {attempt + 1} failed: {str(e)}")
+                if attempt == max_try - 1:
+                    raise OptimizationError(f"All optimization attempts failed. Last error: {str(e)}")
+        
         if best_result is None:
-            raise OptimizationError("All optimization attempts failed.")
+            raise OptimizationError("No successful optimization runs")
 
         print(f"\n--- Optimization finished. Best MSE found: {best_result.fun:.6f} ---")
-
-        # Update self.pbn with the final parameters only if we have valid parameters
+        # Update self.pbn with the final parameters
         if hasattr(best_result, 'x') and best_result.x is not None:
             final_params = best_result.x
             final_cij = self.evaluator._vector_to_cij_matrix(final_params)
@@ -214,59 +197,63 @@ class ParameterOptimizer:
         return best_result
 
     def _run_single_optimization(self, method: str, bounds: List[tuple]):
-        """Runs a single instance of the specified optimization method."""
-        self._iteration_count = 0
+        """Run a single optimization attempt"""
+        self._start_time = time.time()
         self._last_best_score = float('inf')
-        self._stagnation_counter = 0
-        self._optimization_history = [] # Reset history for each new run
-        self._start_time = time.time()  # Track optimization start time
+        self._optimization_history = []
         
         if method == 'differential_evolution':
-            de_params = self.config['de_params'].copy()
-            self._max_iter = de_params.get('maxiter', 500)
-            
-            # Print early stopping configuration for DE
-            early_stopping = de_params.get('early_stopping', False)
-            if early_stopping:
-                success_threshold = self.config.get('success_threshold', 0.01)
-                print(f"DE early stopping enabled:")
-                print(f"  - Success threshold (MSE): {success_threshold}")
-                if 'atol' in de_params and de_params['atol'] > 0:
-                    print(f"  - Absolute tolerance: {de_params['atol']}")
-                if 'tol' in de_params and de_params['tol'] > 0:
-                    print(f"  - Relative tolerance: {de_params['tol']}")
-                print("\n")
-            
-            # Remove our custom parameters before passing to scipy
-            de_params_for_scipy = de_params.copy()
-            de_params_for_scipy.pop('early_stopping', None)
-            de_params_for_scipy.pop('success_threshold', None)
-            de_params_for_scipy['callback'] = self._de_callback
-            
-            result = differential_evolution(self.evaluator.objective_function, bounds, **de_params_for_scipy)
-            result.history = self._optimization_history
-            result.method = method
-            result.time = time.time() - self._start_time
-            # Clear the progress line
-            if not self.verbose:
-                sys.stdout.write('\n')
-                sys.stdout.flush()
-            return result
+            return self._de_optimizer(bounds)
         elif method == 'particle_swarm':
-            result = self._pso_optimizer(bounds)
-            result.method = method
-            result.time = time.time() - self._start_time
-            return result
-        elif method == 'local':
-            local_params = self.config['local_params'].copy()
-            x0 = np.random.rand(len(bounds)) # Random initial guess
-            result = minimize(self.evaluator.objective_function, x0, bounds=bounds, **local_params)
-            result.history = self._optimization_history
-            result.method = method
-            result.time = time.time() - self._start_time
-            return result
+            return self._pso_optimizer(bounds)
         else:
-            raise ValueError(f"Unknown optimization method: {method}")
+            raise ValueError(f"Unsupported method: {method}")
+
+    def _de_optimizer(self, bounds):
+        """Differential evolution implementation using scipy"""
+        from scipy.optimize import differential_evolution
+        print(f"Running DE optimization...")
+        print("\n")
+        if self.verbose:
+            print(f"DE Setup:")
+            print(f"  - Max iterations: {self.config['de_params']['maxiter']}")
+            print(f"  - Population size: {self.config['de_params']['popsize']}")
+            print(f"  - Tolerance: {self.config['de_params']['tol']}")
+            print(f"  - Absolute tolerance: {self.config['de_params']['atol']}")
+            print(f"  - Mutation: {self.config['de_params']['mutation']}")
+            print(f"  - Recombination: {self.config['de_params']['recombination']}")
+            print(f"  - Early stopping: {self.config['de_params']['early_stopping']}")
+        
+        de_params = self.config['de_params'].copy()
+        de_params.pop('early_stopping', None)
+        self._max_iter = de_params.get('maxiter', 500)
+        
+        # Run optimization
+        result = differential_evolution(
+            self.evaluator.objective_function,
+            bounds,
+            callback=self._de_callback,
+            **de_params
+        )
+        
+        # Clear any remaining display artifacts
+        if not self.verbose:
+            sys.stdout.write('\n')
+            sys.stdout.flush()
+        
+        # Check success based on threshold
+        success_threshold = self.config.get('success_threshold', 0.01)
+        success = result.fun < success_threshold
+        
+        return OptimizeResult(
+            fun=result.fun,
+            x=result.x,
+            success=success,
+            message=f"DE optimization finished with MSE: {result.fun:.6f}",
+            nfev=result.nfev,
+            nit=result.nit,
+            history=self._optimization_history
+        )
 
     def _de_callback(self, xk, convergence, **kwargs):
         """Callback for DE to monitor progress with a single updating line and progress bar"""
@@ -290,7 +277,7 @@ class ParameterOptimizer:
         should_display_rules = (display_rules_every > 0 and 
                                self._iteration_count % display_rules_every == 0)
         
-        # Simplified display logic
+        # display logic
         if should_display_rules:
             # Clear any progress bar if not in verbose mode
             if not self.verbose:
@@ -370,17 +357,20 @@ class ParameterOptimizer:
                         if prob_sum > 1e-10:  # Avoid division by zero
                             probabilities = probabilities / prob_sum
                         
-                        # Display all functions for this node
-                        for i in range(num_functions):
-                            prob = probabilities[i]
-                            func = functions[i]
-                            rules.append(f"{node_name} = {func}, {prob:.4f}")
+                        # Format the rule string
+                        rule_parts = []
+                        for i, (func, prob) in enumerate(zip(functions, probabilities)):
+                            if prob > 1e-6:  # Only show functions with non-negligible probability
+                                rule_parts.append(f"{func} (p={prob:.3f})")
+                        
+                        if rule_parts:
+                            rules.append(f"{node_name}: {' | '.join(rule_parts)}")
             
             return rules
+            
         except Exception as e:
-            # For debugging: print the error but don't crash optimization
             if self.verbose:
-                print(f"    Warning: Could not display rules - {e}")
+                print(f"Warning: Could not generate rules: {str(e)}")
             return []
 
     def _pso_optimizer(self, bounds):
@@ -390,95 +380,36 @@ class ParameterOptimizer:
         lb = np.array([b[0] for b in bounds])
         ub = np.array([b[1] for b in bounds])
         pyswarms_bounds = (lb, ub)
-
-        # Print PSO early stopping configuration
-        ftol = pso_params.get('ftol', 1e-3)
-        ftol_iter = pso_params.get('ftol_iter', 10)
-        if ftol > -np.inf:
-            print(f"PSO early stopping enabled:")
-            print(f"  - Function tolerance: {ftol}")
-            print(f"  - Tolerance iterations: {ftol_iter}")
-            print("\n")
         
-        # Print rule display configuration
-        display_rules_every = self.config.get('display_rules_every', 0)
-
-        # Initialize PSO iteration tracking for rule display
-        self._pso_iteration_count = 0
-        self._pso_best_position = None
-        self._pso_best_cost = float('inf')
-        
-        # Extract parameters for progress tracking
+        # Extract parameters
         n_particles = pso_params.get('n_particles', 30)
         iters = pso_params.get('iters', 100)
-        
-        # Print optimization setup info
-        print(f"PSO Setup:")
-        print(f"  - Particles: {n_particles}")
-        print(f"  - Max iterations: {iters}")
-        print(f"  - Problem dimensions: {len(bounds)}")
-        print(f"  - Total function evaluations: {n_particles * iters}")
-        print()
+        ftol = pso_params.get('ftol', 1e-3)
+        ftol_iter = pso_params.get('ftol_iter', 10)
+
+        # Print optimization setup info 
+        print(f"Running PSO optimization...")
+        print("\n")
+        if self.verbose:
+            print(f"PSO Setup:")
+            print(f"  - Particles: {n_particles}")
+            print(f"  - Max iterations: {iters}")
+            print(f"  - Problem dimensions: {len(bounds)}")
+            print(f"  - Total function evaluations: {n_particles * iters}")
+            if ftol > 0:
+                print(f"  Early stopping enabled:")
+                print(f"    - Function tolerance: {ftol}")
+                print(f"    - Tolerance iterations: {ftol_iter}")
 
         def pso_objective(x):
-            """Objective function wrapper that handles rule display for PSO"""
+            """Objective function wrapper for PSO"""
             costs = []
-            
             for i, p in enumerate(x):
                 cost = self.evaluator.objective_function(p)
                 costs.append(cost)
-                
-                # Track best position and cost
-                if cost < self._pso_best_cost:
-                    self._pso_best_cost = cost
-                    self._pso_best_position = p.copy()
-            
-            # Increment iteration count once per swarm evaluation
-            self._pso_iteration_count += 1
-            
-            # Calculate progress percentage
-            progress = min(100.0, (self._pso_iteration_count / iters) * 100)
-            
-            # Create progress bar
-            bar_length = 30
-            filled_length = int(bar_length * progress / 100)
-            bar = '█' * filled_length + '░' * (bar_length - filled_length)
-            
-            # Check if we should display rules
-            should_display_rules = (display_rules_every > 0 and 
-                                   self._pso_iteration_count % display_rules_every == 0)
-            
-            # display logic (similar to DE)
-            if should_display_rules:
-                # Clear any progress bar if not in verbose mode
-                if not self.verbose:
-                    sys.stdout.write('\r' + ' ' * 120 + '\r')
-                    sys.stdout.flush()
-                
-                elapsed_time = time.time() - self._start_time
-                rules = self._get_current_optimized_rules(self._pso_best_position)
-                
-                if rules:
-                    print(f"PSO Iter {self._pso_iteration_count}: Best MSE: {self._pso_best_cost:.6f} - Time: {elapsed_time:.1f}s")
-                    print("  Current optimized rules:")
-                    for rule in rules:
-                        print(f"    {rule}")
-                    print()  # Add blank line for readability
-            elif self.verbose:
-                # Verbose mode: show iteration details
-                current_best = min(costs)
-                print(f"PSO Iteration {self._pso_iteration_count}: Current best MSE: {current_best:.6f}, Global best MSE: {self._pso_best_cost:.6f}")
-            elif not should_display_rules:
-                # Non-verbose mode: show progress bar (similar to DE)
-                elapsed_time = time.time() - self._start_time
-                sys.stdout.write(f'\r[{bar}] {progress:.1f}% | Iter: {self._pso_iteration_count}/{iters} | Best MSE: {self._pso_best_cost:.6f} | Time: {elapsed_time:.1f}s')
-                sys.stdout.flush()
-            
             return np.array(costs)
 
-        # optimize parameters
-        optimize_kwargs = {'iters': iters}
-            
+        # Create optimizer
         optimizer = ps.single.GlobalBestPSO(
             n_particles=n_particles,
             dimensions=len(bounds),
@@ -488,12 +419,8 @@ class ParameterOptimizer:
             ftol_iter=ftol_iter
         )
         
-        cost, pos = optimizer.optimize(pso_objective, **optimize_kwargs)
-
-        # Clear any remaining display artifacts
-        if not self.verbose:
-            sys.stdout.write('\n')
-            sys.stdout.flush()
+        # Run optimization
+        cost, pos = optimizer.optimize(pso_objective, iters=iters)
 
         # Check if early stopping occurred and determine success
         success_threshold = self.config.get('success_threshold', 0.01)
@@ -581,11 +508,7 @@ class ParameterOptimizer:
         sorted: bool, optional
             Whether to sort the optimization history by MSE
         """
-        try:
-            import matplotlib.pyplot as plt
-        except ImportError:
-            print("Matplotlib not available. Install with: pip install matplotlib")
-            return
+        import matplotlib.pyplot as plt
         
         if not hasattr(result, 'history') or not result.history:
             print("No optimization history available for plotting.")
@@ -607,7 +530,7 @@ class ParameterOptimizer:
         
         plt.xlabel('Iteration')
         plt.ylabel('Mean Squared Error (MSE)')
-        plt.title(f'Optimization History (Method: {result.get("method", "unknown")})')
+        plt.title(f'Optimization History')
         plt.grid(True, alpha=0.3)
         plt.legend()
         
@@ -661,8 +584,7 @@ class ParameterOptimizer:
         ProbabilisticBN
             A new PBN object with the optimized parameters.
         """
-        # Create a deep copy to avoid modifying the original PBN object
-        optimized_pbn = copy.deepcopy(self.pbn)
+        optimized_pbn = self.pbn
         
         # Get the Cij matrix from the result parameters
         cij_matrix = self.evaluator._vector_to_cij_matrix(result.x)

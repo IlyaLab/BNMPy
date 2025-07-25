@@ -53,7 +53,7 @@ class SimulationEvaluator:
         """Default simulation configuration"""
         return {
             'steady_state': {
-                'method': 'tsmc',  # or 'monte_carlo'
+                'method': 'monte_carlo',  # or 'tsmc'
                 'tsmc_params': {
                     'epsilon': 0.001,
                     'r': 0.025,
@@ -64,9 +64,9 @@ class SimulationEvaluator:
                     'freeze_self_loop': True
                 },
                 'monte_carlo_params': {
-                    'n_runs': 10,
-                    'n_steps': 1000,
-                    'p_noise': 0
+                    'n_runs': 3,
+                    'n_steps': 2000,
+                    'p_noise': 0.05
                 }
             }
         }
@@ -130,7 +130,7 @@ class SimulationEvaluator:
             print(f"Warning: Error updating PBN parameters: {str(e)}")
             return 1e10
         
-        # 4. Calculate SSE across all experiments with retry mechanism
+        # 4. Calculate SSE across all experiments
         total_sse = 0
         max_retries = 3
         

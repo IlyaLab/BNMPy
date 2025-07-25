@@ -91,6 +91,20 @@ class SteadyStateCalculator:
                 return True
         return False
     
+    def _get_node_name_by_index(self, node_idx: int) -> Optional[str]:
+        """Get node name by index from nodeDict"""
+        for name, idx in self.network.nodeDict.items():
+            if idx == node_idx:
+                return name
+        return None
+    
+    def _set_input_nodes_to_zero(self):
+        """Set all input nodes to 0 by default using knockout"""
+        for i in self.input_indices:
+            node_name = self._get_node_name_by_index(i)
+            if node_name is not None:
+                self.network.knockout(node_name, 0)
+    
     def compute_steady_state(self, method: str = 'tsmc', **kwargs) -> np.ndarray:
         """
         steady-state calculation
@@ -126,7 +140,8 @@ class SteadyStateCalculator:
                                p_mir: float = 0.001,
                                initial_nsteps: int = 100,
                                max_iterations: int = 500,
-                               freeze_self_loop: bool = False) -> np.ndarray:
+                               freeze_self_loop: bool = False,
+                               seed: Optional[int] = None) -> np.ndarray:
         """
         Two-State Markov Chain steady-state calculation
         In addition to the original function, handle input nodes and constant nodes
@@ -143,9 +158,15 @@ class SteadyStateCalculator:
         - `initial_nsteps` (int, default=100): Initial number of simulation steps
         - `max_iterations` (int, default=500): Maximum convergence iterations
         - `freeze_self_loop` (bool, default=False): Freeze self-loop nodes (constant nodes)
+        - `seed` (int, optional): Random seed for reproducibility
         """
+        # Set random seed for reproducibility
+        if seed is not None:
+            np.random.seed(seed)
+            
         # Store original state
         self._save_network_state()
+        
         orig_input_idx = self.input_indices.copy()
         if not freeze_self_loop:
             # strip out nodes that are "input" only because of A=A
@@ -162,7 +183,12 @@ class SteadyStateCalculator:
         
         if not opt_states:
             # All nodes are inputs/constants
-            return self.network.nodes.astype(float)
+            steady_state = self.network.nodes.astype(float)
+            # Restore original state and undo knockouts
+            self._restore_network_state()
+            self.network.undoKnockouts()
+            self.input_indices = orig_input_idx
+            return steady_state
 
         N_collect = np.zeros(len(opt_states))
         m0_collect = np.zeros(len(opt_states))
@@ -233,10 +259,11 @@ class SteadyStateCalculator:
         else:
             # Fallback to Monte Carlo if TSMC fails
             warnings.warn("TSMC failed, falling back to Monte Carlo")
-            steady_state = self.compute_stationary_mc()
+            steady_state = self.compute_stationary_mc(seed=seed)
         
-        # Restore original state
+        # Restore original state and undo knockouts
         self._restore_network_state()
+        self.network.undoKnockouts()
         self.input_indices = orig_input_idx
         return steady_state
     
@@ -339,7 +366,8 @@ class SteadyStateCalculator:
                              n_steps: int = 1000,
                              p_noise: float = 0,
                              analyze_convergence: bool = False,
-                             output_node: str = None) -> Union[np.ndarray, Tuple[np.ndarray, Dict]]:
+                             output_node: str = None,
+                             seed: Optional[int] = None) -> Union[np.ndarray, Tuple[np.ndarray, Dict]]:
         """
         Monte Carlo steady-state calculation, handle input nodes and constant nodes
         
@@ -355,6 +383,8 @@ class SteadyStateCalculator:
             Whether to perform convergence analysis and show plot
         output_node : str, optional
             Node name for convergence analysis. If None, uses all nodes.
+        seed : int, optional
+            Random seed for reproducibility
             
         Returns:
         --------
@@ -362,15 +392,23 @@ class SteadyStateCalculator:
             If analyze_convergence is False: steady-state probabilities
             If analyze_convergence is True: (steady_state, convergence_info)
         """
+        # Set random seed for reproducibility
+        if seed is not None:
+            np.random.seed(seed)
+            
         # Store original state
         self._save_network_state()
         
         if analyze_convergence:
             # Single long run for convergence analysis
-            steady_state, convergence_info = self._compute_mc_with_convergence(n_steps, p_noise, output_node)
+            steady_state, convergence_info = self._compute_mc_with_convergence(n_steps, p_noise, output_node, seed)
             
             # convergence plot
             self._convergence_plot(convergence_info, output_node)
+            
+            # Restore original state and undo knockouts
+            self._restore_network_state()
+            self.network.undoKnockouts()
             
             return steady_state, convergence_info
         else:
@@ -393,12 +431,13 @@ class SteadyStateCalculator:
                 mean_state = np.mean(steady_portion, axis=0)
                 steady_states.append(mean_state)
             
-            # Restore original state
+            # Restore original state and undo knockouts
             self._restore_network_state()
+            self.network.undoKnockouts()
             
             return np.mean(steady_states, axis=0)
     
-    def _compute_mc_with_convergence(self, n_steps: int, p_noise: float, output_node: str = None) -> Tuple[np.ndarray, Dict]:
+    def _compute_mc_with_convergence(self, n_steps: int, p_noise: float, output_node: str = None, seed: Optional[int] = None) -> Tuple[np.ndarray, Dict]:
         """
         Compute Monte Carlo steady state with convergence analysis.
         
@@ -410,12 +449,18 @@ class SteadyStateCalculator:
             Noise probability
         output_node : str, optional
             Node name for convergence analysis
+        seed : int, optional
+            Random seed for reproducibility
             
         Returns:
         --------
         Tuple[np.ndarray, Dict]
             (steady_state, convergence_info)
         """
+        # Set random seed for reproducibility
+        if seed is not None:
+            np.random.seed(seed)
+            
         # Random initial state
         initial_state = self.network.nodes.copy()
         for i in range(self.N):
@@ -432,9 +477,6 @@ class SteadyStateCalculator:
         
         # Convergence analysis on second half
         convergence_info = self._analyze_convergence(steady_portion, output_node)
-        
-        # Restore original state
-        self._restore_network_state()
         
         return steady_state, convergence_info
     
@@ -583,7 +625,8 @@ class SteadyStateCalculator:
                                    inhibitors_efficacy: List[float] = None,
                                    node_dict: Dict[str, int] = None):
         """
-        Set experimental conditions
+        Set experimental conditions for steady state calculation.
+        First sets all input nodes to 0 by default, then applies specified stimuli and inhibitors.
         
         Parameters:
         -----------
@@ -597,9 +640,18 @@ class SteadyStateCalculator:
             Efficacy values for inhibitors (0-1). If 1.0, full knockout. If < 1.0, probabilistic.
         node_dict : Dict[str, int], optional
             Node name to index mapping
+            
+        Note:
+        -----
+        This method automatically sets all input nodes to 0 by default before applying 
+        the specified experimental conditions. Input nodes not specified in stimuli 
+        or inhibitors will remain at 0.
         """
         if node_dict is None:
             node_dict = getattr(self.network, 'nodeDict', {})
+        
+        # First, set all input nodes to 0 by default
+        self._set_input_nodes_to_zero()
         
         # Apply stimuli with efficacy
         if stimuli:
@@ -647,10 +699,19 @@ class SteadyStateCalculator:
             'max_connectivity': np.max(self.K) if len(self.K) > 0 else 0
         }
 
-    def compute_stationary_deterministic(self,n_runs: int = 100,n_steps: int = 1000) -> Dict[str, Union[List[np.ndarray], List[List[np.ndarray]]]]:
+    def compute_stationary_deterministic(self, n_runs: int = 100, n_steps: int = 1000, seed: Optional[int] = None) -> Dict[str, Union[List[np.ndarray], List[List[np.ndarray]]]]:
         """
         Find attractors (fixed points and cycles) in a synchronous
         Boolean network via random restarts.
+        
+        Parameters:
+        -----------
+        n_runs : int, default=100
+            Number of random initial conditions to try
+        n_steps : int, default=1000
+            Maximum number of steps to simulate before declaring no cycle found
+        seed : int, optional
+            Random seed for reproducibility
 
         Returns
         -------
@@ -660,6 +721,10 @@ class SteadyStateCalculator:
                             ...]
         }
         """
+        # Set random seed for reproducibility
+        if seed is not None:
+            np.random.seed(seed)
+            
         fixed_points: List[np.ndarray] = []
         cycles: List[List[np.ndarray]] = []
 
@@ -677,6 +742,10 @@ class SteadyStateCalculator:
         for _ in range(n_runs):
             # random start
             init = (np.random.rand(self.N) > 0.5).astype(np.int8)
+            # Keep input nodes at their current values (set by experimental conditions)
+            for i in self.input_indices:
+                init[i] = self.network.nodes[i]
+            
             self.network.setInitialValues(init)
 
             history: List[Tuple[int, ...]] = []
@@ -702,7 +771,10 @@ class SteadyStateCalculator:
                 history.append(state)
                 self.network.update(1)
 
+        # Restore original state and undo knockouts
         self._restore_network_state()
+        self.network.undoKnockouts()
+        
         print(f"Found {len(fixed_points)} fixed points and {len(cycles)} cyclic attractors")
         print("--------------------------------")
         if len(fixed_points) > 0:
