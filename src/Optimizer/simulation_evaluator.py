@@ -275,9 +275,7 @@ class SimulationEvaluator:
             Selection probability matrix
         """
         self.pbn.cij = cij_matrix
-        # Update cumulative probabilities if needed
-        if hasattr(self.pbn, 'update_cumulative_probabilities'):
-            self.pbn.update_cumulative_probabilities()
+        self.pbn.update_cumulative_probabilities()
     
     def _simulate_experiment(self, experiment: Dict) -> np.ndarray:
         """

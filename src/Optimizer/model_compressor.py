@@ -713,7 +713,7 @@ class ModelCompressor:
         Network object if interactive=True, matplotlib figure if interactive=False, None on error
         """
         try:
-            from ..BNMPy.vis import vis_compression_comparison
+            from ..BNMPy.vis import vis_compression
             
             compression_info = {
                 'removed_non_observable': set(),
@@ -725,7 +725,7 @@ class ModelCompressor:
                 'perturbed_nodes': self.perturbed_nodes
             }
             
-            vis_compression_comparison(
+            vis_compression(
                 original_network, 
                 self.network,
                 compression_info,

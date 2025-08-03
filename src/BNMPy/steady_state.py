@@ -141,6 +141,7 @@ class SteadyStateCalculator:
                                initial_nsteps: int = 100,
                                max_iterations: int = 500,
                                freeze_self_loop: bool = False,
+                               verbose: bool = False,
                                seed: Optional[int] = None) -> np.ndarray:
         """
         Two-State Markov Chain steady-state calculation
@@ -158,6 +159,7 @@ class SteadyStateCalculator:
         - `initial_nsteps` (int, default=100): Initial number of simulation steps
         - `max_iterations` (int, default=500): Maximum convergence iterations
         - `freeze_self_loop` (bool, default=False): Freeze self-loop nodes (constant nodes)
+        - `verbose` (bool, default=False): Whether to print steady state information
         - `seed` (int, optional): Random seed for reproducibility
         """
         # Set random seed for reproducibility
@@ -265,6 +267,11 @@ class SteadyStateCalculator:
         self._restore_network_state()
         self.network.undoKnockouts()
         self.input_indices = orig_input_idx
+        if verbose:
+            print("Steady state:")
+            for i, node in enumerate(self.network.nodeDict.keys()):
+                print(f"{node}: {steady_state[i]:.4f}")
+
         return steady_state
     
     def _run_tsmc_simulation(self, initial_state: np.ndarray, nsteps: int, p_mir: float, p_noise: float) -> np.ndarray:
@@ -367,6 +374,7 @@ class SteadyStateCalculator:
                              p_noise: float = 0,
                              analyze_convergence: bool = False,
                              output_node: str = None,
+                             verbose: bool = False,
                              seed: Optional[int] = None) -> Union[np.ndarray, Tuple[np.ndarray, Dict]]:
         """
         Monte Carlo steady-state calculation, handle input nodes and constant nodes
@@ -383,6 +391,8 @@ class SteadyStateCalculator:
             Whether to perform convergence analysis and show plot
         output_node : str, optional
             Node name for convergence analysis. If None, uses all nodes.
+        verbose : bool, default=False
+            Whether to print steady state information
         seed : int, optional
             Random seed for reproducibility
             
@@ -435,6 +445,11 @@ class SteadyStateCalculator:
             self._restore_network_state()
             self.network.undoKnockouts()
             
+            if verbose:
+                print("Steady state:")
+                for i, node in enumerate(self.network.nodeDict.keys()):
+                    print(f"{node}: {np.mean(steady_states, axis=0)[i]:.4f}")
+
             return np.mean(steady_states, axis=0)
     
     def _compute_mc_with_convergence(self, n_steps: int, p_noise: float, output_node: str = None, seed: Optional[int] = None) -> Tuple[np.ndarray, Dict]:
@@ -699,7 +714,7 @@ class SteadyStateCalculator:
             'max_connectivity': np.max(self.K) if len(self.K) > 0 else 0
         }
 
-    def compute_stationary_deterministic(self, n_runs: int = 100, n_steps: int = 1000, seed: Optional[int] = None) -> Dict[str, Union[List[np.ndarray], List[List[np.ndarray]]]]:
+    def compute_stationary_deterministic(self, n_runs: int = 100, n_steps: int = 1000, verbose: bool = True, seed: Optional[int] = None) -> Dict[str, Union[List[np.ndarray], List[List[np.ndarray]]]]:
         """
         Find attractors (fixed points and cycles) in a synchronous
         Boolean network via random restarts.
@@ -710,6 +725,8 @@ class SteadyStateCalculator:
             Number of random initial conditions to try
         n_steps : int, default=1000
             Maximum number of steps to simulate before declaring no cycle found
+        verbose : bool, default=True
+            Whether to print steady state information
         seed : int, optional
             Random seed for reproducibility
 
@@ -775,21 +792,22 @@ class SteadyStateCalculator:
         self._restore_network_state()
         self.network.undoKnockouts()
         
-        print(f"Found {len(fixed_points)} fixed points and {len(cycles)} cyclic attractors")
-        print("--------------------------------")
-        if len(fixed_points) > 0:
-            print("Fixed points: ")
-            for i, fixed_point in enumerate(fixed_points):
-                print(f"Fixed point {i+1}: {fixed_point.tolist()}")
-        else:
-            print("No fixed points found")
-        print("--------------------------------")
-        if len(cycles) > 0:
-            print("Cyclic attractors: ")
-            for i, cycle in enumerate(cycles):
-                print(f"Cyclic attractor {i+1}: {[component.tolist() for component in cycle]}")
-        else:
-            print("No cyclic attractors found")
-        print("--------------------------------")
-        print(f"Node order: {self.network.nodeDict.keys()}")
+        if verbose:
+            print(f"Found {len(fixed_points)} fixed points and {len(cycles)} cyclic attractors")
+            print("--------------------------------")
+            if len(fixed_points) > 0:
+                print("Fixed points: ")
+                for i, fixed_point in enumerate(fixed_points):
+                    print(f"Fixed point {i+1}: {fixed_point.tolist()}")
+            else:
+                print("No fixed points found")
+            print("--------------------------------")
+            if len(cycles) > 0:
+                print("Cyclic attractors: ")
+                for i, cycle in enumerate(cycles):
+                    print(f"Cyclic attractor {i+1}: {[component.tolist() for component in cycle]}")
+            else:
+                print("No cyclic attractors found")
+            print("--------------------------------")
+            print(f"Node order: {self.network.nodeDict.keys()}")
         return {"fixed_points": fixed_points, "cyclic_attractors": cycles}

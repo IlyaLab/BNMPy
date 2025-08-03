@@ -245,8 +245,8 @@ compressed_network, compression_info = compress_model(
 )
 
 # Visualize compression results
-from BNMPy.vis import vis_compression_comparison
-vis_compression_comparison(
+from BNMPy.vis import vis_compression
+vis_compression(
     network,
     compressed_network,
     compression_info,

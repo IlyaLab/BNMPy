@@ -342,7 +342,7 @@ class ProbabilisticBN(object):
 
         return y
     
-    # update the Boolean network with noise, derived from update functions (Boris)
+    # update the network with noise, derived from update functions (Boris)
     def update_noise(self, p, iterations=1):
         """
         Update the network with noise parameter p over a given number of iterations.
@@ -402,6 +402,58 @@ class ProbabilisticBN(object):
         
         self.nodes = y[-1]  # Update the network state to the final iteration
         return y
+
+    def update_one(self):
+        """
+        Asynchronous update: Update one random non-constant node for one step.
+        
+        This method randomly selects one non-constant node and updates only that node
+        based on its Boolean function, while keeping all other nodes unchanged.
+        This simulates asynchronous dynamics where nodes update at different times.
+        
+        Returns:
+        --------
+        int or None
+            Index of the updated node, or None if no non-constant nodes are available
+        """
+        # Find all non-constant nodes that can be updated
+        updatable_nodes = []
+        for i in range(self.N):
+            if not self.isConstantNode[i]:
+                updatable_nodes.append(i)
+        
+        # Return None if no nodes can be updated
+        if len(updatable_nodes) == 0:
+            return None
+        
+        # Randomly select one node to update
+        selected_node = np.random.choice(updatable_nodes)
+        
+        # Helper array for function input calculation
+        temp = np.array([2**i for i in range(self.N-1, -1, -1)])
+        
+        # Update the selected node
+        if selected_node in self.knockdown_nodes:
+            # Handle knockdown nodes
+            target_value, efficacy = self.knockdown_nodes[selected_node]
+            if np.random.random() < efficacy:
+                self.nodes[selected_node] = target_value
+            else:
+                self.nodes[selected_node] = 1 - target_value
+        else:
+            # Normal function-based update
+            func_offset = self._select_function(selected_node)
+            idx = self.cumsum[selected_node] + func_offset
+            
+            # Calculate function input
+            fInput = 0
+            for j in range(self.K[idx]):
+                fInput += (self.nodes[self.varF[idx,j]]) * temp[j - self.K[idx]]
+            
+            # Update the node state
+            self.nodes[selected_node] = self.F[idx, fInput]
+        
+        return selected_node
 
     def getRealization(self):
         return (self.F, self.varF)

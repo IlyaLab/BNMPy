@@ -531,14 +531,39 @@ def vis_network(source, output_html="network_graph.html", interactive=False,
             width=edge_width
         )
 
+    # Add legend for interactive mode
+    legend_x = -1500  # Position legend to the left
+    legend_y_start = -800
+    legend_spacing = 120
+    
+    legend_items = [
+        ("Input", "lightgreen", "black"),
+        ("Output", "yellow", "black"), 
+        ("Intermediate", "lightblue", "black"),
+        ("Measured", "orange", "black"),
+        ("Perturbed", "red", "white"),
+        ("Removed", "lightgrey", "grey")
+    ]
+    
+    for i, (label, color, font_color) in enumerate(legend_items):
+        net.add_node(
+            f"legend_{i}",
+            label=label,
+            title=f"{label} nodes",
+            color=color,
+            size=30,
+            x=legend_x,
+            y=legend_y_start + i * legend_spacing,
+            physics=False,  # Keep legend nodes fixed
+            font={'size': 14, 'color': font_color}
+        )
+
     # Save the network
     net.save_graph(output_html)
     print(f"Network visualization saved to {output_html}")
 
 
-
-
-def vis_compression_comparison(original_network, compressed_network, 
+def vis_compression(original_network, compressed_network, 
                              compression_info, output_html="compression_comparison.html",
                              interactive=False):
     """
@@ -573,18 +598,6 @@ def vis_compression_comparison(original_network, compressed_network,
     measured_nodes = compression_info.get('measured_nodes', set())
     perturbed_nodes = compression_info.get('perturbed_nodes', set())
     
-    # print(f"Visualizing compression comparison:")
-    # print(f"  Original network nodes: {len(original_network.nodeDict)}")
-    # print(f"  Compressed network nodes: {len(compressed_network.nodeDict)}")
-    # print(f"  Nodes in original: {sorted(original_nodes)}")
-    # print(f"  Nodes in compressed: {sorted(compressed_nodes)}")
-    # print(f"  Missing nodes: {sorted(missing_nodes)}")
-    # print(f"  Nodes marked as removed: {len(removed_nodes)}")
-    # print(f"  Removed nodes: {sorted(removed_nodes)}")
-    # print(f"  Removed edges: {len(removed_edges)}")
-    # print(f"  Measured nodes: {sorted(measured_nodes)}")
-    # print(f"  Perturbed nodes: {sorted(perturbed_nodes)}")
-    
     # Use the original network for visualization with removed nodes marked
     return vis_network(
         original_network, 
@@ -595,3 +608,379 @@ def vis_compression_comparison(original_network, compressed_network,
         measured_nodes=measured_nodes,
         perturbed_nodes=perturbed_nodes
     )
+
+
+def vis_extension(original_network, extended_network, output_html="extension_comparison.html", interactive=False):
+    """
+    Visualize the extended network with new nodes and edges highlighted.
+    
+    Args:
+        original_network: Original BooleanNetwork or ProbabilisticBN
+        extended_network: Extended network with additional nodes/edges
+        output_html (str): Output HTML file name
+        interactive (bool): If True, return network visualization in interactive html file
+    """
+    # Extract logic rules from both networks
+    original_rules, _ = extract_logic_rules_from_network(original_network)
+    extended_rules, extended_probabilities = extract_logic_rules_from_network(extended_network)
+    
+    # Helper function to extract nodes from rules
+    def extract_nodes_from_rules(rules_dict):
+        nodes = set()
+        for node_name, rules in rules_dict.items():
+            nodes.add(node_name)
+            if isinstance(rules, list):
+                # PBN case - rules is a list of rule strings
+                for rule in rules:
+                    nodes.update(re.findall(r'\b[A-Za-z0-9_]+\b', rule))
+            else:
+                # BN case - rules is a single string
+                nodes.update(re.findall(r'\b[A-Za-z0-9_]+\b', rules))
+        return nodes
+    
+    # Helper function to extract edges from rules
+    def extract_edges_from_rules(rules_dict):
+        edges = set()
+        for target, rules in rules_dict.items():
+            if isinstance(rules, list):
+                # PBN case
+                for rule in rules:
+                    inputs = set(re.findall(r'\b[A-Za-z0-9_]+\b', rule))
+                    for input_node in inputs:
+                        if input_node != target:
+                            edges.add((input_node, target))
+            else:
+                # BN case
+                inputs = set(re.findall(r'\b[A-Za-z0-9_]+\b', rules))
+                for input_node in inputs:
+                    if input_node != target:
+                        edges.add((input_node, target))
+        return edges
+    
+    # Extract nodes and edges
+    original_nodes = extract_nodes_from_rules(original_rules)
+    extended_nodes = extract_nodes_from_rules(extended_rules)
+    original_edges = extract_edges_from_rules(original_rules)
+    extended_edges = extract_edges_from_rules(extended_rules)
+    
+    # Identify new nodes and edges
+    new_nodes = extended_nodes - original_nodes
+    new_edges = extended_edges - original_edges
+    
+    print(f"Extension comparison:")
+    print(f"  Original nodes: {len(original_nodes)}")
+    print(f"  Extended nodes: {len(extended_nodes)}")
+    print(f"  New nodes: {len(new_nodes)} - {sorted(new_nodes)}")
+    print(f"  Original edges: {len(original_edges)}")
+    print(f"  Extended edges: {len(extended_edges)}")
+    print(f"  New edges: {len(new_edges)}")
+    
+    # For non-interactive mode, use matplotlib visualization with highlights
+    if not interactive:
+        return create_matplotlib_extension_visualization(extended_rules, new_nodes, new_edges)
+    
+    # For interactive mode, use the extended network but highlight new elements
+    # Check if this is PBN
+    is_pbn = any(isinstance(rules, list) for rules in extended_rules.values()) if extended_rules else False
+    
+    if is_pbn:
+        # Build graph for PBN
+        g = build_igraph_pbn(extended_rules, extended_probabilities)
+    else:
+        # Build graph for BN
+        g = build_igraph(extended_rules)
+    
+    # Create pyvis network
+    net = Network(
+        height='1000px', 
+        width='1200px', 
+        bgcolor='#ffffff',
+        font_color='black',
+        directed=True
+    )
+    
+    # Set network options
+    net.set_options("""
+    var options = {
+        "configure": {
+            "enabled": false
+        },
+        "edges": {
+            "color": {
+                "inherit": true
+            },
+            "smooth": {
+                "enabled": true,
+                "type": "dynamic"
+            }
+        },
+        "interaction": {
+            "dragNodes": true,
+            "hideEdgesOnDrag": false,
+            "hideNodesOnDrag": false
+        },
+        "physics": {
+            "enabled": true,
+            "stabilization": {
+                "enabled": true,
+                "fit": true,
+                "iterations": 1000,
+                "onlyDynamicEdges": false,
+                "updateInterval": 50
+            }
+        }
+    }
+    """)
+
+    # Add nodes to the PyVis network
+    for v in g.vs:
+        node_name = v["name"]
+        upstream_count = len([pred for pred in g.predecessors(v.index) if pred != v.index])
+        downstream_count = len([succ for succ in g.successors(v.index) if succ != v.index])
+        
+        # Check if this is a new node
+        is_new_node = node_name in new_nodes
+        
+        # Determine base node type and color
+        if upstream_count == 0:
+            base_color = "lightgreen"  # Input
+            font_color = "black"
+            node_type = "input"
+        elif downstream_count == 0:
+            base_color = "yellow"  # Output
+            font_color = "black" 
+            node_type = "output"
+        else:
+            base_color = "lightblue"  # Intermediate
+            font_color = "black"
+            node_type = "intermediate"
+        
+        # Add orange border for new nodes
+        if is_new_node:
+            border_color = "orange"
+            border_width = 4
+            title = f"{node_name} (NEW {node_type})"
+            node_color = {'background': base_color, 'border': border_color}
+        else:
+            border_width = 0
+            title = f"{node_name} ({node_type})"
+            node_color = base_color  # No border for existing nodes
+
+        net.add_node(
+            v.index, 
+            label=node_name, 
+            title=title, 
+            color=node_color,
+            borderWidth=border_width,
+            size=40,
+            font={'size': 20, 'color': font_color}
+        )
+
+    # Add edges to the PyVis network
+    for e in g.es:
+        src, tgt = e.tuple
+        src_name = g.vs[src]["name"]
+        tgt_name = g.vs[tgt]["name"]
+        
+        rule_label = e["label"]
+        
+        # Check if this is a new edge
+        is_new_edge = (src_name, tgt_name) in new_edges
+        
+        # Get probability if available
+        edge_prob = e["probability"] if "probability" in e.attributes() else 1.0
+        
+        # Create hover title with rule and probability
+        if is_pbn and edge_prob < 1.0:
+            edge_title = f"{tgt_name} = {rule_label}, p={edge_prob:.3f}"
+        else:
+            edge_title = f"{tgt_name} = {rule_label}"
+        
+        if is_new_edge:
+            edge_title += " (NEW)"
+        
+        # Set edge color and style
+        if is_new_edge:
+            edge_color = "orange"
+            edge_width = 4
+        elif rule_label.startswith("!(") and src_name in rule_label:
+            edge_color = "grey"
+            edge_width = 2
+        elif rule_label.startswith("! (") and src_name in rule_label:
+            edge_color = "grey" 
+            edge_width = 2
+        elif "! (" in rule_label and src_name in rule_label:
+            edge_color = "grey"
+            edge_width = 2
+        elif f"!{src_name}" in rule_label or f"! {src_name}" in rule_label:
+            edge_color = "blue"
+            edge_width = 2
+        else:
+            edge_color = "red"
+            edge_width = 2
+        
+        # For PBN, adjust edge width and transparency based on probability
+        if is_pbn and not is_new_edge and edge_prob < 1.0:
+            edge_width = max(1, int(edge_prob * 4))  # Scale width by probability
+            # Convert alpha to hex color for transparency
+            alpha_hex = format(int(edge_prob * 255), '02x')
+            if edge_color == "red":
+                edge_color = f"#ff0000{alpha_hex}"
+            elif edge_color == "blue":
+                edge_color = f"#0000ff{alpha_hex}"
+            elif edge_color == "grey":
+                edge_color = f"#808080{alpha_hex}"
+
+        net.add_edge(
+            src, 
+            tgt, 
+            title=edge_title, 
+            color=edge_color, 
+            width=edge_width
+        )
+
+    # Add legend
+    legend_x = -1500  
+    legend_y_start = -800
+    legend_spacing = 120
+    
+    legend_items = [
+        ("Input", "lightgreen", "black"),
+        ("Output", "yellow", "black"), 
+        ("Intermediate", "lightblue", "black"),
+        ("New Node", "white", "black", "orange")
+    ]
+    
+    for i, item in enumerate(legend_items):
+        if len(item) == 4:  # Node with border
+            label, color, font_color, border_color = item
+            net.add_node(
+                f"legend_{i}",
+                label=label,
+                title=f"{label}",
+                color={'background': color, 'border': border_color},
+                borderWidth=4 if border_color == "orange" else 1,
+                size=30,
+                x=legend_x,
+                y=legend_y_start + i * legend_spacing,
+                physics=False,
+                font={'size': 14, 'color': font_color}
+            )
+        else:
+            label, color, font_color = item
+            net.add_node(
+                f"legend_{i}",
+                label=label,
+                title=f"{label}",
+                color=color,
+                size=30,
+                x=legend_x,
+                y=legend_y_start + i * legend_spacing,
+                physics=False,
+                font={'size': 14, 'color': font_color}
+            )
+
+    # Save the network
+    net.save_graph(output_html)
+    print(f"Extension visualization saved to {output_html}")
+
+
+def create_matplotlib_extension_visualization(logic_rules, new_nodes, new_edges):
+    """
+    Create a matplotlib-based visualization for extension comparison.
+    """
+    # Create networkx graph
+    G = nx.DiGraph()
+    
+    # Add all nodes mentioned in rules
+    all_nodes = set()
+    for node_name, rules in logic_rules.items():
+        all_nodes.add(node_name)
+        if isinstance(rules, list):
+            # PBN case
+            for rule in rules:
+                all_nodes.update(re.findall(r'\b[A-Za-z0-9_]+\b', rule))
+        else:
+            # BN case
+            all_nodes.update(re.findall(r'\b[A-Za-z0-9_]+\b', rules))
+    
+    # Add nodes with attributes
+    for node in all_nodes:
+        G.add_node(node, is_new=node in new_nodes)
+    
+    # Add edges
+    for target, rules in logic_rules.items():
+        if isinstance(rules, list):
+            # PBN case
+            for rule in rules:
+                inputs = set(re.findall(r'\b[A-Za-z0-9_]+\b', rule))
+                for input_node in inputs:
+                    if input_node != target:
+                        G.add_edge(input_node, target, is_new=(input_node, target) in new_edges)
+        else:
+            # BN case
+            inputs = set(re.findall(r'\b[A-Za-z0-9_]+\b', rules))
+            for input_node in inputs:
+                if input_node != target:
+                    G.add_edge(input_node, target, is_new=(input_node, target) in new_edges)
+    
+    # Create visualization
+    plt.figure(figsize=(12, 8))
+    
+    # Use spring layout
+    pos = nx.spring_layout(G, k=2, iterations=50)
+    
+    # Separate new and existing nodes
+    existing_nodes = [n for n in G.nodes() if n not in new_nodes]
+    new_node_list = [n for n in G.nodes() if n in new_nodes]
+    
+    # Categorize existing nodes
+    input_nodes = []
+    output_nodes = []
+    intermediate_nodes = []
+    
+    for node in existing_nodes:
+        if G.in_degree(node) == 0:
+            input_nodes.append(node)
+        elif G.out_degree(node) == 0:
+            output_nodes.append(node)
+        else:
+            intermediate_nodes.append(node)
+    
+    # Draw nodes
+    if input_nodes:
+        nx.draw_networkx_nodes(G, pos, nodelist=input_nodes, node_color='lightgreen', 
+                             node_size=500, alpha=0.8, label='Input', edgecolors='black')
+    if output_nodes:
+        nx.draw_networkx_nodes(G, pos, nodelist=output_nodes, node_color='yellow', 
+                             node_size=500, alpha=0.8, label='Output', edgecolors='black')
+    if intermediate_nodes:
+        nx.draw_networkx_nodes(G, pos, nodelist=intermediate_nodes, node_color='lightblue', 
+                             node_size=500, alpha=0.8, label='Intermediate', edgecolors='black')
+    if new_node_list:
+        nx.draw_networkx_nodes(G, pos, nodelist=new_node_list, node_color='white', 
+                             node_size=500, alpha=0.8, label='New Nodes', edgecolors='orange', linewidths=3)
+    
+    # Draw edges
+    existing_edges = [(u, v) for u, v in G.edges() if (u, v) not in new_edges]
+    new_edge_list = [(u, v) for u, v in G.edges() if (u, v) in new_edges]
+    
+    if existing_edges:
+        nx.draw_networkx_edges(G, pos, edgelist=existing_edges, edge_color='black', 
+                             arrows=True, arrowsize=20, alpha=0.6)
+    if new_edge_list:
+        nx.draw_networkx_edges(G, pos, edgelist=new_edge_list, edge_color='orange', 
+                             arrows=True, arrowsize=20, alpha=0.8, width=3)
+    
+    # Draw labels
+    nx.draw_networkx_labels(G, pos, font_size=10, font_weight='bold')
+    
+    plt.title("Network Extension Visualization", fontsize=14, fontweight='bold')
+    plt.axis('off')
+    plt.tight_layout()
+    
+    # Add legend
+    plt.legend(loc='upper right', bbox_to_anchor=(1, 1))
+    
+    plt.show()
+    return None

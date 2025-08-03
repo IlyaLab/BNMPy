@@ -10,7 +10,9 @@ class ExperimentData:
     def load_from_csv(csv_file):
         """
         Load experiments from CSV file
-        
+
+        Only required columns are used. Extra columns in the CSV are ignored.
+
         CSV Format:
         Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values
         1,TGFa,1,TNFa,1,"NFkB,ERK,C8,Akt","0.7,0.88,0,1"
@@ -24,12 +26,12 @@ class ExperimentData:
         - Stimuli_efficacy and Inhibitors_efficacy are optional columns.
         - If efficacy is not specified, defaults to 1.0 (full efficacy).
         - Efficacy < 1 means the probability of achieving the target state is reduced.
-        
+
         Parameters:
         -----------
         csv_file : str
             Path to CSV file with experimental data
-            
+
         Returns:
         --------
         list
@@ -43,19 +45,29 @@ class ExperimentData:
                 'measurements': dict (node: value)
             }
         """
-        df = pd.read_csv(csv_file)
+        # Only read the columns we care about, ignore all others
+        usecols = [
+            'Experiments',
+            'Stimuli',
+            'Stimuli_efficacy',
+            'Inhibitors',
+            'Inhibitors_efficacy',
+            'Measured_nodes',
+            'Measured_values'
+        ]
+        df = pd.read_csv(csv_file, usecols=[col for col in usecols if col in pd.read_csv(csv_file, nrows=0).columns])
         experiments = []
-        
+
         for _, row in df.iterrows():
-            # Create measurements dictionary for easy access
-            measured_nodes = ExperimentData._parse_node_list(row['Measured_nodes'])
-            measured_values = ExperimentData._parse_value_list(row['Measured_values'])
+            # Use .get to avoid KeyError if column is missing
+            measured_nodes = ExperimentData._parse_node_list(row.get('Measured_nodes', ''))
+            measured_values = ExperimentData._parse_value_list(row.get('Measured_values', ''))
 
             # Validate that we have the same number of nodes and values
             if len(measured_nodes) != len(measured_values):
-                raise ValueError(f"Experiment {row['Experiments']}: Number of measured nodes "
-                               f"({len(measured_nodes)}) does not match "
-                               f"number of measured values ({len(measured_values)})")
+                raise ValueError(f"Experiment {row.get('Experiments', '')}: Number of measured nodes "
+                                 f"({len(measured_nodes)}) does not match "
+                                 f"number of measured values ({len(measured_values)})")
 
             # Normalize values if necessary
             if measured_values and max(measured_values) > 1:
@@ -65,30 +77,30 @@ class ExperimentData:
             # Parse stimuli and their efficacies
             stimuli = ExperimentData._parse_node_list(row.get('Stimuli', ''))
             stimuli_efficacy = ExperimentData._parse_value_list(row.get('Stimuli_efficacy', ''))
-            
+
             # If no efficacy specified, default to 1.0 for all stimuli
             if not stimuli_efficacy and stimuli:
                 stimuli_efficacy = [1.0] * len(stimuli)
-            
+
             # Parse inhibitors and their efficacies
             inhibitors = ExperimentData._parse_node_list(row.get('Inhibitors', ''))
             inhibitors_efficacy = ExperimentData._parse_value_list(row.get('Inhibitors_efficacy', ''))
-            
+
             # If no efficacy specified, default to 1.0 for all inhibitors
             if not inhibitors_efficacy and inhibitors:
                 inhibitors_efficacy = [1.0] * len(inhibitors)
 
             experiment = {
-                'id': row['Experiments'],
+                'id': row.get('Experiments', ''),
                 'stimuli': stimuli,
                 'stimuli_efficacy': stimuli_efficacy,
                 'inhibitors': inhibitors,
                 'inhibitors_efficacy': inhibitors_efficacy,
                 'measurements': dict(zip(measured_nodes, measured_values))
             }
-            
+
             experiments.append(experiment)
-        
+
         return experiments
     
     @staticmethod

@@ -188,6 +188,45 @@ class BooleanNetwork(object):
 
         return y 
 
+    def update_one(self):
+        """
+        Asynchronous update: Update one random non-constant node for one step.
+        
+        This method randomly selects one non-constant node and updates only that node
+        based on its Boolean function, while keeping all other nodes unchanged.
+        This simulates asynchronous dynamics where nodes update at different times.
+        
+        Returns:
+        --------
+        int or None
+            Index of the updated node, or None if no non-constant nodes are available
+        """
+        # Find all non-constant nodes that can be updated
+        updatable_nodes = []
+        for i in range(self.N):
+            if not self.isConstanNode[i]:
+                updatable_nodes.append(i)
+        
+        # Return None if no nodes can be updated
+        if len(updatable_nodes) == 0:
+            return None
+        
+        # Randomly select one node to update
+        selected_node = np.random.choice(updatable_nodes)
+        
+        # Helper array for function input calculation
+        temp = np.array([2**i for i in range(self.N-1, -1, -1)])
+        
+        # Calculate function input
+        fInput = 0
+        for j in range(self.K[selected_node]):
+            fInput += (self.nodes[self.varF[selected_node,j]]) * temp[j - self.K[selected_node]]
+        
+        # Update the node state
+        self.nodes[selected_node] = self.F[selected_node, fInput]
+        
+        return selected_node
+
  	
 
     # Updates the network until either an attractor is reached (in which case
