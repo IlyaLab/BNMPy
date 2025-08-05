@@ -140,7 +140,7 @@ class SteadyStateCalculator:
                                p_mir: float = 0.001,
                                initial_nsteps: int = 100,
                                max_iterations: int = 500,
-                               freeze_self_loop: bool = False,
+                               freeze_constant: bool = False,
                                verbose: bool = False,
                                seed: Optional[int] = None) -> np.ndarray:
         """
@@ -158,7 +158,7 @@ class SteadyStateCalculator:
         - `p_mir` (float, default=0.001): Perturbation probability (Miranda-Parga scheme)
         - `initial_nsteps` (int, default=100): Initial number of simulation steps
         - `max_iterations` (int, default=500): Maximum convergence iterations
-        - `freeze_self_loop` (bool, default=False): Freeze self-loop nodes (constant nodes)
+        - `freeze_constant` (bool, default=False): Freeze constant nodes
         - `verbose` (bool, default=False): Whether to print steady state information
         - `seed` (int, optional): Random seed for reproducibility
         """
@@ -170,9 +170,13 @@ class SteadyStateCalculator:
         self._save_network_state()
         
         orig_input_idx = self.input_indices.copy()
-        if not freeze_self_loop:
+        if not freeze_constant:
             # strip out nodes that are "input" only because of A=A
             self.input_indices = [i for i in orig_input_idx if not self._is_self_dependent(i)]
+        else:
+            # When freeze_constant=True, also include knocked-out nodes as inputs
+            knocked_out_nodes = [i for i in range(self.N) if self._is_constant_node(i)]
+            self.input_indices = list(set(orig_input_idx + knocked_out_nodes))
         
         # Initialize parameters
         m0 = 0  # burn-in steps
@@ -249,14 +253,22 @@ class SteadyStateCalculator:
             y_final = np.array(y_kept)
             steady_state = np.zeros(self.N)
             
-            # For input nodes, use their constant value
-            for i in self.input_indices:
-                steady_state[i] = self.network.nodes[i]
-            
-            # For knockdown nodes, calculate based on their efficacy
+            # Save knockout values before processing
+            knockout_values = {}
             for i in range(self.N):
-                if i not in self.input_indices:
-                    # For all non-input nodes (including knockdowns), use trajectory average
+                if self._is_constant_node(i):
+                    knockout_values[i] = self.network.nodes[i]
+            
+            # Handle different types of nodes
+            for i in range(self.N):
+                if i in self.input_indices:
+                    # For input nodes, use their constant value
+                    steady_state[i] = self.network.nodes[i]
+                elif self._is_constant_node(i):
+                    # For knocked-out nodes, use their fixed knockout value
+                    steady_state[i] = knockout_values[i]
+                else:
+                    # For regular nodes, use trajectory average
                     steady_state[i] = np.mean(y_final[:, i])
         else:
             # Fallback to Monte Carlo if TSMC fails
@@ -425,6 +437,12 @@ class SteadyStateCalculator:
             # Standard multiple runs approach
             steady_states = []
             
+            # Save knockout values before simulation
+            knockout_values = {}
+            for i in range(self.N):
+                if self._is_constant_node(i):
+                    knockout_values[i] = self.network.nodes[i]
+            
             for run in range(n_runs):
                 # Random initial state
                 initial_state = self.network.nodes.copy()
@@ -439,7 +457,21 @@ class SteadyStateCalculator:
                 # Take second half as steady state
                 steady_portion = trajectory[n_steps//2:]
                 mean_state = np.mean(steady_portion, axis=0)
+                
+                # Fix constant/knocked-out nodes to their original knockout values
+                for i in range(self.N):
+                    if self._is_constant_node(i):
+                        mean_state[i] = knockout_values[i]
+                
                 steady_states.append(mean_state)
+            
+            # Calculate final steady state
+            final_steady_state = np.mean(steady_states, axis=0)
+            
+            # Ensure constant nodes have their fixed knockout values
+            for i in range(self.N):
+                if self._is_constant_node(i):
+                    final_steady_state[i] = knockout_values[i]
             
             # Restore original state and undo knockouts
             self._restore_network_state()
@@ -448,9 +480,9 @@ class SteadyStateCalculator:
             if verbose:
                 print("Steady state:")
                 for i, node in enumerate(self.network.nodeDict.keys()):
-                    print(f"{node}: {np.mean(steady_states, axis=0)[i]:.4f}")
+                    print(f"{node}: {final_steady_state[i]:.4f}")
 
-            return np.mean(steady_states, axis=0)
+            return final_steady_state
     
     def _compute_mc_with_convergence(self, n_steps: int, p_noise: float, output_node: str = None, seed: Optional[int] = None) -> Tuple[np.ndarray, Dict]:
         """
@@ -489,6 +521,17 @@ class SteadyStateCalculator:
         # Take second half for steady state calculation
         steady_portion = trajectory[n_steps//2:]
         steady_state = np.mean(steady_portion, axis=0)
+        
+        # Save and apply knockout values
+        knockout_values = {}
+        for i in range(self.N):
+            if self._is_constant_node(i):
+                knockout_values[i] = self.network.nodes[i]
+        
+        # Fix constant/knocked-out nodes to their original knockout values
+        for i in range(self.N):
+            if self._is_constant_node(i):
+                steady_state[i] = knockout_values[i]
         
         # Convergence analysis on second half
         convergence_info = self._analyze_convergence(steady_portion, output_node)
@@ -811,3 +854,9 @@ class SteadyStateCalculator:
             print("--------------------------------")
             print(f"Node order: {self.network.nodeDict.keys()}")
         return {"fixed_points": fixed_points, "cyclic_attractors": cycles}
+
+    def _is_constant_node(self, node_idx: int) -> bool:
+        """Check if a node is a constant/knocked-out node"""
+        if hasattr(self.network, 'isConstantNode'):
+            return self.network.isConstantNode[node_idx]
+        return False

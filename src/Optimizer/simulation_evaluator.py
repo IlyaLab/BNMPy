@@ -61,7 +61,7 @@ class SimulationEvaluator:
                     'p_mir': 0.001,
                     'initial_nsteps': 100,
                     'max_iterations': 500,
-                    'freeze_self_loop': True
+                    'freeze_constant': True
                 },
                 'monte_carlo_params': {
                     'n_runs': 3,

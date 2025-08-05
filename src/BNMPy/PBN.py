@@ -24,7 +24,7 @@ class ProbabilisticBN(object):
         self.cumsum = np.insert(temp,0,0)
         
         self.Nf = np.sum( self.nf ) 
-        self.isConstanNode = np.full( self.Nf , False)    
+        self.isConstantNode = np.full( self.Nf , False)    
 
         # Obtain the number of inputs per function
         for i in range( self.Nf ):
@@ -38,7 +38,7 @@ class ProbabilisticBN(object):
         # determine if a node is constant
         for i in range( self.Nf ) :
             if ( self.K[i] == 0 )  :
-                self.isConstanNode[i] = True
+                self.isConstantNode[i] = True
         
         self.outputFilePath = outputFilePath
 
@@ -115,11 +115,11 @@ class ProbabilisticBN(object):
                 self.K[i] += 1
         self.K = np.array(self.K)
         
-        # Rebuild isConstanNode array
-        self.isConstanNode = np.full(self.Nf, False)
+        # Rebuild isConstantNode array
+        self.isConstantNode = np.full(self.Nf, False)
         for i in range(self.Nf):
             if (self.K[i] == 0):
-                self.isConstanNode[i] = True
+                self.isConstantNode[i] = True
         
         # Update isConstantNode
         self.isConstantNode = np.zeros(self.N, dtype=bool)

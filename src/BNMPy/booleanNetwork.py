@@ -24,7 +24,7 @@ class BooleanNetwork(object):
 
         self.K = []
         self.isConstantConnectivity = True
-        self.isConstanNode = np.full( self.N , False)
+        self.isConstantNode = np.full( self.N , False)
         for i in range(len(self.varF)):
             self.K.append(0)
             for linkage in self.varF[i]:
@@ -34,7 +34,7 @@ class BooleanNetwork(object):
                 self.K[i] += 1
         
             if self.K[i] == 0 :
-                self.isConstanNode[i] = True
+                self.isConstantNode[i] = True
                 
         self.K = np.array(self.K)
 
@@ -54,7 +54,7 @@ class BooleanNetwork(object):
         "This rebuilds the K array."
         self.K = []
         self.isConstantConnectivity = True
-        self.isConstanNode = np.full( self.N , False)
+        self.isConstantNode = np.full( self.N , False)
         for i in range(len(self.varF)):
             self.K.append(0)
             for linkage in self.varF[i]:
@@ -64,7 +64,7 @@ class BooleanNetwork(object):
                 self.K[i] += 1
         
             if self.K[i] == 0 :
-                self.isConstanNode[i] = True
+                self.isConstantNode[i] = True
                 
         self.K = np.array(self.K)
 
@@ -105,6 +105,9 @@ class BooleanNetwork(object):
         self.F[self.nodeDict[key], 1:] = -1
         self.F.dtype = np.int8
         self.buildK()
+        
+        # Set this node as constant
+        self.isConstantNode[self.nodeDict[key]] = True
 
     def undoKnockouts(self):
         "Undoes all knockouts. Does not change initial values, however."
@@ -114,6 +117,10 @@ class BooleanNetwork(object):
             self.F = self.old_F
             self.old_F = None
             self.buildK()
+            self.isConstantNode = np.full(self.N, False)
+            for i in range(len(self.varF)):
+                if self.K[i] == 0:
+                    self.isConstantNode[i] = True
 
     def stateToWrite(self):
         stringToWrite = ''
@@ -144,7 +151,7 @@ class BooleanNetwork(object):
             
             for i in range(self.N):
                 
-              if ( not self.isConstanNode[i] ) :
+              if ( not self.isConstantNode[i] ) :
                 fInput = 0
                 for j in range(self.K[i]):
                     fInput += self.nodes[ self.varF[i,j]] * temp[ j - self.K[i]  ]
@@ -167,7 +174,7 @@ class BooleanNetwork(object):
             newNodes = self.nodes
             
             # check if there is a better way to do this [[ Boris ]] 
-            gam = np.array( [ False if self.isConstanNode[i] else np.random.rand() < p  for i in range(self.N)  ])
+            gam = np.array( [ False if self.isConstantNode[i] else np.random.rand() < p  for i in range(self.N)  ])
             
             if np.any(gam):
                 
@@ -176,7 +183,7 @@ class BooleanNetwork(object):
             else :
                 for i in range(self.N):
                     
-                  if ( not self.isConstanNode[i] ) :
+                  if ( not self.isConstantNode[i] ) :
                     fInput = 0
                     for j in range(self.K[i]):
                         fInput += self.nodes[ self.varF[i,j]] * temp[ j - self.K[i]  ]
@@ -204,7 +211,7 @@ class BooleanNetwork(object):
         # Find all non-constant nodes that can be updated
         updatable_nodes = []
         for i in range(self.N):
-            if not self.isConstanNode[i]:
+            if not self.isConstantNode[i]:
                 updatable_nodes.append(i)
         
         # Return None if no nodes can be updated

@@ -535,7 +535,7 @@ class ParameterOptimizer:
         plt.legend()
         
         # Add text box with final statistics
-        stats_text = f'Final MSE: {result.fun:.6f}\nIterations: {result.nit}\nSuccess: {result.success}'
+        stats_text = f'Final MSE: {result.fun:.6f}\nIterations: {result.nit}'
         plt.text(0.02, 0.98, stats_text, transform=plt.gca().transAxes, 
                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
         

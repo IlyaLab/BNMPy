@@ -1,5 +1,0 @@
-Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values,Notes
-1,,,,,SPI1,0.33,"Homeostatic HSPC, data from Ramos single-cell microarrays (GSE2534)"
-2,,,,,SPI1,0.35,"Homeostatic HSPC, data from Chambers (GSE6506) HSC subset"
-3,GATA1,,FLI1,,SPI1,0.27,"Committed erythroid, data  from Chambers (GSE6506) erythroblast subset"
-4,CSF3R,,,,SPI1,0.61,"Myeloid push via CSF3R, data from Lara-Astiaso (GSE60101) granulocyte"

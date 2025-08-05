@@ -181,7 +181,7 @@ class ResultEvaluator:
                                       show_node_colors: bool = True,
                                       show_confidence_interval: bool = True,
                                       show_experiment_ids: bool = False,
-                                      figsize: Tuple[int, int] = (10, 8)) -> plt.Figure:
+                                      figsize: Tuple[int, int] = (8, 6)) -> plt.Figure:
         """
         Create a scatter plot comparing predicted vs experimental values.
         
@@ -195,8 +195,8 @@ class ResultEvaluator:
             Whether to show confidence intervals
         show_experiment_ids : bool, default=False
             Whether to label points with experiment IDs
-        figsize : Tuple[int, int], default=(10, 8)
-            Figure size in inches
+        figsize : Tuple[int, int], default=(8, 6)
+            Figure size
             
         Returns:
         --------
@@ -247,8 +247,8 @@ class ResultEvaluator:
         # Perfect prediction line
         min_val = min(np.min(predicted), np.min(measured))
         max_val = max(np.max(predicted), np.max(measured))
-        ax.plot([min_val, max_val], [min_val, max_val], 'r--', 
-                linewidth=2, label='Perfect prediction')
+        # ax.plot([min_val, max_val], [min_val, max_val], 'r--', 
+        #         linewidth=2, label='Perfect prediction')
         
         # Add confidence interval bands
         if show_confidence_interval:
@@ -306,7 +306,7 @@ class ResultEvaluator:
     
     def plot_residuals(self, save_path: Optional[str] = None, 
                       show_experiment_ids: bool = False,
-                      figsize: Tuple[int, int] = (12, 5)) -> plt.Figure:
+                      figsize: Tuple[int, int] = (9, 4)) -> plt.Figure:
         """
         Create residual plots to assess model fit quality.
         
@@ -316,7 +316,7 @@ class ResultEvaluator:
             Path to save the plot
         show_experiment_ids : bool, default=False
             Whether to label points with experiment IDs
-        figsize : Tuple[int, int], default=(12, 5)
+        figsize : Tuple[int, int], default=(9, 4)
             Figure size in inches
             
         Returns:
@@ -475,6 +475,7 @@ class ResultEvaluator:
 
 def evaluate_optimization_result(optimizer_result, parameter_optimizer, 
                                 output_dir: str = ".", 
+                                plot_residuals: bool = True,
                                 save: bool = True,
                                 detailed: bool = False) -> ResultEvaluator:
     """
@@ -486,6 +487,8 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
         The optimization result
     parameter_optimizer : ParameterOptimizer
         The parameter optimizer instance
+    plot_residuals: bool, default=True
+        Whether to plot residuals
     output_dir : str, default="."
         Directory to save output files
     save : bool, default=True
@@ -513,10 +516,11 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
         # Prediction vs experimental plot
         plot_path = os.path.join(output_dir, "prediction_vs_experimental.png")
         evaluator.plot_prediction_vs_experimental(save_path=plot_path, show_experiment_ids=detailed)
-        
+
+        if plot_residuals:
         # Residual plots
-        residual_path = os.path.join(output_dir, "residual_analysis.png")
-        evaluator.plot_residuals(save_path=residual_path, show_experiment_ids=detailed)
+            residual_path = os.path.join(output_dir, "residual_analysis.png")
+            evaluator.plot_residuals(save_path=residual_path, show_experiment_ids=detailed)
         
         # Generate report
         report_path = os.path.join(output_dir, "evaluation_report.txt")
@@ -528,7 +532,8 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
     else:
         # Display plots without saving
         evaluator.plot_prediction_vs_experimental(show_experiment_ids=detailed)
-        evaluator.plot_residuals(show_experiment_ids=detailed)
+        if plot_residuals:
+            evaluator.plot_residuals(show_experiment_ids=detailed)
         
         # Print report to console
         report = evaluator.generate_evaluation_report()
@@ -659,7 +664,7 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
     plot_paths = {}
     if generate_plots and len(predicted) > 0:
         # Scatter plot
-        fig, ax = plt.subplots(figsize=(10, 8))
+        fig, ax = plt.subplots(figsize=(8, 6))
         unique_nodes = list(set(simulation_results['measured_nodes']))
         colors = plt.cm.Set3(np.linspace(0, 1, len(unique_nodes)))
         node_color_map = dict(zip(unique_nodes, colors))
@@ -670,7 +675,6 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
             ax.scatter(node_meas, node_pred, c=[node_color_map[node]], label=node, alpha=0.7, s=60)
         min_val = min(np.min(predicted), np.min(measured))
         max_val = max(np.max(predicted), np.max(measured))
-        ax.plot([min_val, max_val], [min_val, max_val], 'r--', linewidth=2, label='Perfect prediction')
         from scipy import stats
         slope, intercept, r_value, p_value, std_err = stats.linregress(measured, predicted)
         x_reg = np.linspace(min_val, max_val, 100)
