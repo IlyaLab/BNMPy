@@ -1,9 +1,9 @@
 # building a boolean network
 
-# TODO: given a KG subset, can we construct a boolean network?
+# given a KG subset, can we construct a boolean network?
 
 # try using signor
-def load_signor_network(gene_list, input_format="symbol", joiner='&'):
+def load_signor_network(gene_list, input_format="symbol", joiner='&', kg_filename='SIGNOR_formated.tsv'):
     """
     Creates a boolean network from SigNOR using all of the provided genes. Tries to build a connected Steiner subgraph...
 
@@ -11,13 +11,13 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&'):
         gene_list - list of gene symbols, gene ids, or uniprot ids.
         input_format - "symbol", "id", or "uniprot"
         joiner - "&", "|", or "inhibitor_wins"
+        kg_filename - "SIGNOR_formatted.tsv" by default.
     """
-    from kgfe import graph_info, explanations, gene_names
+    from . import graph_info, steiner_tree, gene_names
     if ' ' not in joiner and (joiner == '&' or joiner == '|'):
         joiner = ' ' + joiner + ' '
     input_format = input_format.lower()
-    filename = 'SIGNOR_formated.tsv'
-    graph_table = graph_info.load_graph(filename)
+    graph_table = graph_info.load_graph(kg_filename)
     graph = graph_info.df_to_graph(graph_table, False)
     digraph = graph_info.df_to_graph(graph_table, True)
     # get a graph subset
@@ -45,7 +45,7 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&'):
             continue
     # print(new_uniprot_list)
     # Steiner subgraph - get a tree using a connected thing...
-    tree = explanations.steiner_tree(graph, new_uniprot_list)
+    tree = steiner_tree.steiner_tree(graph, new_uniprot_list)
     subgraph = digraph.induced_subgraph([n['name'] for n in tree.vs])
     # use the subgraph to build a connected thing
     # TODO: figure out the rule for combining inputs
@@ -101,6 +101,11 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&'):
                 input_nodes_string = f'{upregulator_string}'
             else:
                 input_nodes_string = gene_name
+        elif joiner == 'majority':
+            # TODO: implement a majority vote system for upregulators and downregulators
+            # sum of activators + repressors > 0 - just get all possible permutations that are acceptable...
+            input_nodes_string = ''
+            pass
         else:
             input_nodes_string = joiner.join(input_nodes)
 
