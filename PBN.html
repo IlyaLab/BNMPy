@@ -80,6 +80,9 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.PBN.ProbabilisticBN.update_noise" title="BNMPy.PBN.ProbabilisticBN.update_noise"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_noise</span></code></a>(p[, iterations])</p></td>
 <td><p>Update the network with noise parameter p over a given number of iterations.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.PBN.ProbabilisticBN.update_one" title="BNMPy.PBN.ProbabilisticBN.update_one"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_one</span></code></a>()</p></td>
+<td><p>Asynchronous update: Update one random non-constant node for one step.</p></td>
+</tr>
 </tbody>
 </table>
 <table class="docutils align-default">
@@ -214,6 +217,15 @@ but is never applied to constant nodes (knockouts).</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="BNMPy.PBN.ProbabilisticBN.update_one">
+<span class="sig-name descname"><span class="pre">update_one</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/PBN.html#ProbabilisticBN.update_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.PBN.ProbabilisticBN.update_one" title="Link to this definition">¶</a></dt>
+<dd><p>Asynchronous update: Update one random non-constant node for one step.</p>
+<p>This method randomly selects one non-constant node and updates only that node
+based on its Boolean function, while keeping all other nodes unchanged.
+This simulates asynchronous dynamics where nodes update at different times.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="BNMPy.PBN.ProbabilisticBN.writeNetworkHistory">
 <span class="sig-name descname"><span class="pre">writeNetworkHistory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/PBN.html#ProbabilisticBN.writeNetworkHistory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.PBN.ProbabilisticBN.writeNetworkHistory" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -251,6 +263,7 @@ but is never applied to constant nodes (knockouts).</p>
 <li><a class="reference internal" href="#BNMPy.PBN.ProbabilisticBN.update"><code class="docutils literal notranslate"><span class="pre">ProbabilisticBN.update()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.PBN.ProbabilisticBN.update_cumulative_probabilities"><code class="docutils literal notranslate"><span class="pre">ProbabilisticBN.update_cumulative_probabilities()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.PBN.ProbabilisticBN.update_noise"><code class="docutils literal notranslate"><span class="pre">ProbabilisticBN.update_noise()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.PBN.ProbabilisticBN.update_one"><code class="docutils literal notranslate"><span class="pre">ProbabilisticBN.update_one()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.PBN.ProbabilisticBN.writeNetworkHistory"><code class="docutils literal notranslate"><span class="pre">ProbabilisticBN.writeNetworkHistory()</span></code></a></li>
 </ul>
 </li>

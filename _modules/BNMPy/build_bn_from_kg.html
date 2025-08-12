@@ -36,12 +36,12 @@
   <h1>Source code for BNMPy.build_bn_from_kg</h1><div class="highlight"><pre>
 <span></span><span class="c1"># building a boolean network</span>
 
-<span class="c1"># TODO: given a KG subset, can we construct a boolean network?</span>
+<span class="c1"># given a KG subset, can we construct a boolean network?</span>
 
 <span class="c1"># try using signor</span>
 <div class="viewcode-block" id="load_signor_network">
 <a class="viewcode-back" href="../../build_bn_from_kg.html#BNMPy.build_bn_from_kg.load_signor_network">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">load_signor_network</span><span class="p">(</span><span class="n">gene_list</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;symbol&quot;</span><span class="p">,</span> <span class="n">joiner</span><span class="o">=</span><span class="s1">&#39;&amp;&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_signor_network</span><span class="p">(</span><span class="n">gene_list</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;symbol&quot;</span><span class="p">,</span> <span class="n">joiner</span><span class="o">=</span><span class="s1">&#39;&amp;&#39;</span><span class="p">,</span> <span class="n">kg_filename</span><span class="o">=</span><span class="s1">&#39;SIGNOR_formated.tsv&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates a boolean network from SigNOR using all of the provided genes. Tries to build a connected Steiner subgraph...</span>
 
@@ -49,13 +49,13 @@
 <span class="sd">        gene_list - list of gene symbols, gene ids, or uniprot ids.</span>
 <span class="sd">        input_format - &quot;symbol&quot;, &quot;id&quot;, or &quot;uniprot&quot;</span>
 <span class="sd">        joiner - &quot;&amp;&quot;, &quot;|&quot;, or &quot;inhibitor_wins&quot;</span>
+<span class="sd">        kg_filename - &quot;SIGNOR_formatted.tsv&quot; by default.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">kgfe</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_info</span><span class="p">,</span> <span class="n">explanations</span><span class="p">,</span> <span class="n">gene_names</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_info</span><span class="p">,</span> <span class="n">steiner_tree</span><span class="p">,</span> <span class="n">gene_names</span>
     <span class="k">if</span> <span class="s1">&#39; &#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">joiner</span> <span class="ow">and</span> <span class="p">(</span><span class="n">joiner</span> <span class="o">==</span> <span class="s1">&#39;&amp;&#39;</span> <span class="ow">or</span> <span class="n">joiner</span> <span class="o">==</span> <span class="s1">&#39;|&#39;</span><span class="p">):</span>
         <span class="n">joiner</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">joiner</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span>
     <span class="n">input_format</span> <span class="o">=</span> <span class="n">input_format</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-    <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;SIGNOR_formated.tsv&#39;</span>
-    <span class="n">graph_table</span> <span class="o">=</span> <span class="n">graph_info</span><span class="o">.</span><span class="n">load_graph</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">graph_table</span> <span class="o">=</span> <span class="n">graph_info</span><span class="o">.</span><span class="n">load_graph</span><span class="p">(</span><span class="n">kg_filename</span><span class="p">)</span>
     <span class="n">graph</span> <span class="o">=</span> <span class="n">graph_info</span><span class="o">.</span><span class="n">df_to_graph</span><span class="p">(</span><span class="n">graph_table</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
     <span class="n">digraph</span> <span class="o">=</span> <span class="n">graph_info</span><span class="o">.</span><span class="n">df_to_graph</span><span class="p">(</span><span class="n">graph_table</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
     <span class="c1"># get a graph subset</span>
@@ -83,7 +83,7 @@
             <span class="k">continue</span>
     <span class="c1"># print(new_uniprot_list)</span>
     <span class="c1"># Steiner subgraph - get a tree using a connected thing...</span>
-    <span class="n">tree</span> <span class="o">=</span> <span class="n">explanations</span><span class="o">.</span><span class="n">steiner_tree</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">new_uniprot_list</span><span class="p">)</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">steiner_tree</span><span class="o">.</span><span class="n">steiner_tree</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">new_uniprot_list</span><span class="p">)</span>
     <span class="n">subgraph</span> <span class="o">=</span> <span class="n">digraph</span><span class="o">.</span><span class="n">induced_subgraph</span><span class="p">([</span><span class="n">n</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">vs</span><span class="p">])</span>
     <span class="c1"># use the subgraph to build a connected thing</span>
     <span class="c1"># TODO: figure out the rule for combining inputs</span>
@@ -115,59 +115,45 @@
                 <span class="n">all_relations</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">in_node</span><span class="p">,</span> <span class="n">gene_name</span><span class="p">,</span> <span class="s1">&#39;activate&#39;</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">joiner</span> <span class="o">==</span> <span class="s1">&#39;inhibitor_wins&#39;</span><span class="p">:</span>
             <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-            <span class="n">inhibitor_string</span> <span class="o">=</span> <span class="s1">&#39; &amp; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;!</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inhibitors</span><span class="p">)</span>
-            <span class="n">upregulator_string</span> <span class="o">=</span> <span class="s1">&#39; | &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">upregulators</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inhibitors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">inhibitor_string</span> <span class="o">=</span> <span class="s1">&#39; &amp; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;!</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inhibitors</span><span class="p">)</span>
+                <span class="n">inhibitor_string</span> <span class="o">=</span><span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="n">inhibitor_string</span><span class="si">}</span><span class="s1">)&#39;</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">inhibitors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">inhibitor_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;!</span><span class="si">{</span><span class="n">inhibitors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">inhibitor_string</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">upregulators</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">upregulator_string</span> <span class="o">=</span> <span class="s1">&#39; | &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">upregulators</span><span class="p">)</span>
+                <span class="n">upregulator_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="n">upregulator_string</span><span class="si">}</span><span class="s1">)&#39;</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">upregulators</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">upregulator_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">upregulators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">upregulator_string</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
             <span class="k">if</span> <span class="n">inhibitor_string</span> <span class="ow">and</span> <span class="n">upregulator_string</span><span class="p">:</span>
-                <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="n">inhibitor_string</span><span class="si">}</span><span class="s1">) &amp; (</span><span class="si">{</span><span class="n">upregulator_string</span><span class="si">}</span><span class="s1">)&#39;</span>
+                <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">inhibitor_string</span><span class="si">}</span><span class="s1"> &amp; </span><span class="si">{</span><span class="n">upregulator_string</span><span class="si">}</span><span class="s1">&#39;</span>
             <span class="k">elif</span> <span class="n">inhibitor_string</span><span class="p">:</span>
                 <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">inhibitor_string</span><span class="si">}</span><span class="s1">&#39;</span>
             <span class="k">elif</span> <span class="n">upregulator_string</span><span class="p">:</span>
                 <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">upregulator_string</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="n">gene_name</span>
+        <span class="k">elif</span> <span class="n">joiner</span> <span class="o">==</span> <span class="s1">&#39;majority&#39;</span><span class="p">:</span>
+            <span class="c1"># TODO: implement a majority vote system for upregulators and downregulators</span>
+            <span class="c1"># sum of activators + repressors &gt; 0 - just get all possible permutations that are acceptable...</span>
+            <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">pass</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="n">joiner</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">input_nodes</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="n">gene_name</span>
         <span class="n">output_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">gene_name</span><span class="si">}</span><span class="s1"> = </span><span class="si">{</span><span class="n">input_nodes_string</span><span class="si">}</span><span class="s1">&#39;</span>
         <span class="n">bn_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_string</span><span class="p">)</span>
+    <span class="c1"># order the equations by key alphabetically</span>
+    <span class="n">bn_lines</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bn_lines</span><span class="p">),</span> <span class="n">all_relations</span></div>
-
-
-
-<div class="viewcode-block" id="merge_network">
-<a class="viewcode-back" href="../../build_bn_from_kg.html#BNMPy.build_bn_from_kg.merge_network">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">merge_network</span><span class="p">(</span><span class="n">bn</span><span class="p">,</span> <span class="n">new_equations</span><span class="p">,</span> <span class="n">outer_joiner</span><span class="o">=</span><span class="s1">&#39;&amp;&#39;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Merges a BooleanNetwork object with a string or list of equations.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_equations</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">new_equations</span> <span class="o">=</span> <span class="n">new_equations</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="n">equations</span> <span class="o">=</span> <span class="n">bn</span><span class="o">.</span><span class="n">equations</span>
-    <span class="n">old_eq_dict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">eq</span> <span class="ow">in</span> <span class="n">equations</span><span class="p">:</span>
-        <span class="n">terms</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
-        <span class="n">key</span> <span class="o">=</span> <span class="n">terms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="n">old_eq_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">terms</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">new_eq_dict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">eq</span> <span class="ow">in</span> <span class="n">new_equations</span><span class="p">:</span>
-        <span class="n">terms</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
-        <span class="n">key</span> <span class="o">=</span> <span class="n">terms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="n">new_eq_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">terms</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="c1"># just combine it in a primitive way...</span>
-    <span class="n">combined_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">old_eq_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">new_eq_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
-    <span class="n">combined_eqs</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">combined_eqs_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">combined_keys</span><span class="p">:</span>
-        <span class="n">new_term</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">old_eq_dict</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_eq_dict</span><span class="p">:</span>
-            <span class="n">new_term</span> <span class="o">=</span> <span class="n">old_eq_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">new_eq_dict</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">old_eq_dict</span><span class="p">:</span>
-            <span class="n">new_term</span> <span class="o">=</span> <span class="n">new_eq_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">new_term</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="n">old_eq_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s1">) </span><span class="si">{</span><span class="n">outer_joiner</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">new_eq_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s1">)&#39;</span>
-        <span class="n">combined_eqs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_term</span>
-        <span class="n">combined_eqs_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1"> = </span><span class="si">{</span><span class="n">new_term</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">combined_eqs_list</span><span class="p">)</span></div>
-
 
 
 <div class="viewcode-block" id="add_genes_to_network">

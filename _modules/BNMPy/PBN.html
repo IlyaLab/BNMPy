@@ -62,7 +62,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">cumsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">Nf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">nf</span> <span class="p">)</span> 
-        <span class="bp">self</span><span class="o">.</span><span class="n">isConstanNode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nf</span> <span class="p">,</span> <span class="kc">False</span><span class="p">)</span>    
+        <span class="bp">self</span><span class="o">.</span><span class="n">isConstantNode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nf</span> <span class="p">,</span> <span class="kc">False</span><span class="p">)</span>    
 
         <span class="c1"># Obtain the number of inputs per function</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nf</span> <span class="p">):</span>
@@ -76,7 +76,7 @@
         <span class="c1"># determine if a node is constant</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nf</span> <span class="p">)</span> <span class="p">:</span>
             <span class="k">if</span> <span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span>  <span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">isConstanNode</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">isConstantNode</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">outputFilePath</span> <span class="o">=</span> <span class="n">outputFilePath</span>
 
@@ -158,11 +158,11 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">)</span>
         
-        <span class="c1"># Rebuild isConstanNode array</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">isConstanNode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Nf</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># Rebuild isConstantNode array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isConstantNode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Nf</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Nf</span><span class="p">):</span>
             <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">isConstanNode</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">isConstantNode</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         
         <span class="c1"># Update isConstantNode</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">isConstantNode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
@@ -413,7 +413,7 @@
         <span class="k">return</span> <span class="n">y</span></div>
 
     
-    <span class="c1"># update the Boolean network with noise, derived from update functions (Boris)</span>
+    <span class="c1"># update the network with noise, derived from update functions (Boris)</span>
 <div class="viewcode-block" id="ProbabilisticBN.update_noise">
 <a class="viewcode-back" href="../../PBN.html#BNMPy.PBN.ProbabilisticBN.update_noise">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
@@ -475,6 +475,61 @@
         
         <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Update the network state to the final iteration</span>
         <span class="k">return</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="ProbabilisticBN.update_one">
+<a class="viewcode-back" href="../../PBN.html#BNMPy.PBN.ProbabilisticBN.update_one">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_one</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Asynchronous update: Update one random non-constant node for one step.</span>
+<span class="sd">        </span>
+<span class="sd">        This method randomly selects one non-constant node and updates only that node</span>
+<span class="sd">        based on its Boolean function, while keeping all other nodes unchanged.</span>
+<span class="sd">        This simulates asynchronous dynamics where nodes update at different times.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        int or None</span>
+<span class="sd">            Index of the updated node, or None if no non-constant nodes are available</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Find all non-constant nodes that can be updated</span>
+        <span class="n">updatable_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isConstantNode</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                <span class="n">updatable_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        
+        <span class="c1"># Return None if no nodes can be updated</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">updatable_nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        
+        <span class="c1"># Randomly select one node to update</span>
+        <span class="n">selected_node</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">updatable_nodes</span><span class="p">)</span>
+        
+        <span class="c1"># Helper array for function input calculation</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+        
+        <span class="c1"># Update the selected node</span>
+        <span class="k">if</span> <span class="n">selected_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">knockdown_nodes</span><span class="p">:</span>
+            <span class="c1"># Handle knockdown nodes</span>
+            <span class="n">target_value</span><span class="p">,</span> <span class="n">efficacy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">knockdown_nodes</span><span class="p">[</span><span class="n">selected_node</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">efficacy</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">selected_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">selected_node</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">target_value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Normal function-based update</span>
+            <span class="n">func_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select_function</span><span class="p">(</span><span class="n">selected_node</span><span class="p">)</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cumsum</span><span class="p">[</span><span class="n">selected_node</span><span class="p">]</span> <span class="o">+</span> <span class="n">func_offset</span>
+            
+            <span class="c1"># Calculate function input</span>
+            <span class="n">fInput</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">idx</span><span class="p">]):</span>
+                <span class="n">fInput</span> <span class="o">+=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">varF</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span><span class="n">j</span><span class="p">]])</span> <span class="o">*</span> <span class="n">temp</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
+            
+            <span class="c1"># Update the node state</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">selected_node</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">fInput</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">selected_node</span></div>
 
 
 <div class="viewcode-block" id="ProbabilisticBN.getRealization">

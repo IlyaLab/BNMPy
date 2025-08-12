@@ -57,6 +57,12 @@
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.vis.create_matplotlib_extension_visualization">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">create_matplotlib_extension_visualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logic_rules</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_edges</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#create_matplotlib_extension_visualization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.create_matplotlib_extension_visualization" title="Link to this definition">¶</a></dt>
+<dd><p>Create a matplotlib-based visualization for extension comparison.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="BNMPy.vis.create_matplotlib_visualization">
 <span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">create_matplotlib_visualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logic_rules</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removed_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#create_matplotlib_visualization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.create_matplotlib_visualization" title="Link to this definition">¶</a></dt>
 <dd><p>Create a matplotlib-based visualization for Jupyter notebooks.</p>
@@ -88,13 +94,26 @@ dict: Mapping from edges to probabilities (for PBN) or empty dict (for BN)</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="BNMPy.vis.vis_compression_comparison">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">vis_compression_comparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">original_network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compressed_network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_html</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'compression_comparison.html'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#vis_compression_comparison"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.vis_compression_comparison" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="BNMPy.vis.vis_compression">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">vis_compression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">original_network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compressed_network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_html</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'compression_comparison.html'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#vis_compression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.vis_compression" title="Link to this definition">¶</a></dt>
 <dd><p>Visualize the original network with removed/collapsed nodes highlighted.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>original_network: Original BooleanNetwork or ProbabilisticBN
 compressed_network: Compressed network (not used for visualization)
 compression_info: Dictionary with compression information
+output_html (str): Output HTML file name
+interactive (bool): If True, return network visualization in interactive html file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.vis.vis_extension">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">vis_extension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">original_network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extended_network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_html</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'extension_comparison.html'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#vis_extension"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.vis_extension" title="Link to this definition">¶</a></dt>
+<dd><p>Visualize the extended network with new nodes and edges highlighted.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>original_network: Original BooleanNetwork or ProbabilisticBN
+extended_network: Extended network with additional nodes/edges
 output_html (str): Output HTML file name
 interactive (bool): If True, return network visualization in interactive html file</p>
 </dd>
@@ -135,10 +154,12 @@ perturbed_nodes (set): Set of node names that are perturbed (shown in red)</p>
 <li><a class="reference internal" href="#">BNMPy.vis</a><ul>
 <li><a class="reference internal" href="#BNMPy.vis.build_igraph"><code class="docutils literal notranslate"><span class="pre">build_igraph()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.vis.build_igraph_pbn"><code class="docutils literal notranslate"><span class="pre">build_igraph_pbn()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.vis.create_matplotlib_extension_visualization"><code class="docutils literal notranslate"><span class="pre">create_matplotlib_extension_visualization()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.vis.create_matplotlib_visualization"><code class="docutils literal notranslate"><span class="pre">create_matplotlib_visualization()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.vis.extract_logic_rules_from_network"><code class="docutils literal notranslate"><span class="pre">extract_logic_rules_from_network()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.vis.read_logic_rules"><code class="docutils literal notranslate"><span class="pre">read_logic_rules()</span></code></a></li>
-<li><a class="reference internal" href="#BNMPy.vis.vis_compression_comparison"><code class="docutils literal notranslate"><span class="pre">vis_compression_comparison()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.vis.vis_compression"><code class="docutils literal notranslate"><span class="pre">vis_compression()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.vis.vis_extension"><code class="docutils literal notranslate"><span class="pre">vis_extension()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.vis.vis_network"><code class="docutils literal notranslate"><span class="pre">vis_network()</span></code></a></li>
 </ul>
 </li>

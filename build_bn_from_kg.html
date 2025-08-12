@@ -60,12 +60,13 @@ outer_joiner - “&amp;” or “|”</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="BNMPy.build_bn_from_kg.load_signor_network">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.build_bn_from_kg.</span></span><span class="sig-name descname"><span class="pre">load_signor_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gene_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'symbol'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">joiner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&amp;'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/build_bn_from_kg.html#load_signor_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.build_bn_from_kg.load_signor_network" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">BNMPy.build_bn_from_kg.</span></span><span class="sig-name descname"><span class="pre">load_signor_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gene_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'symbol'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">joiner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&amp;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kg_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SIGNOR_formated.tsv'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/build_bn_from_kg.html#load_signor_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.build_bn_from_kg.load_signor_network" title="Link to this definition">¶</a></dt>
 <dd><p>Creates a boolean network from SigNOR using all of the provided genes. Tries to build a connected Steiner subgraph…</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>gene_list - list of gene symbols, gene ids, or uniprot ids.
 input_format - “symbol”, “id”, or “uniprot”
-joiner - “&amp;”, “|”, or “inhibitor_wins”</p>
+joiner - “&amp;”, “|”, or “inhibitor_wins”
+kg_filename - “SIGNOR_formatted.tsv” by default.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -75,12 +76,6 @@ joiner - “&amp;”, “|”, or “inhibitor_wins”</p>
 <span class="sig-prename descclassname"><span class="pre">BNMPy.build_bn_from_kg.</span></span><span class="sig-name descname"><span class="pre">merge_PBN_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">original_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">KG_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/build_bn_from_kg.html#merge_PBN_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.build_bn_from_kg.merge_PBN_string" title="Link to this definition">¶</a></dt>
 <dd><p>Merge the original model and the KG model to a PBN
 prob: probability of the equations from the original model</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="BNMPy.build_bn_from_kg.merge_network">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.build_bn_from_kg.</span></span><span class="sig-name descname"><span class="pre">merge_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_equations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_joiner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&amp;'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/build_bn_from_kg.html#merge_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.build_bn_from_kg.merge_network" title="Link to this definition">¶</a></dt>
-<dd><p>Merges a BooleanNetwork object with a string or list of equations.</p>
 </dd></dl>
 
 </section>
@@ -99,7 +94,6 @@ prob: probability of the equations from the original model</p>
 <li><a class="reference internal" href="#BNMPy.build_bn_from_kg.add_genes_to_network"><code class="docutils literal notranslate"><span class="pre">add_genes_to_network()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.build_bn_from_kg.load_signor_network"><code class="docutils literal notranslate"><span class="pre">load_signor_network()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.build_bn_from_kg.merge_PBN_string"><code class="docutils literal notranslate"><span class="pre">merge_PBN_string()</span></code></a></li>
-<li><a class="reference internal" href="#BNMPy.build_bn_from_kg.merge_network"><code class="docutils literal notranslate"><span class="pre">merge_network()</span></code></a></li>
 </ul>
 </li>
 </ul>
