@@ -45,28 +45,21 @@
   <section id="bnmpy-build-bn-from-kg">
 <h1>BNMPy.build_bn_from_kg<a class="headerlink" href="#bnmpy-build-bn-from-kg" title="Link to this heading">¶</a></h1>
 <span class="target" id="module-BNMPy.build_bn_from_kg"></span><dl class="py function">
-<dt class="sig sig-object py" id="BNMPy.build_bn_from_kg.add_genes_to_network">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.build_bn_from_kg.</span></span><span class="sig-name descname"><span class="pre">add_genes_to_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gene_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'symbol'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">joiner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'inhibitor_wins'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_joiner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&amp;'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/build_bn_from_kg.html#add_genes_to_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.build_bn_from_kg.add_genes_to_network" title="Link to this definition">¶</a></dt>
-<dd><p>Creates an augmented boolean network from SigNOR using all of the genes along with the genes already present in bn. Tries to build a connected Steiner subgraph…</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>bn - a BooleanNetwork object
-gene_list - list of gene symbols, gene ids, or uniprot ids.
-input_format - “symbol”, “id”, or “uniprot”
-joiner - “&amp;”, “|”, or “inhibitor_wins” - used for the knowledge graph-derived network.
-outer_joiner - “&amp;” or “|”</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="BNMPy.build_bn_from_kg.all_boolean_combos">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.build_bn_from_kg.</span></span><span class="sig-name descname"><span class="pre">all_boolean_combos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/build_bn_from_kg.html#all_boolean_combos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.build_bn_from_kg.all_boolean_combos" title="Link to this definition">¶</a></dt>
+<dd><p>Generates all boolean strings of length n, as tuples of 1s and 0s.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="BNMPy.build_bn_from_kg.load_signor_network">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.build_bn_from_kg.</span></span><span class="sig-name descname"><span class="pre">load_signor_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gene_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'symbol'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">joiner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&amp;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kg_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SIGNOR_formated.tsv'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/build_bn_from_kg.html#load_signor_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.build_bn_from_kg.load_signor_network" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">BNMPy.build_bn_from_kg.</span></span><span class="sig-name descname"><span class="pre">load_signor_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gene_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'symbol'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">joiner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&amp;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kg_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SIGNOR_2025_08_12.tsv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_proteins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/build_bn_from_kg.html#load_signor_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.build_bn_from_kg.load_signor_network" title="Link to this definition">¶</a></dt>
 <dd><p>Creates a boolean network from SigNOR using all of the provided genes. Tries to build a connected Steiner subgraph…</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>gene_list - list of gene symbols, gene ids, or uniprot ids.
 input_format - “symbol”, “id”, or “uniprot”
-joiner - “&amp;”, “|”, or “inhibitor_wins”
-kg_filename - “SIGNOR_formatted.tsv” by default.</p>
+joiner - “&amp;”, “|”, “inhibitor_wins”, or “majority”, or “plurality” (difference between the last two: in plurality, a tie indicates 1, in majority, a tie indicates 0)
+kg_filename - “SIGNOR_2025_08_12.tsv” by default. “SIGNOR_formatted.tsv” can also be used (this is an older version of SigNOR).
+only_proteins - whether to only use protein nodes in SIGNOR for getting the subgraph (default: True)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -91,7 +84,7 @@ prob: probability of the equations from the original model</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">BNMPy.build_bn_from_kg</a><ul>
-<li><a class="reference internal" href="#BNMPy.build_bn_from_kg.add_genes_to_network"><code class="docutils literal notranslate"><span class="pre">add_genes_to_network()</span></code></a></li>
+<li><a class="reference internal" href="#BNMPy.build_bn_from_kg.all_boolean_combos"><code class="docutils literal notranslate"><span class="pre">all_boolean_combos()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.build_bn_from_kg.load_signor_network"><code class="docutils literal notranslate"><span class="pre">load_signor_network()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.build_bn_from_kg.merge_PBN_string"><code class="docutils literal notranslate"><span class="pre">merge_PBN_string()</span></code></a></li>
 </ul>

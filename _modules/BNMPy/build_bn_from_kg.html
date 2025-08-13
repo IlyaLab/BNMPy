@@ -38,26 +38,57 @@
 
 <span class="c1"># given a KG subset, can we construct a boolean network?</span>
 
+<span class="c1"># basic cache</span>
+<span class="n">GRAPH_TABLES</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="all_boolean_combos">
+<a class="viewcode-back" href="../../build_bn_from_kg.html#BNMPy.build_bn_from_kg.all_boolean_combos">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">all_boolean_combos</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="s2">&quot;Generates all boolean strings of length n, as tuples of 1s and 0s.&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">all_boolean_combos</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">new_results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+            <span class="n">new_results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">0</span><span class="p">,)</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span>
+            <span class="n">new_results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_results</span></div>
+
+
+
 <span class="c1"># try using signor</span>
 <div class="viewcode-block" id="load_signor_network">
 <a class="viewcode-back" href="../../build_bn_from_kg.html#BNMPy.build_bn_from_kg.load_signor_network">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">load_signor_network</span><span class="p">(</span><span class="n">gene_list</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;symbol&quot;</span><span class="p">,</span> <span class="n">joiner</span><span class="o">=</span><span class="s1">&#39;&amp;&#39;</span><span class="p">,</span> <span class="n">kg_filename</span><span class="o">=</span><span class="s1">&#39;SIGNOR_formated.tsv&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_signor_network</span><span class="p">(</span><span class="n">gene_list</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s2">&quot;symbol&quot;</span><span class="p">,</span> <span class="n">joiner</span><span class="o">=</span><span class="s1">&#39;&amp;&#39;</span><span class="p">,</span> <span class="n">kg_filename</span><span class="o">=</span><span class="s1">&#39;SIGNOR_2025_08_12.tsv&#39;</span><span class="p">,</span>
+        <span class="n">only_proteins</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates a boolean network from SigNOR using all of the provided genes. Tries to build a connected Steiner subgraph...</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        gene_list - list of gene symbols, gene ids, or uniprot ids.</span>
 <span class="sd">        input_format - &quot;symbol&quot;, &quot;id&quot;, or &quot;uniprot&quot;</span>
-<span class="sd">        joiner - &quot;&amp;&quot;, &quot;|&quot;, or &quot;inhibitor_wins&quot;</span>
-<span class="sd">        kg_filename - &quot;SIGNOR_formatted.tsv&quot; by default.</span>
+<span class="sd">        joiner - &quot;&amp;&quot;, &quot;|&quot;, &quot;inhibitor_wins&quot;, or &quot;majority&quot;, or &quot;plurality&quot; (difference between the last two: in plurality, a tie indicates 1, in majority, a tie indicates 0)</span>
+<span class="sd">        kg_filename - &quot;SIGNOR_2025_08_12.tsv&quot; by default. &quot;SIGNOR_formatted.tsv&quot; can also be used (this is an older version of SigNOR).</span>
+<span class="sd">        only_proteins - whether to only use protein nodes in SIGNOR for getting the subgraph (default: True)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_info</span><span class="p">,</span> <span class="n">steiner_tree</span><span class="p">,</span> <span class="n">gene_names</span>
     <span class="k">if</span> <span class="s1">&#39; &#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">joiner</span> <span class="ow">and</span> <span class="p">(</span><span class="n">joiner</span> <span class="o">==</span> <span class="s1">&#39;&amp;&#39;</span> <span class="ow">or</span> <span class="n">joiner</span> <span class="o">==</span> <span class="s1">&#39;|&#39;</span><span class="p">):</span>
         <span class="n">joiner</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">joiner</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span>
     <span class="n">input_format</span> <span class="o">=</span> <span class="n">input_format</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-    <span class="n">graph_table</span> <span class="o">=</span> <span class="n">graph_info</span><span class="o">.</span><span class="n">load_graph</span><span class="p">(</span><span class="n">kg_filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">kg_filename</span> <span class="ow">in</span> <span class="n">GRAPH_TABLES</span><span class="p">:</span>
+        <span class="n">graph_table</span> <span class="o">=</span> <span class="n">GRAPH_TABLES</span><span class="p">[</span><span class="n">kg_filename</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">graph_table</span> <span class="o">=</span> <span class="n">graph_info</span><span class="o">.</span><span class="n">load_graph</span><span class="p">(</span><span class="n">kg_filename</span><span class="p">)</span>
+        <span class="n">GRAPH_TABLES</span><span class="p">[</span><span class="n">kg_filename</span><span class="p">]</span> <span class="o">=</span> <span class="n">graph_table</span>
     <span class="n">graph</span> <span class="o">=</span> <span class="n">graph_info</span><span class="o">.</span><span class="n">df_to_graph</span><span class="p">(</span><span class="n">graph_table</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
     <span class="n">digraph</span> <span class="o">=</span> <span class="n">graph_info</span><span class="o">.</span><span class="n">df_to_graph</span><span class="p">(</span><span class="n">graph_table</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">only_proteins</span><span class="p">:</span>
+        <span class="n">protein_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">graph_info</span><span class="o">.</span><span class="n">nodes_in_category</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s1">&#39;protein&#39;</span><span class="p">)]</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">induced_subgraph</span><span class="p">(</span><span class="n">protein_names</span><span class="p">)</span>
+        <span class="n">digraph</span> <span class="o">=</span> <span class="n">digraph</span><span class="o">.</span><span class="n">induced_subgraph</span><span class="p">(</span><span class="n">protein_names</span><span class="p">)</span>
     <span class="c1"># get a graph subset</span>
     <span class="c1"># signor names are uniprot, of the format UNIPROT::[uniprot ID]</span>
     <span class="c1"># feature_name is the gene name</span>
@@ -139,11 +170,21 @@
                 <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">upregulator_string</span><span class="si">}</span><span class="s1">&#39;</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="n">gene_name</span>
-        <span class="k">elif</span> <span class="n">joiner</span> <span class="o">==</span> <span class="s1">&#39;majority&#39;</span><span class="p">:</span>
-            <span class="c1"># TODO: implement a majority vote system for upregulators and downregulators</span>
-            <span class="c1"># sum of activators + repressors &gt; 0 - just get all possible permutations that are acceptable...</span>
+        <span class="k">elif</span> <span class="n">joiner</span> <span class="o">==</span> <span class="s1">&#39;majority&#39;</span> <span class="ow">or</span> <span class="n">joiner</span> <span class="o">==</span> <span class="s1">&#39;plurality&#39;</span><span class="p">:</span>
+            <span class="c1"># a majority vote system for upregulators and downregulators</span>
+            <span class="c1"># node is true if activators - repressors &gt; 0</span>
             <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-            <span class="k">pass</span>
+            <span class="n">up_down</span> <span class="o">=</span> <span class="n">upregulators</span> <span class="o">+</span> <span class="n">inhibitors</span>
+            <span class="n">all_outputs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">permutation</span> <span class="ow">in</span> <span class="n">all_boolean_combos</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">up_down</span><span class="p">)):</span>
+                <span class="n">upreg</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">permutation</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">upregulators</span><span class="p">)])</span>
+                <span class="n">downreg</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">permutation</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">upregulators</span><span class="p">):])</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">joiner</span> <span class="o">==</span> <span class="s1">&#39;majority&#39;</span> <span class="ow">and</span>  <span class="n">upreg</span> <span class="o">&gt;</span> <span class="n">downreg</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">joiner</span> <span class="o">==</span> <span class="s1">&#39;plurality&#39;</span> <span class="ow">and</span> <span class="n">upreg</span> <span class="o">&gt;=</span> <span class="n">downreg</span><span class="p">)</span> <span class="p">:</span>
+                    <span class="n">gene_string</span> <span class="o">=</span> <span class="s1">&#39; &amp; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;!&#39;</span><span class="o">+</span><span class="n">g</span> <span class="k">if</span> <span class="n">v</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="n">g</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">permutation</span><span class="p">,</span> <span class="n">up_down</span><span class="p">))</span>
+                    <span class="n">all_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="o">+</span><span class="n">gene_string</span><span class="o">+</span><span class="s1">&#39;)&#39;</span><span class="p">)</span>
+            <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="s1">&#39; | &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">all_outputs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_nodes_string</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">input_nodes_string</span> <span class="o">=</span> <span class="n">joiner</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">input_nodes</span><span class="p">)</span>
 
@@ -154,28 +195,6 @@
     <span class="c1"># order the equations by key alphabetically</span>
     <span class="n">bn_lines</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bn_lines</span><span class="p">),</span> <span class="n">all_relations</span></div>
-
-
-<div class="viewcode-block" id="add_genes_to_network">
-<a class="viewcode-back" href="../../build_bn_from_kg.html#BNMPy.build_bn_from_kg.add_genes_to_network">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">add_genes_to_network</span><span class="p">(</span><span class="n">bn</span><span class="p">,</span> <span class="n">gene_list</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="s1">&#39;symbol&#39;</span><span class="p">,</span>
-        <span class="n">joiner</span><span class="o">=</span><span class="s1">&#39;inhibitor_wins&#39;</span><span class="p">,</span> <span class="n">outer_joiner</span><span class="o">=</span><span class="s1">&#39;&amp;&#39;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Creates an augmented boolean network from SigNOR using all of the genes along with the genes already present in bn. Tries to build a connected Steiner subgraph...</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        bn - a BooleanNetwork object</span>
-<span class="sd">        gene_list - list of gene symbols, gene ids, or uniprot ids.</span>
-<span class="sd">        input_format - &quot;symbol&quot;, &quot;id&quot;, or &quot;uniprot&quot;</span>
-<span class="sd">        joiner - &quot;&amp;&quot;, &quot;|&quot;, or &quot;inhibitor_wins&quot; - used for the knowledge graph-derived network.</span>
-<span class="sd">        outer_joiner - &quot;&amp;&quot; or &quot;|&quot;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s1">&#39; &#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">joiner</span><span class="p">:</span>
-        <span class="n">joiner</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">joiner</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span>
-    <span class="c1"># TODO: combine equations...</span>
-    <span class="n">new_equations</span><span class="p">,</span> <span class="n">relations</span> <span class="o">=</span> <span class="n">load_signor_network</span><span class="p">(</span><span class="n">gene_list</span><span class="p">,</span> <span class="n">input_format</span><span class="p">,</span> <span class="n">joiner</span><span class="p">)</span> 
-    <span class="n">new_equations</span> <span class="o">=</span> <span class="n">new_equations</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">merge_network</span><span class="p">(</span><span class="n">bn</span><span class="p">,</span> <span class="n">new_equations</span><span class="p">,</span> <span class="n">outer_joiner</span><span class="p">)</span></div>
 
 
 
