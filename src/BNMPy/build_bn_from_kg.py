@@ -2,24 +2,52 @@
 
 # given a KG subset, can we construct a boolean network?
 
+# basic cache
+GRAPH_TABLES = {}
+
+def all_boolean_combos(n):
+    "Generates all boolean strings of length n, as tuples of 1s and 0s."
+    if n == 0:
+        return []
+    elif n == 1:
+        return [(0,), (1,)]
+    else:
+        results = all_boolean_combos(n-1)
+        new_results = []
+        for r in results:
+            new_results.append((0,) + r)
+            new_results.append((1,) + r)
+        return new_results
+
+
 # try using signor
-def load_signor_network(gene_list, input_format="symbol", joiner='&', kg_filename='SIGNOR_formated.tsv'):
+def load_signor_network(gene_list, input_format="symbol", joiner='&', kg_filename='SIGNOR_2025_08_12.tsv',
+        only_proteins=True):
     """
     Creates a boolean network from SigNOR using all of the provided genes. Tries to build a connected Steiner subgraph...
 
     Args:
         gene_list - list of gene symbols, gene ids, or uniprot ids.
         input_format - "symbol", "id", or "uniprot"
-        joiner - "&", "|", or "inhibitor_wins"
-        kg_filename - "SIGNOR_formatted.tsv" by default.
+        joiner - "&", "|", "inhibitor_wins", or "majority", or "plurality" (difference between the last two: in plurality, a tie indicates 1, in majority, a tie indicates 0)
+        kg_filename - "SIGNOR_2025_08_12.tsv" by default. "SIGNOR_formatted.tsv" can also be used (this is an older version of SigNOR).
+        only_proteins - whether to only use protein nodes in SIGNOR for getting the subgraph (default: True)
     """
     from . import graph_info, steiner_tree, gene_names
     if ' ' not in joiner and (joiner == '&' or joiner == '|'):
         joiner = ' ' + joiner + ' '
     input_format = input_format.lower()
-    graph_table = graph_info.load_graph(kg_filename)
+    if kg_filename in GRAPH_TABLES:
+        graph_table = GRAPH_TABLES[kg_filename]
+    else:
+        graph_table = graph_info.load_graph(kg_filename)
+        GRAPH_TABLES[kg_filename] = graph_table
     graph = graph_info.df_to_graph(graph_table, False)
     digraph = graph_info.df_to_graph(graph_table, True)
+    if only_proteins:
+        protein_names = [n['name'] for n in graph_info.nodes_in_category(graph, 'protein')]
+        graph = graph.induced_subgraph(protein_names)
+        digraph = digraph.induced_subgraph(protein_names)
     # get a graph subset
     # signor names are uniprot, of the format UNIPROT::[uniprot ID]
     # feature_name is the gene name
@@ -101,11 +129,21 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&', kg_filenam
                 input_nodes_string = f'{upregulator_string}'
             else:
                 input_nodes_string = gene_name
-        elif joiner == 'majority':
-            # TODO: implement a majority vote system for upregulators and downregulators
-            # sum of activators + repressors > 0 - just get all possible permutations that are acceptable...
+        elif joiner == 'majority' or joiner == 'plurality':
+            # a majority vote system for upregulators and downregulators
+            # node is true if activators - repressors > 0
             input_nodes_string = ''
-            pass
+            up_down = upregulators + inhibitors
+            all_outputs = []
+            for permutation in all_boolean_combos(len(up_down)):
+                upreg = sum(permutation[:len(upregulators)])
+                downreg = sum(permutation[len(upregulators):])
+                if (joiner == 'majority' and  upreg > downreg) or (joiner == 'plurality' and upreg >= downreg) :
+                    gene_string = ' & '.join('!'+g if v==0 else g for v, g in zip(permutation, up_down))
+                    all_outputs.append('('+gene_string+')')
+            input_nodes_string = ' | '.join(all_outputs)
+            if len(input_nodes_string) == 0:
+                input_nodes_string = '0'
         else:
             input_nodes_string = joiner.join(input_nodes)
 
@@ -116,25 +154,6 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&', kg_filenam
     # order the equations by key alphabetically
     bn_lines.sort(key=lambda x: x.split('=')[0])
     return '\n'.join(bn_lines), all_relations
-
-def add_genes_to_network(bn, gene_list, input_format='symbol',
-        joiner='inhibitor_wins', outer_joiner='&'):
-    """
-    Creates an augmented boolean network from SigNOR using all of the genes along with the genes already present in bn. Tries to build a connected Steiner subgraph...
-
-    Args:
-        bn - a BooleanNetwork object
-        gene_list - list of gene symbols, gene ids, or uniprot ids.
-        input_format - "symbol", "id", or "uniprot"
-        joiner - "&", "|", or "inhibitor_wins" - used for the knowledge graph-derived network.
-        outer_joiner - "&" or "|"
-    """
-    if ' ' not in joiner:
-        joiner = ' ' + joiner + ' '
-    # TODO: combine equations...
-    new_equations, relations = load_signor_network(gene_list, input_format, joiner) 
-    new_equations = new_equations.split('\n')
-    return merge_network(bn, new_equations, outer_joiner)
 
 
 def merge_PBN_string(original_string, KG_string, prob=0.5):
