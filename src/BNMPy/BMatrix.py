@@ -16,7 +16,17 @@ BUILT_INS = {'0', '1', 'True', 'False'}
 def get_equations(file):
     with open(file, 'r') as file:
         equations = file.readlines()
-    equations = [equation.strip() for equation in equations if len(equation.strip()) > 0]
+    # Filter out empty lines and comment lines (starting with #)
+    # For non-comment lines, remove inline comments (after #)
+    equations = []
+    for equation in equations:
+        equation = equation.strip()
+        if len(equation) > 0 and not equation.startswith('#'):
+            # Remove inline comments
+            if '#' in equation:
+                equation = equation.split('#')[0].strip()
+            if len(equation) > 0:
+                equations.append(equation)
     return equations
 
 def get_gene_dict(equations):
@@ -366,6 +376,18 @@ def load_network_from_string(network_string, initial_state=None):
     """
     from .booleanNetwork import BooleanNetwork
     equations = [x.strip() for x in network_string.strip().split('\n') if x.strip()]
+    # Filter out empty lines and comment lines (starting with #)
+    # For non-comment lines, remove inline comments (after #)
+    processed_equations = []
+    for eq in equations:
+        if len(eq) > 0 and not eq.startswith('#'):
+            # Remove inline comments
+            if '#' in eq:
+                eq = eq.split('#')[0].strip()
+            if len(eq) > 0:
+                processed_equations.append(eq)
+    
+    equations = processed_equations
     ngenes = len(equations)
     gene_dict = get_gene_dict(equations)
     upstream_genes = get_upstream_genes(equations)
@@ -426,7 +448,19 @@ def load_pbn_from_file(filename, initial_state=None):
     from .PBN import ProbabilisticBN
     with open(filename, 'r') as file:
         lines = file.readlines()
-    lines = [line.strip() for line in lines if len(line.strip()) > 0]
+    # Filter out empty lines and comment lines (starting with #)
+    # For non-comment lines, remove inline comments (after #)
+    processed_lines = []
+    for line in lines:
+        line = line.strip()
+        if len(line) > 0 and not line.startswith('#'):
+            # Remove inline comments
+            if '#' in line:
+                line = line.split('#')[0].strip()
+            if len(line) > 0:
+                processed_lines.append(line)
+    
+    lines = processed_lines
 
     gene_funcs = {}
     gene_probs = {}
@@ -551,7 +585,19 @@ def load_pbn_from_string(network_string, initial_state=None):
     # Split the string into lines
     lines = [x.strip() for x in network_string.strip().split('\n') if x.strip()]
     
-    # Parse gene names and organize functions by gene
+    # Filter out empty lines and comment lines (starting with #)
+    # For non-comment lines, remove inline comments (after #)
+    processed_lines = []
+    for line in lines:
+        if len(line) > 0 and not line.startswith('#'):
+            # Remove inline comments
+            if '#' in line:
+                line = line.split('#')[0].strip()
+            if len(line) > 0:
+                processed_lines.append(line)
+    
+    lines = processed_lines
+
     gene_funcs = {}
     gene_probs = {}
     

@@ -21,8 +21,8 @@ def all_boolean_combos(n):
 
 
 # try using signor
-def load_signor_network(gene_list, input_format="symbol", joiner='&', kg_filename='SIGNOR_2025_08_12.tsv',
-        only_proteins=True):
+def load_signor_network(gene_list, input_format="symbol", joiner='&', kg_filename='SIGNOR_2025_08_14.tsv',
+        only_proteins=True, score_cutoff=None):
     """
     Creates a boolean network from SigNOR using all of the provided genes. Tries to build a connected Steiner subgraph...
 
@@ -30,18 +30,34 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&', kg_filenam
         gene_list - list of gene symbols, gene ids, or uniprot ids.
         input_format - "symbol", "id", or "uniprot"
         joiner - "&", "|", "inhibitor_wins", or "majority", or "plurality" (difference between the last two: in plurality, a tie indicates 1, in majority, a tie indicates 0)
-        kg_filename - "SIGNOR_2025_08_12.tsv" by default. "SIGNOR_formatted.tsv" can also be used (this is an older version of SigNOR).
+        kg_filename - "SIGNOR_2025_08_14.tsv" by default. "SIGNOR_formatted.tsv" can also be used (this is an older version of SigNOR).
         only_proteins - whether to only use protein nodes in SIGNOR for getting the subgraph (default: True)
+        score_cutoff - minimum score threshold for edges to be included (default: None, includes all edges)
     """
     from . import graph_info, steiner_tree, gene_names
     if ' ' not in joiner and (joiner == '&' or joiner == '|'):
         joiner = ' ' + joiner + ' '
     input_format = input_format.lower()
-    if kg_filename in GRAPH_TABLES:
-        graph_table = GRAPH_TABLES[kg_filename]
+    
+    # Create a unique key for the graph table with score cutoff
+    if score_cutoff is not None:
+        graph_key = f"{kg_filename}_score_cutoff_{score_cutoff}"
+    else:
+        graph_key = kg_filename
+    
+    if graph_key in GRAPH_TABLES:
+        graph_table = GRAPH_TABLES[graph_key]
     else:
         graph_table = graph_info.load_graph(kg_filename)
-        GRAPH_TABLES[kg_filename] = graph_table
+        
+        # Apply score cutoff if specified
+        if score_cutoff is not None:
+            if 'score' in graph_table.columns:
+                n_original = len(graph_table)
+                graph_table = graph_table[graph_table['score'] >= score_cutoff].copy()
+                print(f"Applied score cutoff {score_cutoff}, filtered to {len(graph_table)}/{n_original} edges")        
+        GRAPH_TABLES[graph_key] = graph_table
+    
     graph = graph_info.df_to_graph(graph_table, False)
     digraph = graph_info.df_to_graph(graph_table, True)
     if only_proteins:
@@ -88,6 +104,8 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&', kg_filenam
         gene_name = n.attributes()['feature_name']
         in_edges = subgraph.incident(n, mode='in')
         input_nodes = []
+        edge_scores = []
+        
         for e in in_edges:
             e = subgraph.es[e]
             in_node = subgraph.vs[e.source].attributes()['feature_name']
@@ -95,14 +113,25 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&', kg_filenam
                 continue
             incoming_genes.add(in_node)
             predicate = e.attributes()['predicate']
+            
+            # Get score if available
+            score = None
+            if 'score' in e.attributes():
+                score = e.attributes()['score']
+            
             if 'down-regulates' in predicate:
                 input_nodes.append(f'(! {in_node})')
                 inhibitors.append(in_node)
-                all_relations.append((in_node, gene_name, 'inhibit'))
+                all_relations.append((in_node, gene_name, 'inhibit', score))
+                if score is not None:
+                    edge_scores.append(f"{in_node}_inhibit:{score}")
             elif 'up-regulates' in predicate:
                 input_nodes.append(f'({in_node})')
                 upregulators.append(in_node)
-                all_relations.append((in_node, gene_name, 'activate'))
+                all_relations.append((in_node, gene_name, 'activate', score))
+                if score is not None:
+                    edge_scores.append(f"{in_node}_activate:{score}")
+        
         if joiner == 'inhibitor_wins':
             input_nodes_string = ''
             if len(inhibitors) > 1:
@@ -149,7 +178,14 @@ def load_signor_network(gene_list, input_format="symbol", joiner='&', kg_filenam
 
         if len(input_nodes) == 0:
             input_nodes_string = gene_name
-        output_string = f'{gene_name} = {input_nodes_string}'
+        
+        # Add score annotations as comments
+        if edge_scores:
+            score_comment = ' # Scores: ' + '; '.join(edge_scores)
+            output_string = f'{gene_name} = {input_nodes_string}{score_comment}'
+        else:
+            output_string = f'{gene_name} = {input_nodes_string}'
+        
         bn_lines.append(output_string)
     # order the equations by key alphabetically
     bn_lines.sort(key=lambda x: x.split('=')[0])
@@ -164,13 +200,19 @@ def merge_PBN_string(original_string, KG_string, prob=0.5):
     # Parse equations from both models
     original_equations = {}
     for line in original_string.strip().split('\n'):
-        if '=' in line:
+        if '=' in line and not line.strip().startswith('#'):
+            # Remove inline comments
+            if '#' in line:
+                line = line.split('#')[0].strip()
             target, rule = line.split('=', 1)
             original_equations[target.strip()] = rule.strip()
     
     kg_equations = {}
     for line in KG_string.strip().split('\n'):
-        if '=' in line:
+        if '=' in line and not line.strip().startswith('#'):
+            # Remove inline comments
+            if '#' in line:
+                line = line.split('#')[0].strip()
             target, rule = line.split('=', 1)
             kg_equations[target.strip()] = rule.strip()
     

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DATA_PATH = os.path.join(PATH, 'processed_graphs')
+DATA_PATH = os.path.join(PATH, 'KG_files')
 MSIGDB_PATH = os.path.join(PATH, 'raw_graphs/msigdb_v2023.1.Hs_json_files_to_download_locally.zip')
 
 def get_available_graphs():
@@ -128,7 +128,7 @@ def df_to_graph(df, directed=False):
     df['subject_id_full'] = df['subject_id_prefix'] + '::' + df['subject_id'].astype(str)
     df['object_id_full'] = df['object_id_prefix'] + '::' + df['object_id'].astype(str)
     # reorder?
-    edges_df = df[['subject_id_full', 'object_id_full', 'predicate', 'Primary_Knowledge_Source', 'Knowledge_Source', 'publications']]
+    edges_df = df[['subject_id_full', 'object_id_full', 'predicate', 'Primary_Knowledge_Source', 'Knowledge_Source', 'publications', 'score']]
     graph = ig.Graph.DataFrame(edges_df, directed=directed, use_vids=False)
     node_attributes = {}
     for _, row in df.iterrows():
