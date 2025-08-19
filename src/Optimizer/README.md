@@ -78,6 +78,7 @@ The parameters of each approach can be set via a config dictionary:
 ```python
 config = {
 # Global settings
+    'seed': 9,                        # Global seed for random number generation (affects all stochastic processes)
     'success_threshold': 0.005,       # Global success threshold for final result evaluation
     'max_try': 3,                     # Try up to 3 times if optimization fails
     'display_rules_every': 50,        # Display optimized rules every N iterations (0 = disabled)
@@ -200,8 +201,10 @@ evaluator = evaluate_optimization_result(
     result, 
     optimizer, 
     output_dir="evaluation_results",
-    generate_plots=True,
-    generate_report=True
+    plot_residuals=True,
+    save=True,
+    detailed=True,
+    figsize=(8, 6)
 )
 ```
 
@@ -257,6 +260,30 @@ vis_compression(
 optimizer = ParameterOptimizer(compressed_network, "experiments.csv")
 result = optimizer.optimize(method='differential_evolution')
 ```
+
+## Sensitivity Analysis
+
+The Optimizer module includes sensitivity analysis tools to identify the most influential nodes affecting measurements:
+
+```python
+from BNMPy.Optimizer import sensitivity_analysis
+
+# Run sensitivity analysis
+results = sensitivity_analysis(
+    network, 
+    experiments, 
+    config=config,  # similar config for the optimizer
+    top_n=5
+)
+
+# Get top sensitive nodes
+top_nodes = results['top_nodes']
+sensitivity_df = results['sensitivity_df']
+```
+
+- **Morris Analysis**: One-at-a-time sensitivity analysis using Morris trajectories
+- **Sobol Analysis**: Variance-based sensitivity analysis for comprehensive parameter importance
+- **Simple Analysis**: Basic one-at-a-time approach for quick assessment
 
 ## References
 

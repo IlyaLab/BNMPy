@@ -307,10 +307,12 @@ class SimulationEvaluator:
         # print(f"  Using steady-state method: {method}")
         if method == 'tsmc':
             params = ss_config.get('tsmc_params', {})
+            params['seed'] = self.config.get('seed', 9)
             # print(f"  TSMC params: {params}")
             steady_state = self.steady_state_calc.compute_stationary_tsmc(**params)
         else:  # monte_carlo
             params = ss_config.get('monte_carlo_params', {})
+            params['seed'] = self.config.get('seed', 9)
             # print(f"  Monte Carlo params: {params}")
             steady_state = self.steady_state_calc.compute_stationary_mc(**params)
         

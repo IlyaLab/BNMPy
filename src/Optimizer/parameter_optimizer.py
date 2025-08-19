@@ -80,6 +80,7 @@ class ParameterOptimizer:
         """Default configuration for optimization"""
         return {
             # Global settings
+            'seed': 9,                       # Seed for random number generator
             'success_threshold': 0.005,       # Global success threshold for final result evaluation
             'max_try': 3,                     # Try up to 3 times if optimization fails
             'display_rules_every': 10,        # Display optimized rules every N iterations (0 = disabled)
@@ -202,6 +203,10 @@ class ParameterOptimizer:
         self._last_best_score = float('inf')
         self._optimization_history = []
         
+        # Set global seed for reproducibility
+        global_seed = self.config.get('seed', 9)
+        np.random.seed(global_seed)
+        
         if method == 'differential_evolution':
             return self._de_optimizer(bounds)
         elif method == 'particle_swarm':
@@ -223,10 +228,15 @@ class ParameterOptimizer:
             print(f"  - Mutation: {self.config['de_params']['mutation']}")
             print(f"  - Recombination: {self.config['de_params']['recombination']}")
             print(f"  - Early stopping: {self.config['de_params']['early_stopping']}")
+            print(f"  - Seed: {self.config.get('seed', 9)}")
         
         de_params = self.config['de_params'].copy()
         de_params.pop('early_stopping', None)
         self._max_iter = de_params.get('maxiter', 500)
+        
+        # Add seed for reproducibility
+        global_seed = self.config.get('seed', 9)
+        de_params['seed'] = global_seed
         
         # Run optimization
         result = differential_evolution(
@@ -396,6 +406,7 @@ class ParameterOptimizer:
             print(f"  - Max iterations: {iters}")
             print(f"  - Problem dimensions: {len(bounds)}")
             print(f"  - Total function evaluations: {n_particles * iters}")
+            print(f"  - Seed: {self.config.get('seed', 9)}")
             if ftol > 0:
                 print(f"  Early stopping enabled:")
                 print(f"    - Function tolerance: {ftol}")
@@ -409,7 +420,8 @@ class ParameterOptimizer:
                 costs.append(cost)
             return np.array(costs)
 
-        # Create optimizer
+        # Create optimizer with seed for reproducibility
+        global_seed = self.config.get('seed', 9)
         optimizer = ps.single.GlobalBestPSO(
             n_particles=n_particles,
             dimensions=len(bounds),
@@ -659,6 +671,8 @@ class ParameterOptimizer:
                 # Run steady state calculation using optimizer's config
                 if method == 'tsmc':
                     params = ss_config.get('tsmc_params', {})
+                    # Add seed for reproducibility
+                    params['seed'] = self.config.get('seed', 9)
                     result = self.evaluator.steady_state_calc.compute_stationary_tsmc(**params)
                 else:  # monte_carlo
                     params = ss_config.get('monte_carlo_params', {})
@@ -667,6 +681,8 @@ class ParameterOptimizer:
                     params_with_convergence = params.copy()
                     params_with_convergence['analyze_convergence'] = True
                     params_with_convergence['show_plot'] = show_plot
+                    # Add seed for reproducibility
+                    params_with_convergence['seed'] = self.config.get('seed', 9)
                     
                     # Pick a measured node for convergence analysis if available
                     output_node = None

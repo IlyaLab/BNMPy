@@ -388,9 +388,11 @@ def generate_experiments(pbn, experiment_csv: str, config: dict = None, output_c
         method = ss_config.get('method', 'monte_carlo')
         if method == 'tsmc':
             params = ss_config.get('tsmc_params', {})
+            params['seed'] = config.get('seed', 9) if config else 9
             steady_state = steady_state_calc.compute_stationary_tsmc(**params)
         else:  # monte_carlo
             params = ss_config.get('monte_carlo_params', {})
+            params['seed'] = config.get('seed', 9) if config else 9
             steady_state = steady_state_calc.compute_stationary_mc(**params)
         
         # Reset experimental conditions

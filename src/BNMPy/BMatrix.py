@@ -15,11 +15,11 @@ BUILT_INS = {'0', '1', 'True', 'False'}
 
 def get_equations(file):
     with open(file, 'r') as file:
-        equations = file.readlines()
+        file_equations = file.readlines()
     # Filter out empty lines and comment lines (starting with #)
     # For non-comment lines, remove inline comments (after #)
     equations = []
-    for equation in equations:
+    for equation in file_equations:
         equation = equation.strip()
         if len(equation) > 0 and not equation.startswith('#'):
             # Remove inline comments

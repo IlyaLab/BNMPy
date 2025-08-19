@@ -49,6 +49,10 @@ class ResultEvaluator:
         """
         print("Simulating optimized model on all experimental conditions...")
         
+        # Set global seed for reproducibility
+        global_seed = self.optimizer.config.get('seed', 9)
+        np.random.seed(global_seed)
+        
         simulation_results = {
             'experiments': [],
             'predictions': [],
@@ -178,8 +182,7 @@ class ResultEvaluator:
         return metrics
     
     def plot_prediction_vs_experimental(self, save_path: Optional[str] = None, 
-                                      show_node_colors: bool = True,
-                                      show_confidence_interval: bool = True,
+                                      show_confidence_interval: bool = False,
                                       show_experiment_ids: bool = False,
                                       figsize: Tuple[int, int] = (8, 6)) -> plt.Figure:
         """
@@ -189,8 +192,6 @@ class ResultEvaluator:
         -----------
         save_path : str, optional
             Path to save the plot. If None, displays the plot.
-        show_node_colors : bool, default=True
-            Whether to color points by node type
         show_confidence_interval : bool, default=True
             Whether to show confidence intervals
         show_experiment_ids : bool, default=False
@@ -220,23 +221,7 @@ class ResultEvaluator:
         
         # Create figure
         fig, ax = plt.subplots(figsize=figsize)
-        
-        # Color mapping for nodes 
-        if show_node_colors:
-            unique_nodes = list(set(nodes))
-            colors = plt.cm.Set3(np.linspace(0, 1, len(unique_nodes)))
-            node_color_map = dict(zip(unique_nodes, colors))
-            
-            for node in unique_nodes:
-                node_indices = [i for i, n in enumerate(nodes) if n == node]
-                node_pred = predicted[node_indices]
-                node_meas = measured[node_indices]
-                
-                ax.scatter(node_meas, node_pred, 
-                          c=[node_color_map[node]], 
-                          label=node, alpha=0.7, s=60)
-        else:
-            ax.scatter(measured, predicted, alpha=0.7, s=60, c='blue')
+        ax.scatter(measured, predicted, alpha=0.7, s=60, c='lightgreen')
         
         # Add experiment ID labels
         if show_experiment_ids:
@@ -250,17 +235,17 @@ class ResultEvaluator:
         # ax.plot([min_val, max_val], [min_val, max_val], 'r--', 
         #         linewidth=2, label='Perfect prediction')
         
+        # Calculate regression line
+        from scipy import stats
+        slope, intercept, r_value, p_value, std_err = stats.linregress(measured, predicted)
+        
+        # Create regression line
+        x_reg = np.linspace(min_val, max_val, 100)
+        y_reg = slope * x_reg + intercept
+        ax.plot(x_reg, y_reg, 'g-', linewidth=2, alpha=0.8, label='Regression line')
+
         # Add confidence interval bands
         if show_confidence_interval:
-            # Calculate regression line
-            from scipy import stats
-            slope, intercept, r_value, p_value, std_err = stats.linregress(measured, predicted)
-            
-            # Create regression line
-            x_reg = np.linspace(min_val, max_val, 100)
-            y_reg = slope * x_reg + intercept
-            ax.plot(x_reg, y_reg, 'g-', linewidth=2, alpha=0.8, label='Regression line')
-            
             # Add confidence bands (approximate)
             residuals = predicted - (slope * measured + intercept)
             mse_residuals = np.mean(residuals**2)
@@ -277,20 +262,21 @@ class ResultEvaluator:
         metrics = self.evaluation_metrics['overall']
         final_mse = self.evaluation_metrics['optimization_result']['final_mse']
         
-        title = f'Predicted vs Experimental (r={metrics["correlation"]:.3f}, p={metrics["p_value"]:.3e}, MSE={final_mse:.6f})'
+        # title = f'Predicted vs Experimental (r={metrics["correlation"]:.3f}, p={metrics["p_value"]:.3e}, MSE={final_mse:.6f})'
+        title = f'Predicted vs Experimental (r={metrics["correlation"]:.3f}, p={metrics["p_value"]:.3e})'
+        # title = f'Predicted vs Experimental'
         ax.set_title(title, fontsize=12, fontweight='bold')
         
         # Add grid
         ax.grid(True, alpha=0.3)
         
         # Legend
-        if show_node_colors and len(unique_nodes) <= 10:  # Only show legend if not too many nodes
-            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-        else:
-            ax.legend()
+        ax.legend()
         
         # Equal aspect ratio
-        ax.set_aspect('equal', adjustable='box')
+        # ax.set_aspect('equal', adjustable='box')
+        ax.set_xlim(np.min(measured) - 0.05, np.max(measured) + 0.05)
+        ax.set_ylim(np.min(predicted) - 0.05, np.max(predicted) + 0.05)
         
         # Tight layout
         plt.tight_layout()
@@ -477,7 +463,9 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
                                 output_dir: str = ".", 
                                 plot_residuals: bool = True,
                                 save: bool = True,
-                                detailed: bool = False) -> ResultEvaluator:
+                                detailed: bool = False,
+                                figsize: Tuple[int, int] = (8, 6),
+                                show_confidence_interval: bool = False) -> ResultEvaluator:
     """
     Convenience function to perform a complete evaluation of optimization results.
     
@@ -495,7 +483,10 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
         Whether to save plots and reports to files. If False, displays plots.
     detailed : bool, default=False
         Whether to label dots in plots with experiment IDs
-        
+    figsize : Tuple[int, int], default=(8, 6)
+        Figure size in inches for the prediction vs experimental plot
+    show_confidence_interval: bool, default=False
+        Whether to show confidence interval bands
     Returns:
     --------
     ResultEvaluator
@@ -515,7 +506,7 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
     if save:
         # Prediction vs experimental plot
         plot_path = os.path.join(output_dir, "prediction_vs_experimental.png")
-        evaluator.plot_prediction_vs_experimental(save_path=plot_path, show_experiment_ids=detailed)
+        evaluator.plot_prediction_vs_experimental(save_path=plot_path, show_experiment_ids=detailed, figsize=figsize, show_confidence_interval=show_confidence_interval)
 
         if plot_residuals:
         # Residual plots
@@ -682,18 +673,24 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
         ax.plot(x_reg, y_reg, 'g-', linewidth=2, alpha=0.8, label='Regression line')
         residuals = predicted - (slope * measured + intercept)
         mse_residuals = np.mean(residuals**2)
-        confidence_interval = 1.96 * np.sqrt(mse_residuals)
-        ax.fill_between(x_reg, y_reg - confidence_interval, y_reg + confidence_interval, alpha=0.2, color='green', label='95% Confidence interval')
+        # confidence_interval = 1.96 * np.sqrt(mse_residuals)
+        # ax.fill_between(x_reg, y_reg - confidence_interval, y_reg + confidence_interval, alpha=0.2, color='green', label='95% Confidence interval')
+        for i, (meas, pred, exp_id) in enumerate(zip(measured, predicted, simulation_results['experiment_ids'])):
+            ax.annotate(f'E{exp_id}', (meas, pred), xytext=(5, 5), 
+                        textcoords='offset points', fontsize=8, alpha=0.7)
         ax.set_xlabel('Experimental Values', fontsize=12)
         ax.set_ylabel('Predicted Values', fontsize=12)
-        title = f'Predicted vs Experimental (r={metrics["overall"]["correlation"]:.3f}, p={metrics["overall"]["p_value"]:.3e}, MSE={metrics["overall"]["mse"]:.6f})'
+        # title = f'Predicted vs Experimental (r={metrics["overall"]["correlation"]:.3f}, p={metrics["overall"]["p_value"]:.3e}, MSE={metrics["overall"]["mse"]:.6f})'
+        title = f'Predicted vs Experimental (r={metrics["overall"]["correlation"]:.3f}, p={metrics["overall"]["p_value"]:.3e})'
         ax.set_title(title, fontsize=12, fontweight='bold')
         ax.grid(True, alpha=0.3)
         if len(unique_nodes) <= 10:
             ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
         else:
             ax.legend()
-        ax.set_aspect('equal', adjustable='box')
+        # ax.set_aspect('equal', adjustable='box')
+        ax.set_xlim(np.min(measured) - 0.05, np.max(measured) + 0.05)
+        ax.set_ylim(np.min(predicted) - 0.05, np.max(predicted) + 0.05)
         plt.tight_layout()
         plot_path = os.path.join(output_dir, "prediction_vs_experimental.png")
         plt.savefig(plot_path, dpi=300, bbox_inches='tight')
