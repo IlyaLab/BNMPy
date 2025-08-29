@@ -263,27 +263,144 @@ result = optimizer.optimize(method='differential_evolution')
 
 ## Sensitivity Analysis
 
-The Optimizer module includes sensitivity analysis tools to identify the most influential nodes affecting measurements:
+The Optimizer module includes sensitivity analysis tools to identify the most influential nodes affecting measurements and network behavior:
 
 ```python
-from BNMPy.Optimizer import sensitivity_analysis
+from Optimizer.sensitivity_analysis import sensitivity_analysis, influence_analysis
 
-# Run sensitivity analysis
+# Run traditional sensitivity analysis
 results = sensitivity_analysis(
     network, 
     experiments, 
-    config=config,  # similar config for the optimizer
+    config=config,
     top_n=5
 )
 
-# Get top sensitive nodes
-top_nodes = results['top_nodes']
-sensitivity_df = results['sensitivity_df']
+# Run influence analysis (no experiments needed)
+influence_results = influence_analysis(
+    network,
+    config=config,
+    verbose=True
+)
 ```
 
-- **Morris Analysis**: One-at-a-time sensitivity analysis using Morris trajectories
-- **Sobol Analysis**: Variance-based sensitivity analysis for comprehensive parameter importance
-- **Simple Analysis**: Basic one-at-a-time approach for quick assessment
+### Methods
+
+1. **Traditional Sensitivity Analysis**: Analyzes how parameter changes affect steady-state measurements
+
+   - **Morris Analysis**: One-at-a-time sensitivity analysis using Morris trajectories
+   - **Sobol Analysis**: Variance-based sensitivity analysis for comprehensive parameter importance
+2. **Influence Analysis**: Analyzes how nodes influence each other in the steady state
+3. **MSE Sensitivity Analysis**: Measures how parameter changes affect MSE vs experimental data. Use with trained/optimized PBNs
+
+### Influence Analysis
+
+For understanding network structure and node interactions without experimental data:
+
+```python
+from Optimizer.sensitivity_analysis import influence_analysis, plot_influence_results
+
+# Basic influence analysis
+results = influence_analysis(
+    network, 
+    config={
+        'method': 'tsmc',
+        'samples': 10000,
+        'burn_in': 2000,
+        'thin': 5
+    }
+)
+
+# Get ranking for specific node
+node_ranking = influence_analysis(
+    network, 
+    output_node='YourNodeName',
+    top_n=10
+)
+
+# Visualize results
+plot_influence_results(
+    results['influence_df'],
+    results['sensitivity_df'],
+    top_n=20,
+    save_path='influence_analysis.png'
+)
+```
+
+### MSE Sensitivity Analysis
+
+For optimized PBNs, analyze which nodes are most critical for maintaining model fit:
+
+```python
+from Optimizer.sensitivity_analysis import mse_sensitivity_analysis, plot_mse_sensitivity_results
+
+# Run MSE sensitivity analysis on optimized PBN
+results = mse_sensitivity_analysis(
+    optimized_network, 
+    experiments, 
+    config={
+        'perturbation_magnitude': 0.3,
+        'steady_state': {
+            'method': 'tsmc',
+            'tsmc_params': {
+                'epsilon': 0.01,
+                'max_iterations': 1000
+            }
+        }
+    },
+    top_n=5
+)
+
+# Visualize results
+plot_mse_sensitivity_results(
+    results['sensitivity_df'], 
+    results['baseline_mse'], 
+    top_n=20,
+    save_path='mse_sensitivity_results.png'
+)
+```
+
+### Configuration Options
+
+```python
+# Traditional sensitivity analysis
+config = {
+    'sensitivity_method': 'morris',  # 'morris', 'sobol', or 'fast_morris'
+    'morris_trajectories': 20,
+    'sobol_samples': 512,
+    'parallel': True,
+    'n_workers': -1,  # Use all CPUs
+    'steady_state': {
+        'method': 'tsmc',
+        'tsmc_params': {
+            'epsilon': 0.01,
+            'max_iterations': 1000
+        }
+    }
+}
+
+# Influence analysis
+config = {
+    'method': 'tsmc',           # 'tsmc' or 'monte_carlo'
+    'samples': 20000,           # Number of steady state samples
+    'burn_in': 5000,            # Burn-in steps
+    'thin': 10,                 # Thinning interval
+    'epsilon': 0.001,           # Convergence threshold
+    'seed': 42                  # Random seed
+}
+
+# MSE sensitivity analysis
+config = {
+    'perturbation_magnitude': 0.3,  # How much to perturb probabilities (0.1-0.5)
+    'steady_state': {
+        'method': 'tsmc',
+        'tsmc_params': {
+            'epsilon': 0.01,
+            'max_iterations': 1000
+        }
+    }
+}
+```
 
 ## References
 

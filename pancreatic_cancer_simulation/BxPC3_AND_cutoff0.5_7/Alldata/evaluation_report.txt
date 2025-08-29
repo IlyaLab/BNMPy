@@ -1,0 +1,21 @@
+============================================================
+PBN EVALUATION REPORT
+============================================================
+
+OVERALL PERFORMANCE:
+--------------------
+Pearson Correlation: 0.0418
+P-value: 8.057540e-01
+R-squared: -1.2563
+Mean Squared Error: 0.095270
+Root Mean Squared Error: 0.308658
+Mean Absolute Error: 0.235104
+Number of data points: 37
+
+PER-NODE PERFORMANCE:
+--------------------
+CASP3:
+  Correlation: 0.0418 (p = 8.0575e-01)
+  MSE: 0.095270
+  MAE: 0.235104
+  Data points: 37

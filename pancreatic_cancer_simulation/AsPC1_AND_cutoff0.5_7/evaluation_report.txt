@@ -1,0 +1,28 @@
+============================================================
+OPTIMIZATION RESULT EVALUATION REPORT
+============================================================
+
+OVERALL PERFORMANCE:
+--------------------
+Pearson Correlation: 0.9982
+P-value: 2.610592e-07
+R-squared: 0.9958
+Mean Squared Error: 0.000015
+Root Mean Squared Error: 0.003902
+Mean Absolute Error: 0.002493
+Number of data points: 7
+
+OPTIMIZATION DETAILS:
+--------------------
+Final MSE: 0.000015
+Success: True
+Iterations: 1000
+Function evaluations: 100000
+
+PER-NODE PERFORMANCE:
+--------------------
+CASP3:
+  Correlation: 0.9982 (p = 2.6106e-07)
+  MSE: 0.000015
+  MAE: 0.002493
+  Data points: 7
