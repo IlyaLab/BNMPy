@@ -25,7 +25,7 @@ To install, run `pip install -e .` in this directory.
 
 ### 2. Probabilistic Boolean network (`BNMPy/`)
 
-#### PBN Features
+Basic operations are similar to BNs.
 
 - **Network loading**: Load networks from text files, or string representations
 - **Stochastic Simulation**: Run Monte Carlo simulations over steps
@@ -39,18 +39,6 @@ To install, run `pip install -e .` in this directory.
 - **Optimization algorithms**: Differential evolution, particle swarm optimization
 - **Discrete optimization**: Support for discrete parameter spaces
 - **Result Evaluation**: Compare predictions with experimental observations
-
-#### Model Compression
-
-- **Node removal**: Remove non-observable and non-controllable nodes
-- **Path collapse**: Collapse linear paths to simplify network structure
-
-#### Sensitivity Analysis
-
-- **Morris method**: One-at-a-time sensitivity analysis
-- **Sobol methods**: Global sensitivity analysis
-- **Influence analysis**: Node influence on network behavior
-- **Parameter sensitivity**: Identify most critical model parameters
 
 ## Examples
 
@@ -94,5 +82,6 @@ steady_state = calc.compute_steady_state(n_runs=20,n_steps=10000)
 
 ## Documentation
 
+- **Functions**: [https://ilyalab.github.io/BNMPy/](https://ilyalab.github.io/BNMPy/) (in development)
 - **Tutorials**: Check the [Examples](./Examples/) directory for tutorials
 - **Optimization Guide**: See [Optimizer README](./src/Optimizer/README.md) for advanced optimization features
