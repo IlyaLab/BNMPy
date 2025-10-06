@@ -8,7 +8,7 @@ To install, run `pip install -e .` in this directory.
 
 ## Core functionalities
 
-### 1. Boolean network simulation (`BNMPy/`)
+### 1. Boolean network simulation
 
 #### Basic operations
 
@@ -23,7 +23,7 @@ To install, run `pip install -e .` in this directory.
 - **Stochastic update**: Add noise to represent biological uncertainty
 - **Attractor analysis**: Find steady states and limit cycles
 
-### 2. Probabilistic Boolean network (`BNMPy/`)
+### 2. Probabilistic Boolean network
 
 Basic operations are similar to BNs.
 
@@ -31,7 +31,10 @@ Basic operations are similar to BNs.
 - **Stochastic Simulation**: Run Monte Carlo simulations over steps
 - **Attractor analysis**: Find steady states (state distributions) via Monte Carlo or Two-state Markov Chain (TSMC) methods
 
-### 3. PBN Optimization (`Optimizer/`)
+### 3. Extension using knowledge graph
+
+
+### 4. PBN Optimization
 
 #### Parameter optimization
 
@@ -42,12 +45,23 @@ Basic operations are similar to BNs.
 
 ## Examples
 
+Tutorials:
+
 - **[BN_simulation.ipynb](./Examples/BN_simulation.ipynb)**: Basic Boolean network simulation
 - **[PBN_simulation.ipynb](./Examples/PBN_simulation.ipynb)**: Probabilistic Boolean network simulation
-- **[BN_PBN_steady_state.ipynb](./Examples/BN_PBN_steady_state.ipynb)**: Steady state analysis
-- **[BN_compression.ipynb](./Examples/BN_compression.ipynb)**: Model compression and simplification
+- KG extension
 - **[Optimization.ipynb](./Examples/Optimization.ipynb)**: Parameter optimization with experimental data
 - **[workflow_example.ipynb](./Examples/workflow_example.ipynb)**: Complete workflow from data to optimized model
+
+Examples:
+
+* Pancreatic cancer example: Eduati 2020
+* AML example
+
+Other utilities:
+
+- **[BN_PBN_steady_state.ipynb](./Examples/BN_PBN_steady_state.ipynb)**: Steady state analysis
+- **[BN_compression.ipynb](./Examples/BN_compression.ipynb)**: Model compression and simplification
 
 ## Quick Start
 
@@ -80,8 +94,10 @@ steady_state = calc.compute_steady_state(n_runs=20,n_steps=10000)
 
 ```
 
+## order of x0
+
 ## Documentation
 
 - **Functions**: [https://ilyalab.github.io/BNMPy/](https://ilyalab.github.io/BNMPy/) (in development)
 - **Tutorials**: Check the [Examples](./Examples/) directory for tutorials
-- **Optimization Guide**: See [Optimizer README](./src/Optimizer/README.md) for advanced optimization features
+- **Optimization Guide**: See [Optimizer README](./src/Optimizer_README.md) for advanced optimization features
