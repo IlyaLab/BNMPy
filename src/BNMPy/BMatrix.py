@@ -321,13 +321,22 @@ def load_network_from_file(filename, initial_state=None):
     """
     Given a file representing a boolean network, this generates a BooleanNetwork object.
 
-    Formatting::
+    Formatting:
    
         gene = equation
    
     - all genes must have their own equation in a line (sometimes the equation is just A = A)
     - each equation must have an equal sign and a space before and after it
     - If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed
+    
+    Parameters:
+    -----------
+    filename : str
+        Path to the file containing the network definition
+    initial_state : array-like or dict, optional
+        Initial values for each node. If array-like, order matches gene order in file.
+        If dict, keys are gene names and values are initial states (0 or 1).
+        If None, random initial values are used.
     """
     from .booleanNetwork import BooleanNetwork
     equations = get_equations(filename)
@@ -341,6 +350,13 @@ def load_network_from_file(filename, initial_state=None):
     if initial_state is None:
         print('No initial state provided, using a random initial state')
         x0 = np.random.randint(2, size=ngenes) #random inital state 
+    elif isinstance(initial_state, dict):
+        # Dictionary input: keys are gene names, values are initial states
+        x0 = np.zeros(ngenes, dtype=int)
+        for gene, value in initial_state.items():
+            if gene in gene_dict:
+                x0[gene_dict[gene]] = int(value)
+        print(f'Initial state set from dictionary. Genes not specified default to 0.')
     else:
         x0 = np.array(initial_state)
     
@@ -373,6 +389,15 @@ def load_network_from_string(network_string, initial_state=None):
     - all genes must have their own equation (sometimes the equation is just A = A)
     - each equation must have an equal sign and a space before and after it
     - If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed
+    
+    Parameters:
+    -----------
+    network_string : str
+        String containing the network definition
+    initial_state : array-like or dict, optional
+        Initial values for each node. If array-like, order matches gene order in string.
+        If dict, keys are gene names and values are initial states (0 or 1).
+        If None, random initial values are used.
     """
     from .booleanNetwork import BooleanNetwork
     equations = [x.strip() for x in network_string.strip().split('\n') if x.strip()]
@@ -396,6 +421,13 @@ def load_network_from_string(network_string, initial_state=None):
     if initial_state is None:
         print('No initial state provided, using a random initial state')
         x0 = np.random.randint(2, size=ngenes) #random inital state 
+    elif isinstance(initial_state, dict):
+        # Dictionary input: keys are gene names, values are initial states
+        x0 = np.zeros(ngenes, dtype=int)
+        for gene, value in initial_state.items():
+            if gene in gene_dict:
+                x0[gene_dict[gene]] = int(value)
+        print(f'Initial state set from dictionary. Genes not specified default to 0.')
     else:
         x0 = np.array(initial_state)
     
@@ -437,8 +469,10 @@ def load_pbn_from_file(filename, initial_state=None):
     -----------
     filename : str
         Path to the file containing the PBN definition
-    initial_state : array-like, optional
-        Initial values for each node. If None, random initial values are used.
+    initial_state : array-like or dict, optional
+        Initial values for each node. If array-like, order matches gene order in file.
+        If dict, keys are gene names and values are initial states (0 or 1).
+        If None, random initial values are used.
         
     Returns:
     --------
@@ -572,8 +606,10 @@ def load_pbn_from_string(network_string, initial_state=None):
     -----------
     network_string : str
         String containing the PBN definition
-    initial_state : array-like, optional
-        Initial values for each node. If None, random initial values are used.
+    initial_state : array-like or dict, optional
+        Initial values for each node. If array-like, order matches gene order in string.
+        If dict, keys are gene names and values are initial states (0 or 1).
+        If None, random initial values are used.
         
     Returns:
     --------
@@ -679,6 +715,13 @@ def load_pbn_from_string(network_string, initial_state=None):
     if initial_state is None:
         print('No initial state provided, using a random initial state')
         x0 = np.random.randint(2, size=ngenes)
+    elif isinstance(initial_state, dict):
+        # Dictionary input: keys are gene names, values are initial states
+        x0 = np.zeros(ngenes, dtype=int)
+        for gene, value in initial_state.items():
+            if gene in gene_dict:
+                x0[gene_dict[gene]] = int(value)
+        print(f'Initial state set from dictionary. Genes not specified default to 0.')
     else:
         x0 = np.array(initial_state)
     
