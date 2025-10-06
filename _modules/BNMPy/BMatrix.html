@@ -362,13 +362,22 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Given a file representing a boolean network, this generates a BooleanNetwork object.</span>
 
-<span class="sd">    Formatting::</span>
+<span class="sd">    Formatting:</span>
 <span class="sd">   </span>
 <span class="sd">        gene = equation</span>
 <span class="sd">   </span>
 <span class="sd">    - all genes must have their own equation in a line (sometimes the equation is just A = A)</span>
 <span class="sd">    - each equation must have an equal sign and a space before and after it</span>
 <span class="sd">    - If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    filename : str</span>
+<span class="sd">        Path to the file containing the network definition</span>
+<span class="sd">    initial_state : array-like or dict, optional</span>
+<span class="sd">        Initial values for each node. If array-like, order matches gene order in file.</span>
+<span class="sd">        If dict, keys are gene names and values are initial states (0 or 1).</span>
+<span class="sd">        If None, random initial values are used.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">.booleanNetwork</span><span class="w"> </span><span class="kn">import</span> <span class="n">BooleanNetwork</span>
     <span class="n">equations</span> <span class="o">=</span> <span class="n">get_equations</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
@@ -382,6 +391,13 @@
     <span class="k">if</span> <span class="n">initial_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No initial state provided, using a random initial state&#39;</span><span class="p">)</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">ngenes</span><span class="p">)</span> <span class="c1">#random inital state </span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_state</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="c1"># Dictionary input: keys are gene names, values are initial states</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">gene</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">initial_state</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">gene_dict</span><span class="p">:</span>
+                <span class="n">x0</span><span class="p">[</span><span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Initial state set from dictionary. Genes not specified default to 0.&#39;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
     
@@ -417,6 +433,15 @@
 <span class="sd">    - all genes must have their own equation (sometimes the equation is just A = A)</span>
 <span class="sd">    - each equation must have an equal sign and a space before and after it</span>
 <span class="sd">    - If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    network_string : str</span>
+<span class="sd">        String containing the network definition</span>
+<span class="sd">    initial_state : array-like or dict, optional</span>
+<span class="sd">        Initial values for each node. If array-like, order matches gene order in string.</span>
+<span class="sd">        If dict, keys are gene names and values are initial states (0 or 1).</span>
+<span class="sd">        If None, random initial values are used.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">.booleanNetwork</span><span class="w"> </span><span class="kn">import</span> <span class="n">BooleanNetwork</span>
     <span class="n">equations</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">network_string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
@@ -440,6 +465,13 @@
     <span class="k">if</span> <span class="n">initial_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No initial state provided, using a random initial state&#39;</span><span class="p">)</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">ngenes</span><span class="p">)</span> <span class="c1">#random inital state </span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_state</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="c1"># Dictionary input: keys are gene names, values are initial states</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">gene</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">initial_state</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">gene_dict</span><span class="p">:</span>
+                <span class="n">x0</span><span class="p">[</span><span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Initial state set from dictionary. Genes not specified default to 0.&#39;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
     
@@ -484,8 +516,10 @@
 <span class="sd">    -----------</span>
 <span class="sd">    filename : str</span>
 <span class="sd">        Path to the file containing the PBN definition</span>
-<span class="sd">    initial_state : array-like, optional</span>
-<span class="sd">        Initial values for each node. If None, random initial values are used.</span>
+<span class="sd">    initial_state : array-like or dict, optional</span>
+<span class="sd">        Initial values for each node. If array-like, order matches gene order in file.</span>
+<span class="sd">        If dict, keys are gene names and values are initial states (0 or 1).</span>
+<span class="sd">        If None, random initial values are used.</span>
 <span class="sd">        </span>
 <span class="sd">    Returns:</span>
 <span class="sd">    --------</span>
@@ -622,8 +656,10 @@
 <span class="sd">    -----------</span>
 <span class="sd">    network_string : str</span>
 <span class="sd">        String containing the PBN definition</span>
-<span class="sd">    initial_state : array-like, optional</span>
-<span class="sd">        Initial values for each node. If None, random initial values are used.</span>
+<span class="sd">    initial_state : array-like or dict, optional</span>
+<span class="sd">        Initial values for each node. If array-like, order matches gene order in string.</span>
+<span class="sd">        If dict, keys are gene names and values are initial states (0 or 1).</span>
+<span class="sd">        If None, random initial values are used.</span>
 <span class="sd">        </span>
 <span class="sd">    Returns:</span>
 <span class="sd">    --------</span>
@@ -729,6 +765,13 @@
     <span class="k">if</span> <span class="n">initial_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No initial state provided, using a random initial state&#39;</span><span class="p">)</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">ngenes</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_state</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="c1"># Dictionary input: keys are gene names, values are initial states</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ngenes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">gene</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">initial_state</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">gene_dict</span><span class="p">:</span>
+                <span class="n">x0</span><span class="p">[</span><span class="n">gene_dict</span><span class="p">[</span><span class="n">gene</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Initial state set from dictionary. Genes not specified default to 0.&#39;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
     
