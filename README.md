@@ -8,14 +8,14 @@ To install, run `pip install -e .` in this directory.
 
 ## Core functionalities
 
-### 1. Boolean network simulation
+### 1. Boolean network
 
 #### Basic operations
 
 - **Network loading**: Load networks from text files, SBML files, or string representations
   - `load_network_from_file`, `load_network_from_string`
 - **Network construction**: Build networks from connectivity matrices and Boolean functions
-  - See [BMatrix README](.src/BMatrix_README.md)
+  - See [BMatrix README](./src/BMatrix_README.md)
 - **Network manipulation**: Knockout/knockdown specific nodes, rename nodes, merge networks
   - `merge_networks`, `BN2PBN`, `extend_networks`
 - **Network visualization**: Interactive network visualizations with igraph and matplotlib
@@ -54,7 +54,7 @@ BNMPy can build and extend models using the SIGNOR knowledge graph.
   * Probabilistic (PBN): `merge_networks`
 * **Targeted extension to PBN**: Extend an existing BN by adding nodes and rules informed by KG
 
-  *  `extend_networks`
+  * `extend_networks`
 
 ### 4. PBN Optimization
 
