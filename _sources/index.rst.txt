@@ -1,18 +1,66 @@
-.. BNMPy documentation master file, created by
-   sphinx-quickstart on Wed Jul  2 14:08:32 2025.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. BNMPy documentation master file
 
 Welcome to BNMPy's documentation!
-=================================
+==================================
+
+BNMPy is a Python library for Boolean Network (BN) and Probabilistic Boolean Network (PBN) modeling, simulation, optimization, and analysis with applications in systems biology.
+
+Installation
+------------
+
+To install BNMPy:
+
+.. code-block:: bash
+
+   pip install -e .
+
+Quick Start
+-----------
+
+.. code-block:: python
+
+   import BNMPy
+
+   # Load a network
+   network_string = """
+   A = A
+   B = C
+   C = !E
+   D = A | B
+   E = C & D
+   F = !A & B
+   """
+   network = BNMPy.load_network_from_string(network_string, initial_state=[0, 0, 0, 0, 0, 0])
+
+   # Visualize the network
+   BNMPy.vis_network(network, output_html="SimpleBN.html", interactive=True)
+
+   # Simulate with noise
+   network.update_noise(p=0.05, iterations=10)
+
+   # Calculate steady states
+   calc = BNMPy.SteadyStateCalculator(network)
+   steady_state = calc.compute_steady_state(n_runs=20, n_steps=10000)
+
+
+Documentation Contents
+======================
 
 .. toctree::
-   :maxdepth: 3
-   :caption: Contents:
+   :maxdepth: 2
+   :caption: User Guide:
 
-   bmatrix_readme
+   getting_started
+   tutorials
+   optimization_guide
+   steady_state_guide
+   compression_guide
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference:
+
    api
-
 
 
 Indices and tables
