@@ -15,8 +15,7 @@ pip install numpy scipy pandas pyswarms matplotlib networkx
 ### Basic Usage
 
 ```python
-from BNMPy.Optimizer import ParameterOptimizer
-from BNMPy.BMatrix import load_pbn_from_string
+from BNMPy.BMatrix import load_pbn_from_string, ParameterOptimizer
 
 # Load or create your PBN
 pbn = load_pbn_from_string(...)
@@ -97,7 +96,6 @@ config = {
         'workers': -1,                # Use all available cores for parallelization
         'polish': False,              # Disable polish step for faster runs
         'early_stopping': True,       # Enable early stopping for DE
-        'success_threshold': 0.01     # MSE threshold for DE early stopping
     },  
 
 # Particle Swarm Optimization parameters
@@ -195,7 +193,7 @@ optimizer.plot_optimization_history(
 Evaluate optimization results:
 
 ```python
-from BNMPy.Optimizer import evaluate_optimization_result
+from BNMPy import evaluate_optimization_result
 
 evaluator = evaluate_optimization_result(
     result, 
@@ -230,9 +228,7 @@ The Optimizer module includes model compression functionality to simplify Boolea
 Compression can automatically extract measured and perturbed nodes from experimental data:
 
 ```python
-from BNMPy.Optimizer import ParameterOptimizer, extract_experiment_nodes
-from BNMPy.Optimizer.model_compressor import compress_model
-from BNMPy.BMatrix import load_network_from_file
+from BNMPy import ParameterOptimizer, extract_experiment_nodes, compress_model, load_network_from_file
 
 # Load network and experimental data
 network = load_network_from_file("network.txt")
@@ -248,7 +244,7 @@ compressed_network, compression_info = compress_model(
 )
 
 # Visualize compression results
-from BNMPy.vis import vis_compression
+from BNMPy import vis_compression
 vis_compression(
     network,
     compressed_network,
@@ -266,7 +262,7 @@ result = optimizer.optimize(method='differential_evolution')
 The Optimizer module includes sensitivity analysis tools to identify the most influential nodes affecting measurements and network behavior:
 
 ```python
-from Optimizer.sensitivity_analysis import sensitivity_analysis, influence_analysis
+from BNMPy.sensitivity_analysis import sensitivity_analysis, influence_analysis
 
 # Run traditional sensitivity analysis
 results = sensitivity_analysis(
@@ -298,7 +294,7 @@ influence_results = influence_analysis(
 For understanding network structure and node interactions without experimental data:
 
 ```python
-from Optimizer.sensitivity_analysis import influence_analysis, plot_influence_results
+from BNMPy.sensitivity_analysis import influence_analysis, plot_influence_results
 
 # Basic influence analysis
 results = influence_analysis(
@@ -332,7 +328,7 @@ plot_influence_results(
 For optimized PBNs, analyze which nodes are most critical for maintaining model fit:
 
 ```python
-from Optimizer.sensitivity_analysis import mse_sensitivity_analysis, plot_mse_sensitivity_results
+from BNMPy.sensitivity_analysis import mse_sensitivity_analysis, plot_mse_sensitivity_results
 
 # Run MSE sensitivity analysis on optimized PBN
 results = mse_sensitivity_analysis(

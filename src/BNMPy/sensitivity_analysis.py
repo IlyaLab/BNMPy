@@ -75,7 +75,7 @@ class PBNSensitivityAnalyzer:
         
         # Load experiments if path provided
         if isinstance(experiments, str):
-            from Optimizer.experiment_data import ExperimentData
+            from BNMPy.experiment_data import ExperimentData
             self.experiments = ExperimentData.load_from_csv(experiments)
         else:
             self.experiments = experiments
@@ -86,7 +86,7 @@ class PBNSensitivityAnalyzer:
             self.config.update(config)
             
         # Initialize simulation evaluator for steady state calculations
-        from Optimizer.simulation_evaluator import SimulationEvaluator
+        from BNMPy.simulation_evaluator import SimulationEvaluator
         self.evaluator = SimulationEvaluator(
             self.pbn, 
             self.experiments, 
@@ -458,7 +458,7 @@ def _evaluate_batch_worker(args):
     warnings.filterwarnings('ignore', category=RuntimeWarning)
     
     # Create local evaluator
-    from Optimizer.simulation_evaluator import SimulationEvaluator
+    from BNMPy.simulation_evaluator import SimulationEvaluator
     evaluator = SimulationEvaluator(pbn, experiments, config)
     
     n_samples = batch_X.shape[0]
@@ -997,7 +997,7 @@ class MSESensitivityAnalyzer:
         
         # Load experiments if path provided
         if isinstance(experiments, str):
-            from Optimizer.experiment_data import ExperimentData
+            from BNMPy.experiment_data import ExperimentData
             self.experiments = ExperimentData.load_from_csv(experiments)
         else:
             self.experiments = experiments
@@ -1008,7 +1008,7 @@ class MSESensitivityAnalyzer:
             self.config.update(config)
             
         # Initialize simulation evaluator for steady state calculations
-        from Optimizer.simulation_evaluator import SimulationEvaluator
+        from BNMPy.simulation_evaluator import SimulationEvaluator
         self.evaluator = SimulationEvaluator(
             self.pbn, 
             self.experiments, 

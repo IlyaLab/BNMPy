@@ -253,7 +253,7 @@ def merge_networks(BNs, method="OR", prob=0.9, descriptive=False):
         for gene, expr in merged_network.items():
             merged_lines.append(f"{gene} = {expr}")
     # sort alphabetically
-    # merged_lines.sort()
+    merged_lines.sort()
     merged_network_string = "\n".join(merged_lines)
     return merged_network_string
 
