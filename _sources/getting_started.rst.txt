@@ -82,7 +82,7 @@ Initial States
 
 You can specify initial states in two ways:
 
-**Array format** (order matches gene order in network):
+**Array format** (order matches gene order in network, can be obtained from ``network.nodeDict``):
 
 .. code-block:: python
 
@@ -278,9 +278,11 @@ Check the ``Examples/`` directory for Jupyter notebooks:
 
 - ``BN_simulation.ipynb`` - Basic Boolean network simulation
 - ``PBN_simulation.ipynb`` - Probabilistic Boolean network simulation
+- ``BN_PBN_steady_state.ipynb`` - Steady state analysis
 - ``knowledge_graph.ipynb`` - Knowledge graph integration
 - ``Optimization.ipynb`` - Parameter optimization
 - ``workflow_example.ipynb`` - Complete workflow
+- ``BN_compression.ipynb`` - Boolean network compression
 
 Applications
 ------------

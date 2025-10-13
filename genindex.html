@@ -191,6 +191,8 @@
   <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimization_guide.html">BNMPy Optimizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="steady_state_guide.html">Steady State Calculation Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
 <ul>
@@ -201,6 +203,12 @@
 <li class="toctree-l2"><a class="reference internal" href="steady_state.html">BNMPy.steady_state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vis.html">BNMPy.vis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="build_bn_from_kg.html">BNMPy.build_bn_from_kg</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html">BNMPy.model_parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html">BNMPy.parameter_optimizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation_evaluator.html">BNMPy.simulation_evaluator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_data.html">BNMPy.experiment_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html">BNMPy.result_evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_compressor.html">BNMPy.model_compressor</a></li>
 </ul>
 </li>
 </ul>
@@ -238,7 +246,7 @@
           
 <section class="genindex-section">
   <h1 id="index">Index</h1>
-  <div class="genindex-jumpbox"><a href="#_"><strong>_</strong></a> | <a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#K"><strong>K</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#V"><strong>V</strong></a> | <a href="#W"><strong>W</strong></a></div>
+  <div class="genindex-jumpbox"><a href="#_"><strong>_</strong></a> | <a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#K"><strong>K</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#V"><strong>V</strong></a> | <a href="#W"><strong>W</strong></a> | <a href="#X"><strong>X</strong></a></div>
 </section>
 <section id="_" class="genindex-section">
   <h2>_</h2>
@@ -247,7 +255,17 @@
         <li><a href="booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.__init__">__init__() (BNMPy.booleanNetwork.BooleanNetwork method)</a>
 
         <ul>
+          <li><a href="model_compressor.html#BNMPy.model_compressor.ModelCompressor.__init__">(BNMPy.model_compressor.ModelCompressor method)</a>, <a href="model_compressor.html#id2">[1]</a>
+</li>
+          <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationResult.__init__">(BNMPy.parameter_optimizer.OptimizationResult method)</a>
+</li>
+          <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer.__init__">(BNMPy.parameter_optimizer.ParameterOptimizer method)</a>, <a href="parameter_optimizer.html#id1">[1]</a>
+</li>
           <li><a href="PBN.html#BNMPy.PBN.ProbabilisticBN.__init__">(BNMPy.PBN.ProbabilisticBN method)</a>
+</li>
+          <li><a href="result_evaluation.html#BNMPy.result_evaluation.ResultEvaluator.__init__">(BNMPy.result_evaluation.ResultEvaluator method)</a>
+</li>
+          <li><a href="simulation_evaluator.html#BNMPy.simulation_evaluator.SimulationEvaluator.__init__">(BNMPy.simulation_evaluator.SimulationEvaluator method)</a>, <a href="simulation_evaluator.html#id1">[1]</a>
 </li>
           <li><a href="steady_state.html#BNMPy.steady_state.SteadyStateCalculator.__init__">(BNMPy.steady_state.SteadyStateCalculator method)</a>
 </li>
@@ -270,6 +288,8 @@
   <h2>B</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="model_parser.html#BNMPy.model_parser.BN2PBN">BN2PBN() (in module BNMPy.model_parser)</a>, <a href="model_parser.html#id1">[1]</a>
+</li>
         <li>
     BNMPy.BMatrix
 
@@ -292,14 +312,56 @@
 </li>
         </ul></li>
         <li>
+    BNMPy.experiment_data
+
+        <ul>
+          <li><a href="experiment_data.html#module-BNMPy.experiment_data">module</a>
+</li>
+        </ul></li>
+        <li>
+    BNMPy.model_compressor
+
+        <ul>
+          <li><a href="model_compressor.html#module-BNMPy.model_compressor">module</a>
+</li>
+        </ul></li>
+        <li>
+    BNMPy.model_parser
+
+        <ul>
+          <li><a href="model_parser.html#module-BNMPy.model_parser">module</a>
+</li>
+        </ul></li>
+        <li>
+    BNMPy.parameter_optimizer
+
+        <ul>
+          <li><a href="parameter_optimizer.html#module-BNMPy.parameter_optimizer">module</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li>
     BNMPy.PBN
 
         <ul>
           <li><a href="PBN.html#module-BNMPy.PBN">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
+        <li>
+    BNMPy.result_evaluation
+
+        <ul>
+          <li><a href="result_evaluation.html#module-BNMPy.result_evaluation">module</a>
+</li>
+        </ul></li>
+        <li>
+    BNMPy.simulation_evaluator
+
+        <ul>
+          <li><a href="simulation_evaluator.html#module-BNMPy.simulation_evaluator">module</a>
+</li>
+        </ul></li>
         <li>
     BNMPy.steady_state
 
@@ -334,15 +396,29 @@
   <h2>C</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="result_evaluation.html#BNMPy.result_evaluation.ResultEvaluator.calculate_evaluation_metrics">calculate_evaluation_metrics() (BNMPy.result_evaluation.ResultEvaluator method)</a>
+</li>
+        <li><a href="model_parser.html#BNMPy.model_parser.check_inhibitor_wins_rule">check_inhibitor_wins_rule() (in module BNMPy.model_parser)</a>
+</li>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationResult.cij_matrix">cij_matrix (BNMPy.parameter_optimizer.OptimizationResult attribute)</a>
+</li>
+        <li><a href="model_compressor.html#BNMPy.model_compressor.ModelCompressor.collapse_paths">collapse_paths() (BNMPy.model_compressor.ModelCompressor method)</a>, <a href="model_compressor.html#id6">[1]</a>
+</li>
+        <li><a href="model_compressor.html#BNMPy.model_compressor.ModelCompressor.compress">compress() (BNMPy.model_compressor.ModelCompressor method)</a>, <a href="model_compressor.html#id8">[1]</a>
+</li>
+        <li><a href="model_compressor.html#BNMPy.model_compressor.compress_model">compress_model() (in module BNMPy.model_compressor)</a>, <a href="model_compressor.html#id0">[1]</a>
+</li>
         <li><a href="steady_state.html#BNMPy.steady_state.SteadyStateCalculator.compute_stationary_deterministic">compute_stationary_deterministic() (BNMPy.steady_state.SteadyStateCalculator method)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="steady_state.html#BNMPy.steady_state.SteadyStateCalculator.compute_stationary_mc">compute_stationary_mc() (BNMPy.steady_state.SteadyStateCalculator method)</a>
 </li>
         <li><a href="steady_state.html#BNMPy.steady_state.SteadyStateCalculator.compute_stationary_tsmc">compute_stationary_tsmc() (BNMPy.steady_state.SteadyStateCalculator method)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="steady_state.html#BNMPy.steady_state.SteadyStateCalculator.compute_steady_state">compute_steady_state() (BNMPy.steady_state.SteadyStateCalculator method)</a>
+</li>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationResult.convergence_info">convergence_info (BNMPy.parameter_optimizer.OptimizationResult attribute)</a>
 </li>
         <li><a href="PBN.html#BNMPy.PBN.ProbabilisticBN.copy">copy() (BNMPy.PBN.ProbabilisticBN method)</a>
 </li>
@@ -358,7 +434,41 @@
   <h2>E</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="result_evaluation.html#BNMPy.result_evaluation.evaluate_optimization_result">evaluate_optimization_result() (in module BNMPy.result_evaluation)</a>, <a href="result_evaluation.html#id0">[1]</a>
+</li>
+        <li><a href="result_evaluation.html#BNMPy.result_evaluation.evaluate_pbn">evaluate_pbn() (in module BNMPy.result_evaluation)</a>, <a href="result_evaluation.html#id1">[1]</a>
+</li>
+        <li><a href="experiment_data.html#BNMPy.experiment_data.ExperimentData">ExperimentData (class in BNMPy.experiment_data)</a>, <a href="experiment_data.html#id0">[1]</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="result_evaluation.html#BNMPy.result_evaluation.ResultEvaluator.export_results_to_csv">export_results_to_csv() (BNMPy.result_evaluation.ResultEvaluator method)</a>
+</li>
+        <li><a href="model_parser.html#BNMPy.model_parser.extend_networks">extend_networks() (in module BNMPy.model_parser)</a>, <a href="model_parser.html#id2">[1]</a>
+</li>
+        <li><a href="experiment_data.html#BNMPy.experiment_data.extract_experiment_nodes">extract_experiment_nodes() (in module BNMPy.experiment_data)</a>
+</li>
         <li><a href="vis.html#BNMPy.vis.extract_logic_rules_from_network">extract_logic_rules_from_network() (in module BNMPy.vis)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="F" class="genindex-section">
+  <h2>F</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="model_compressor.html#BNMPy.model_compressor.ModelCompressor.find_collapsible_paths">find_collapsible_paths() (BNMPy.model_compressor.ModelCompressor method)</a>, <a href="model_compressor.html#id5">[1]</a>
+</li>
+        <li><a href="model_parser.html#BNMPy.model_parser.find_direct_targets">find_direct_targets() (in module BNMPy.model_parser)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="model_compressor.html#BNMPy.model_compressor.ModelCompressor.find_non_controllable_nodes">find_non_controllable_nodes() (BNMPy.model_compressor.ModelCompressor method)</a>, <a href="model_compressor.html#id4">[1]</a>
+</li>
+        <li><a href="model_compressor.html#BNMPy.model_compressor.ModelCompressor.find_non_observable_nodes">find_non_observable_nodes() (BNMPy.model_compressor.ModelCompressor method)</a>, <a href="model_compressor.html#id3">[1]</a>
+</li>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationResult.fun">fun (BNMPy.parameter_optimizer.OptimizationResult attribute)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -368,11 +478,17 @@
   <h2>G</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="result_evaluation.html#BNMPy.result_evaluation.ResultEvaluator.generate_evaluation_report">generate_evaluation_report() (BNMPy.result_evaluation.ResultEvaluator method)</a>
+</li>
+        <li><a href="experiment_data.html#BNMPy.experiment_data.generate_experiments">generate_experiments() (in module BNMPy.experiment_data)</a>
+</li>
         <li><a href="bmatrix.html#BNMPy.BMatrix.get_cal_functions">get_cal_functions() (in module BNMPy.BMatrix)</a>
 </li>
         <li><a href="bmatrix.html#BNMPy.BMatrix.get_cal_upstream_genes">get_cal_upstream_genes() (in module BNMPy.BMatrix)</a>
 </li>
         <li><a href="bmatrix.html#BNMPy.BMatrix.get_calculating_scores">get_calculating_scores() (in module BNMPy.BMatrix)</a>
+</li>
+        <li><a href="model_compressor.html#BNMPy.model_compressor.ModelCompressor.get_compression_summary">get_compression_summary() (BNMPy.model_compressor.ModelCompressor method)</a>, <a href="model_compressor.html#id9">[1]</a>
 </li>
         <li><a href="bmatrix.html#BNMPy.BMatrix.get_connectivity_matrix">get_connectivity_matrix() (in module BNMPy.BMatrix)</a>
 </li>
@@ -380,13 +496,25 @@
 </li>
         <li><a href="bmatrix.html#BNMPy.BMatrix.get_equations">get_equations() (in module BNMPy.BMatrix)</a>
 </li>
+        <li><a href="experiment_data.html#BNMPy.experiment_data.ExperimentData.get_experiment_summary">get_experiment_summary() (BNMPy.experiment_data.ExperimentData static method)</a>, <a href="experiment_data.html#id3">[1]</a>
+</li>
         <li><a href="bmatrix.html#BNMPy.BMatrix.get_gene_dict">get_gene_dict() (in module BNMPy.BMatrix)</a>
 </li>
         <li><a href="bmatrix.html#BNMPy.BMatrix.get_knocking_genes">get_knocking_genes() (in module BNMPy.BMatrix)</a>
 </li>
         <li><a href="bmatrix.html#BNMPy.BMatrix.get_mutation_dict">get_mutation_dict() (in module BNMPy.BMatrix)</a>
 </li>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer.get_optimized_pbn">get_optimized_pbn() (BNMPy.parameter_optimizer.ParameterOptimizer method)</a>, <a href="parameter_optimizer.html#id5">[1]</a>
+</li>
+        <li><a href="simulation_evaluator.html#BNMPy.simulation_evaluator.SimulationEvaluator.get_parameter_bounds">get_parameter_bounds() (BNMPy.simulation_evaluator.SimulationEvaluator method)</a>, <a href="simulation_evaluator.html#id3">[1]</a>
+</li>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer.get_pbn_rules_string">get_pbn_rules_string() (BNMPy.parameter_optimizer.ParameterOptimizer method)</a>, <a href="parameter_optimizer.html#id4">[1]</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="bmatrix.html#BNMPy.BMatrix.get_truth_table">get_truth_table() (in module BNMPy.BMatrix)</a>
+</li>
+        <li><a href="model_parser.html#BNMPy.model_parser.get_upstream">get_upstream() (in module BNMPy.model_parser)</a>
 </li>
         <li><a href="bmatrix.html#BNMPy.BMatrix.get_upstream_genes">get_upstream_genes() (in module BNMPy.BMatrix)</a>
 </li>
@@ -396,8 +524,6 @@
           <li><a href="PBN.html#BNMPy.PBN.ProbabilisticBN.getBias">(BNMPy.PBN.ProbabilisticBN method)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="booleanNetwork.html#BNMPy.booleanNetwork.getDataFromFile">getDataFromFile() (in module BNMPy.booleanNetwork)</a>
 </li>
         <li><a href="booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.getMaxConnectivity">getMaxConnectivity() (BNMPy.booleanNetwork.BooleanNetwork method)</a>
@@ -470,6 +596,8 @@
   <h2>L</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="experiment_data.html#BNMPy.experiment_data.ExperimentData.load_from_csv">load_from_csv() (BNMPy.experiment_data.ExperimentData static method)</a>, <a href="experiment_data.html#id1">[1]</a>
+</li>
         <li><a href="bmatrix.html#BNMPy.BMatrix.load_network_from_file">load_network_from_file() (in module BNMPy.BMatrix)</a>
 </li>
         <li><a href="bmatrix.html#BNMPy.BMatrix.load_network_from_string">load_network_from_string() (in module BNMPy.BMatrix)</a>
@@ -490,7 +618,15 @@
   <h2>M</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="model_parser.html#BNMPy.model_parser.merge_networks">merge_networks() (in module BNMPy.model_parser)</a>, <a href="model_parser.html#id0">[1]</a>
+</li>
         <li><a href="build_bn_from_kg.html#BNMPy.build_bn_from_kg.merge_PBN_string">merge_PBN_string() (in module BNMPy.build_bn_from_kg)</a>
+</li>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationResult.message">message (BNMPy.parameter_optimizer.OptimizationResult attribute)</a>
+</li>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationResult.method">method (BNMPy.parameter_optimizer.OptimizationResult attribute)</a>
+</li>
+        <li><a href="model_compressor.html#BNMPy.model_compressor.ModelCompressor">ModelCompressor (class in BNMPy.model_compressor)</a>, <a href="model_compressor.html#id1">[1]</a>
 </li>
         <li>
     module
@@ -502,7 +638,19 @@
 </li>
           <li><a href="build_bn_from_kg.html#module-BNMPy.build_bn_from_kg">BNMPy.build_bn_from_kg</a>
 </li>
+          <li><a href="experiment_data.html#module-BNMPy.experiment_data">BNMPy.experiment_data</a>
+</li>
+          <li><a href="model_compressor.html#module-BNMPy.model_compressor">BNMPy.model_compressor</a>
+</li>
+          <li><a href="model_parser.html#module-BNMPy.model_parser">BNMPy.model_parser</a>
+</li>
+          <li><a href="parameter_optimizer.html#module-BNMPy.parameter_optimizer">BNMPy.parameter_optimizer</a>
+</li>
           <li><a href="PBN.html#module-BNMPy.PBN">BNMPy.PBN</a>
+</li>
+          <li><a href="result_evaluation.html#module-BNMPy.result_evaluation">BNMPy.result_evaluation</a>
+</li>
+          <li><a href="simulation_evaluator.html#module-BNMPy.simulation_evaluator">BNMPy.simulation_evaluator</a>
 </li>
           <li><a href="steady_state.html#module-BNMPy.steady_state">BNMPy.steady_state</a>
 </li>
@@ -513,10 +661,56 @@
   </tr></table>
 </section>
 
+<section id="N" class="genindex-section">
+  <h2>N</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationResult.nfev">nfev (BNMPy.parameter_optimizer.OptimizationResult attribute)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationResult.nit">nit (BNMPy.parameter_optimizer.OptimizationResult attribute)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="O" class="genindex-section">
+  <h2>O</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="simulation_evaluator.html#BNMPy.simulation_evaluator.SimulationEvaluator.objective_function">objective_function() (BNMPy.simulation_evaluator.SimulationEvaluator method)</a>, <a href="simulation_evaluator.html#id2">[1]</a>
+</li>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationError">OptimizationError</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationResult">OptimizationResult (class in BNMPy.parameter_optimizer)</a>
+</li>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer.optimize">optimize() (BNMPy.parameter_optimizer.ParameterOptimizer method)</a>, <a href="parameter_optimizer.html#id2">[1]</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
 <section id="P" class="genindex-section">
   <h2>P</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer">ParameterOptimizer (class in BNMPy.parameter_optimizer)</a>, <a href="parameter_optimizer.html#id0">[1]</a>
+</li>
+        <li><a href="model_parser.html#BNMPy.model_parser.parse_equations">parse_equations() (in module BNMPy.model_parser)</a>
+</li>
+        <li><a href="model_parser.html#BNMPy.model_parser.parse_expression">parse_expression() (in module BNMPy.model_parser)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer.plot_optimization_history">plot_optimization_history() (BNMPy.parameter_optimizer.ParameterOptimizer method)</a>, <a href="parameter_optimizer.html#id3">[1]</a>
+</li>
+        <li><a href="result_evaluation.html#BNMPy.result_evaluation.ResultEvaluator.plot_prediction_vs_experimental">plot_prediction_vs_experimental() (BNMPy.result_evaluation.ResultEvaluator method)</a>
+</li>
+        <li><a href="result_evaluation.html#BNMPy.result_evaluation.ResultEvaluator.plot_residuals">plot_residuals() (BNMPy.result_evaluation.ResultEvaluator method)</a>
+</li>
         <li><a href="PBN.html#BNMPy.PBN.ProbabilisticBN">ProbabilisticBN (class in BNMPy.PBN)</a>
 </li>
     </ul></td>
@@ -529,11 +723,15 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="vis.html#BNMPy.vis.read_logic_rules">read_logic_rules() (in module BNMPy.vis)</a>
 </li>
+        <li><a href="model_compressor.html#BNMPy.model_compressor.ModelCompressor.remove_nodes">remove_nodes() (BNMPy.model_compressor.ModelCompressor method)</a>, <a href="model_compressor.html#id7">[1]</a>
+</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="bmatrix.html#BNMPy.BMatrix.rename_nodes">rename_nodes() (in module BNMPy.BMatrix)</a>
 </li>
         <li><a href="steady_state.html#BNMPy.steady_state.SteadyStateCalculator.reset_network_conditions">reset_network_conditions() (BNMPy.steady_state.SteadyStateCalculator method)</a>
+</li>
+        <li><a href="result_evaluation.html#BNMPy.result_evaluation.ResultEvaluator">ResultEvaluator (class in BNMPy.result_evaluation)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -557,8 +755,14 @@
           <li><a href="PBN.html#BNMPy.PBN.ProbabilisticBN.setInitialValues">(BNMPy.PBN.ProbabilisticBN method)</a>
 </li>
         </ul></li>
+        <li><a href="model_parser.html#BNMPy.model_parser.simplify_expression">simplify_expression() (in module BNMPy.model_parser)</a>
+</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="result_evaluation.html#BNMPy.result_evaluation.ResultEvaluator.simulate_optimized_model">simulate_optimized_model() (BNMPy.result_evaluation.ResultEvaluator method)</a>
+</li>
+        <li><a href="simulation_evaluator.html#BNMPy.simulation_evaluator.SimulationEvaluator">SimulationEvaluator (class in BNMPy.simulation_evaluator)</a>, <a href="simulation_evaluator.html#id0">[1]</a>
+</li>
         <li><a href="booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.stateToWrite">stateToWrite() (BNMPy.booleanNetwork.BooleanNetwork method)</a>
 
         <ul>
@@ -567,6 +771,8 @@
         </ul></li>
         <li><a href="steady_state.html#BNMPy.steady_state.SteadyStateCalculator">SteadyStateCalculator (class in BNMPy.steady_state)</a>
 </li>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationResult.success">success (BNMPy.parameter_optimizer.OptimizationResult attribute)</a>
+</li>
     </ul></td>
   </tr></table>
 </section>
@@ -574,6 +780,10 @@
 <section id="T" class="genindex-section">
   <h2>T</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer.test_steady_states">test_steady_states() (BNMPy.parameter_optimizer.ParameterOptimizer method)</a>, <a href="parameter_optimizer.html#id6">[1]</a>
+</li>
+    </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="booleanNetwork.html#BNMPy.booleanNetwork.BooleanNetwork.toGraph">toGraph() (BNMPy.booleanNetwork.BooleanNetwork method)</a>
 </li>
@@ -623,6 +833,8 @@
   <h2>V</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="experiment_data.html#BNMPy.experiment_data.ExperimentData.validate_experiments">validate_experiments() (BNMPy.experiment_data.ExperimentData static method)</a>, <a href="experiment_data.html#id2">[1]</a>
+</li>
         <li><a href="vis.html#BNMPy.vis.vis_compression">vis_compression() (in module BNMPy.vis)</a>
 </li>
     </ul></td>
@@ -630,6 +842,8 @@
         <li><a href="vis.html#BNMPy.vis.vis_extension">vis_extension() (in module BNMPy.vis)</a>
 </li>
         <li><a href="vis.html#BNMPy.vis.vis_network">vis_network() (in module BNMPy.vis)</a>
+</li>
+        <li><a href="model_compressor.html#BNMPy.model_compressor.ModelCompressor.visualize_compression">visualize_compression() (BNMPy.model_compressor.ModelCompressor method)</a>, <a href="model_compressor.html#id10">[1]</a>
 </li>
     </ul></td>
   </tr></table>
@@ -645,6 +859,16 @@
           <li><a href="PBN.html#BNMPy.PBN.ProbabilisticBN.writeNetworkHistory">(BNMPy.PBN.ProbabilisticBN method)</a>
 </li>
         </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="X" class="genindex-section">
+  <h2>X</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationResult.x">x (BNMPy.parameter_optimizer.OptimizationResult attribute)</a>
+</li>
     </ul></td>
   </tr></table>
 </section>

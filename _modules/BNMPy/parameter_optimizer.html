@@ -1,0 +1,1055 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html">
+
+    <!-- Generated with Sphinx 8.1.3 and Furo 2025.09.25 -->
+        <title>BNMPy.parameter_optimizer - BNMPy 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=580074bf" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">BNMPy 0.1 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <span class="sidebar-brand-text">BNMPy 0.1 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization_guide.html">BNMPy Optimizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../steady_state_guide.html">Steady State Calculation Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../bmatrix.html">BNMPy.BMatrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../booleanNetwork.html">BNMPy.booleanNetwork</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../PBN.html">BNMPy.PBN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../steady_state.html">BNMPy.steady_state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../vis.html">BNMPy.vis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../build_bn_from_kg.html">BNMPy.build_bn_from_kg</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../model_parser.html">BNMPy.model_parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../parameter_optimizer.html">BNMPy.parameter_optimizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../simulation_evaluator.html">BNMPy.simulation_evaluator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../experiment_data.html">BNMPy.experiment_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../result_evaluation.html">BNMPy.result_evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../model_compressor.html">BNMPy.model_compressor</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for BNMPy.parameter_optimizer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizeResult</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyswarms</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.simulation_evaluator</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationEvaluator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.experiment_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExperimentData</span>
+
+<div class="viewcode-block" id="OptimizationResult">
+<a class="viewcode-back" href="../../parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OptimizationResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for optimization results&quot;&quot;&quot;</span>
+    <span class="n">success</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>  <span class="c1"># Best parameters</span>
+    <span class="n">fun</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># Best objective value</span>
+    <span class="n">nfev</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># Number of function evaluations</span>
+    <span class="n">nit</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># Number of iterations</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># Optimization method used</span>
+    <span class="n">cij_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>  <span class="c1"># Reshaped parameters as Cij matrix</span>
+    <span class="n">convergence_info</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>  <span class="c1"># Additional convergence information</span></div>
+
+
+<div class="viewcode-block" id="OptimizationError">
+<a class="viewcode-back" href="../../parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">OptimizationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom exception for optimization errors&quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="ParameterOptimizer">
+<a class="viewcode-back" href="../../parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ParameterOptimizer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameter optimization for Probabilistic Boolean Networks using experimental data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="ParameterOptimizer.__init__">
+<a class="viewcode-back" href="../../parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pbn</span><span class="p">,</span> <span class="n">experiments</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodes_to_optimize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">discrete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the parameter optimizer.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        pbn : ProbabilisticBN</span>
+<span class="sd">            BNMPy PBN object</span>
+<span class="sd">        experiments : str or list</span>
+<span class="sd">            Path to CSV file or list of experiment dictionaries</span>
+<span class="sd">        config : dict, optional</span>
+<span class="sd">            Configuration parameters for optimization</span>
+<span class="sd">        nodes_to_optimize : list, optional</span>
+<span class="sd">            List of node names to optimize. If None, optimize all nodes.</span>
+<span class="sd">        discrete : bool, default=False</span>
+<span class="sd">            Whether to perform discrete optimization</span>
+<span class="sd">        verbose : bool, default=False</span>
+<span class="sd">            Whether to print detailed optimization progress</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span> <span class="o">=</span> <span class="n">pbn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">discrete</span> <span class="o">=</span> <span class="n">discrete</span>
+        
+        <span class="c1"># Load experiments if string (CSV file path)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">experiments</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span> <span class="o">=</span> <span class="n">ExperimentData</span><span class="o">.</span><span class="n">load_from_csv</span><span class="p">(</span><span class="n">experiments</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span> <span class="o">=</span> <span class="n">experiments</span>
+        
+        <span class="c1"># Validate experiments</span>
+        <span class="n">ExperimentData</span><span class="o">.</span><span class="n">validate_experiments</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">,</span> <span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">)</span>
+        
+        <span class="c1"># Initialize evaluator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span> <span class="o">=</span> <span class="n">SimulationEvaluator</span><span class="p">(</span><span class="n">pbn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">nodes_to_optimize</span><span class="p">)</span>
+        
+        <span class="c1"># Set configuration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">()</span>
+        
+        <span class="c1"># Initialize tracking variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iteration_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_iter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_best_score</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optimization_history</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_default_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Default configuration for optimization&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="c1"># Global settings</span>
+            <span class="s1">&#39;seed&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>                       <span class="c1"># Seed for random number generator</span>
+            <span class="s1">&#39;success_threshold&#39;</span><span class="p">:</span> <span class="mf">0.005</span><span class="p">,</span>       <span class="c1"># Global success threshold for final result evaluation</span>
+            <span class="s1">&#39;max_try&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>                     <span class="c1"># Try up to 3 times if optimization fails</span>
+            <span class="s1">&#39;display_rules_every&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>        <span class="c1"># Display optimized rules every N iterations (0 = disabled)</span>
+
+            <span class="c1"># Differential Evolution parameters</span>
+            <span class="s1">&#39;de_params&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;strategy&#39;</span><span class="p">:</span> <span class="s1">&#39;best1bin&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+                <span class="s1">&#39;popsize&#39;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+                <span class="s1">&#39;tol&#39;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>                  <span class="c1"># Relative tolerance for scipy DE convergence</span>
+                <span class="s1">&#39;atol&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>                    <span class="c1"># Absolute tolerance for scipy DE convergence</span>
+                <span class="s1">&#39;mutation&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="s1">&#39;recombination&#39;</span><span class="p">:</span> <span class="mf">0.7</span><span class="p">,</span>
+                <span class="s1">&#39;init&#39;</span><span class="p">:</span> <span class="s1">&#39;sobol&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;updating&#39;</span><span class="p">:</span> <span class="s1">&#39;deferred&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;workers&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>                <span class="c1"># Use all available cores for parallelization</span>
+                <span class="s1">&#39;polish&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>              <span class="c1"># Disable polish step for faster runs</span>
+                <span class="s1">&#39;early_stopping&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>       <span class="c1"># Enable early stopping for DE</span>
+                <span class="s1">&#39;success_threshold&#39;</span><span class="p">:</span> <span class="mf">0.01</span>     <span class="c1"># MSE threshold for DE early stopping</span>
+            <span class="p">},</span>  
+
+            <span class="c1"># Particle Swarm Optimization parameters</span>
+            <span class="s1">&#39;pso_params&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;n_particles&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+                <span class="s1">&#39;iters&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+                <span class="s1">&#39;options&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;c1&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;c2&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">},</span>
+                <span class="s1">&#39;ftol&#39;</span><span class="p">:</span> <span class="mf">1e-6</span><span class="p">,</span>                 <span class="c1"># Function tolerance for early stopping</span>
+                <span class="s1">&#39;ftol_iter&#39;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>              <span class="c1"># Check stagnation over this many iterations</span>
+            <span class="p">},</span>  
+
+            <span class="c1"># Steady state calculation</span>
+            <span class="s1">&#39;steady_state&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;monte_carlo&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;monte_carlo_params&#39;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s1">&#39;n_runs&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+                    <span class="s1">&#39;n_steps&#39;</span><span class="p">:</span> <span class="mi">5000</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="ParameterOptimizer.optimize">
+<a class="viewcode-back" href="../../parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer.optimize">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;differential_evolution&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run parameter optimization using specified method.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        method : str, default=&#39;differential_evolution&#39;</span>
+<span class="sd">            Optimization method (&#39;differential_evolution&#39; or &#39;particle_swarm&#39;)</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        OptimizeResult</span>
+<span class="sd">            Optimization result object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;differential_evolution&#39;</span><span class="p">,</span> <span class="s1">&#39;particle_swarm&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported method: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">. Use &#39;differential_evolution&#39; or &#39;particle_swarm&#39;&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Get parameter bounds</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">get_parameter_bounds</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bounds</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OptimizationError</span><span class="p">(</span><span class="s2">&quot;No parameters to optimize&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Try optimization up to max_try times</span>
+        <span class="n">max_try</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_try&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">best_result</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">best_score</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_try</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Optimization attempt </span><span class="si">{</span><span class="n">attempt</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">max_try</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_single_optimization</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">bounds</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">fun</span> <span class="o">&lt;</span> <span class="n">best_score</span><span class="p">:</span>
+                    <span class="n">best_result</span> <span class="o">=</span> <span class="n">result</span>
+                    <span class="n">best_score</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fun</span>
+                
+                <span class="c1"># Check if we&#39;ve achieved the success threshold</span>
+                <span class="n">success_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;success_threshold&#39;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">fun</span> <span class="o">&lt;</span> <span class="n">success_threshold</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Success threshold achieved: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> &lt; </span><span class="si">{</span><span class="n">success_threshold</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">break</span>
+                    
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempt </span><span class="si">{</span><span class="n">attempt</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">attempt</span> <span class="o">==</span> <span class="n">max_try</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">OptimizationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;All optimization attempts failed. Last error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">best_result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OptimizationError</span><span class="p">(</span><span class="s2">&quot;No successful optimization runs&quot;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">--- Optimization finished. Best MSE found: </span><span class="si">{</span><span class="n">best_result</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> ---&quot;</span><span class="p">)</span>
+        <span class="c1"># Update self.pbn with the final parameters</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">best_result</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">best_result</span><span class="o">.</span><span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">final_params</span> <span class="o">=</span> <span class="n">best_result</span><span class="o">.</span><span class="n">x</span>
+            <span class="n">final_cij</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">_vector_to_cij_matrix</span><span class="p">(</span><span class="n">final_params</span><span class="p">)</span>
+
+            <span class="c1"># If discrete mode, discretize the final result and update the PBN again</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">discrete</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Discretizing final parameters...&quot;</span><span class="p">)</span>
+                <span class="n">final_cij</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_discretize_cij</span><span class="p">(</span><span class="n">final_cij</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Discretized Selection Probabilities:&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">final_cij</span><span class="p">)</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">_update_pbn_parameters</span><span class="p">(</span><span class="n">final_cij</span><span class="p">)</span>
+            
+            <span class="c1"># Print the final PBN rules in the desired format</span>
+            <span class="n">pbn_rules</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pbn_rules_string</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">--- Optimized PBN Rules ---&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">pbn_rules</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---------------------------</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">best_result</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_single_optimization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a single optimization attempt&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_best_score</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optimization_history</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># Set global seed for reproducibility</span>
+        <span class="n">global_seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;seed&#39;</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">global_seed</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;differential_evolution&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_de_optimizer</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;particle_swarm&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pso_optimizer</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported method: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_de_optimizer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Differential evolution implementation using scipy&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">differential_evolution</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running DE optimization...&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DE Setup:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Max iterations: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;de_params&#39;</span><span class="p">][</span><span class="s1">&#39;maxiter&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Population size: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;de_params&#39;</span><span class="p">][</span><span class="s1">&#39;popsize&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Tolerance: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;de_params&#39;</span><span class="p">][</span><span class="s1">&#39;tol&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Absolute tolerance: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;de_params&#39;</span><span class="p">][</span><span class="s1">&#39;atol&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Mutation: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;de_params&#39;</span><span class="p">][</span><span class="s1">&#39;mutation&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Recombination: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;de_params&#39;</span><span class="p">][</span><span class="s1">&#39;recombination&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Early stopping: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;de_params&#39;</span><span class="p">][</span><span class="s1">&#39;early_stopping&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Seed: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;seed&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="n">de_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;de_params&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">de_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;early_stopping&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_iter</span> <span class="o">=</span> <span class="n">de_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;maxiter&#39;</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+        
+        <span class="c1"># Add seed for reproducibility</span>
+        <span class="n">global_seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;seed&#39;</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
+        <span class="n">de_params</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">global_seed</span>
+        
+        <span class="c1"># Run optimization</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">differential_evolution</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">objective_function</span><span class="p">,</span>
+            <span class="n">bounds</span><span class="p">,</span>
+            <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_de_callback</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">de_params</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># Clear any remaining display artifacts</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        
+        <span class="c1"># Check success based on threshold</span>
+        <span class="n">success_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;success_threshold&#39;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fun</span> <span class="o">&lt;</span> <span class="n">success_threshold</span>
+        
+        <span class="k">return</span> <span class="n">OptimizeResult</span><span class="p">(</span>
+            <span class="n">fun</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="p">,</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+            <span class="n">success</span><span class="o">=</span><span class="n">success</span><span class="p">,</span>
+            <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;DE optimization finished with MSE: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">nfev</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">nfev</span><span class="p">,</span>
+            <span class="n">nit</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">nit</span><span class="p">,</span>
+            <span class="n">history</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimization_history</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_de_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xk</span><span class="p">,</span> <span class="n">convergence</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback for DE to monitor progress with a single updating line and progress bar&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iteration_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">current_score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">objective_function</span><span class="p">(</span><span class="n">xk</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optimization_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_score</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">current_score</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_best_score</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_last_best_score</span> <span class="o">=</span> <span class="n">current_score</span>
+
+        <span class="c1"># Calculate progress percentage</span>
+        <span class="n">progress</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">100.0</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iteration_count</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_iter</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
+        
+        <span class="c1"># Create progress bar</span>
+        <span class="n">bar_length</span> <span class="o">=</span> <span class="mi">30</span>
+        <span class="n">filled_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bar_length</span> <span class="o">*</span> <span class="n">progress</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="n">bar</span> <span class="o">=</span> <span class="s1">&#39;█&#39;</span> <span class="o">*</span> <span class="n">filled_length</span> <span class="o">+</span> <span class="s1">&#39;░&#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">bar_length</span> <span class="o">-</span> <span class="n">filled_length</span><span class="p">)</span>
+        
+        <span class="c1"># Check if we should display rules</span>
+        <span class="n">display_rules_every</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;display_rules_every&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">should_display_rules</span> <span class="o">=</span> <span class="p">(</span><span class="n">display_rules_every</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> 
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_iteration_count</span> <span class="o">%</span> <span class="n">display_rules_every</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        
+        <span class="c1"># display logic</span>
+        <span class="k">if</span> <span class="n">should_display_rules</span><span class="p">:</span>
+            <span class="c1"># Clear any progress bar if not in verbose mode</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="mi">120</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+            
+            <span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span>
+            <span class="n">rules</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_current_optimized_rules</span><span class="p">(</span><span class="n">xk</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">rules</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DE Iter </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_iteration_count</span><span class="si">}</span><span class="s2">: Best MSE: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_best_score</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> - Time: </span><span class="si">{</span><span class="n">elapsed_time</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Current optimized rules:&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">rules</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">rule</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">()</span>  <span class="c1"># Add blank line for readability</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="c1"># Verbose mode: show iteration details only when not displaying rules</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Iteration </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_iteration_count</span><span class="si">}</span><span class="s2">: Current MSE: </span><span class="si">{</span><span class="n">current_score</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">, Best MSE so far: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_best_score</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">, Convergence: </span><span class="si">{</span><span class="n">convergence</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">should_display_rules</span><span class="p">:</span>
+            <span class="c1"># Non-verbose mode: show progress bar</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">[</span><span class="si">{</span><span class="n">bar</span><span class="si">}</span><span class="s1">] </span><span class="si">{</span><span class="n">progress</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">% | Iter: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_iteration_count</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_iter</span><span class="si">}</span><span class="s1"> | Best MSE: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_best_score</span><span class="si">:</span><span class="s1">.6f</span><span class="si">}</span><span class="s1"> | Conv: </span><span class="si">{</span><span class="n">convergence</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="c1"># Early stopping logic</span>
+        <span class="n">de_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;de_params&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">early_stopping</span> <span class="o">=</span> <span class="n">de_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;early_stopping&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">early_stopping</span><span class="p">:</span>
+            <span class="n">success_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;success_threshold&#39;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">current_score</span> <span class="o">&lt;</span> <span class="n">success_threshold</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">or</span> <span class="n">should_display_rules</span><span class="p">:</span> 
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">DE early stopping: MSE below success threshold: </span><span class="si">{</span><span class="n">success_threshold</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Clear progress line before printing early stop message</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="mi">120</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DE early stopping: MSE below success threshold: </span><span class="si">{</span><span class="n">success_threshold</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_current_optimized_rules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get formatted rules for nodes being optimized with current parameter values.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        current_params : np.ndarray</span>
+<span class="sd">            Current parameter vector from optimization</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        List[str]</span>
+<span class="sd">            List of formatted rule strings for nodes being optimized</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Convert current parameters to Cij matrix</span>
+            <span class="n">current_cij</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">_vector_to_cij_matrix</span><span class="p">(</span><span class="n">current_params</span><span class="p">)</span>
+            
+            <span class="c1"># Get only the nodes being optimized</span>
+            <span class="n">rules</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">nodes_to_optimize</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">node_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span> <span class="ow">and</span> 
+                    <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="p">,</span> <span class="s1">&#39;gene_functions&#39;</span><span class="p">)</span> <span class="ow">and</span> 
+                    <span class="n">node_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">gene_functions</span><span class="p">):</span>
+                    
+                    <span class="n">node_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
+                    <span class="n">functions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">gene_functions</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
+                    
+                    <span class="c1"># Get the actual number of functions for this node</span>
+                    <span class="n">num_functions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">functions</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">num_functions</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    
+                    <span class="c1"># Get probabilities for this node, ensuring we don&#39;t exceed bounds</span>
+                    <span class="k">if</span> <span class="n">node_idx</span> <span class="o">&lt;</span> <span class="n">current_cij</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">num_functions</span> <span class="o">&lt;=</span> <span class="n">current_cij</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                        <span class="n">probabilities</span> <span class="o">=</span> <span class="n">current_cij</span><span class="p">[</span><span class="n">node_idx</span><span class="p">,</span> <span class="p">:</span><span class="n">num_functions</span><span class="p">]</span>
+                        
+                        <span class="c1"># Normalize probabilities to ensure they sum to 1</span>
+                        <span class="n">prob_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">probabilities</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">prob_sum</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>  <span class="c1"># Avoid division by zero</span>
+                            <span class="n">probabilities</span> <span class="o">=</span> <span class="n">probabilities</span> <span class="o">/</span> <span class="n">prob_sum</span>
+                        
+                        <span class="c1"># Format the rule string</span>
+                        <span class="n">rule_parts</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">prob</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">functions</span><span class="p">,</span> <span class="n">probabilities</span><span class="p">)):</span>
+                            <span class="k">if</span> <span class="n">prob</span> <span class="o">&gt;</span> <span class="mf">1e-6</span><span class="p">:</span>  <span class="c1"># Only show functions with non-negligible probability</span>
+                                <span class="n">rule_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s2"> (p=</span><span class="si">{</span><span class="n">prob</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+                        
+                        <span class="k">if</span> <span class="n">rule_parts</span><span class="p">:</span>
+                            <span class="n">rules</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="s1">&#39; | &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rule_parts</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+            <span class="k">return</span> <span class="n">rules</span>
+            
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Could not generate rules: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pso_optimizer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;PSO implementation using pyswarms library&quot;&quot;&quot;</span>
+        <span class="n">pso_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;pso_params&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bounds</span><span class="p">])</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bounds</span><span class="p">])</span>
+        <span class="n">pyswarms_bounds</span> <span class="o">=</span> <span class="p">(</span><span class="n">lb</span><span class="p">,</span> <span class="n">ub</span><span class="p">)</span>
+        
+        <span class="c1"># Extract parameters</span>
+        <span class="n">n_particles</span> <span class="o">=</span> <span class="n">pso_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;n_particles&#39;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+        <span class="n">iters</span> <span class="o">=</span> <span class="n">pso_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;iters&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="n">ftol</span> <span class="o">=</span> <span class="n">pso_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ftol&#39;</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">)</span>
+        <span class="n">ftol_iter</span> <span class="o">=</span> <span class="n">pso_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ftol_iter&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+        <span class="c1"># Print optimization setup info </span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running PSO optimization...&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PSO Setup:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Particles: </span><span class="si">{</span><span class="n">n_particles</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Max iterations: </span><span class="si">{</span><span class="n">iters</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Problem dimensions: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Total function evaluations: </span><span class="si">{</span><span class="n">n_particles</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">iters</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Seed: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;seed&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ftol</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Early stopping enabled:&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    - Function tolerance: </span><span class="si">{</span><span class="n">ftol</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    - Tolerance iterations: </span><span class="si">{</span><span class="n">ftol_iter</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">pso_objective</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Objective function wrapper for PSO&quot;&quot;&quot;</span>
+            <span class="n">costs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">objective_function</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                <span class="n">costs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cost</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">costs</span><span class="p">)</span>
+
+        <span class="c1"># Create optimizer with seed for reproducibility</span>
+        <span class="n">global_seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;seed&#39;</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">ps</span><span class="o">.</span><span class="n">single</span><span class="o">.</span><span class="n">GlobalBestPSO</span><span class="p">(</span>
+            <span class="n">n_particles</span><span class="o">=</span><span class="n">n_particles</span><span class="p">,</span>
+            <span class="n">dimensions</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">bounds</span><span class="p">),</span>
+            <span class="n">options</span><span class="o">=</span><span class="n">pso_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;options&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;c1&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s1">&#39;c2&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">}),</span>
+            <span class="n">bounds</span><span class="o">=</span><span class="n">pyswarms_bounds</span><span class="p">,</span>
+            <span class="n">ftol</span><span class="o">=</span><span class="n">ftol</span><span class="p">,</span>
+            <span class="n">ftol_iter</span><span class="o">=</span><span class="n">ftol_iter</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># Run optimization</span>
+        <span class="n">cost</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">pso_objective</span><span class="p">,</span> <span class="n">iters</span><span class="o">=</span><span class="n">iters</span><span class="p">)</span>
+
+        <span class="c1"># Check if early stopping occurred and determine success</span>
+        <span class="n">success_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;success_threshold&#39;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+        <span class="n">early_stopped</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">optimizer</span><span class="o">.</span><span class="n">cost_history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">iters</span>
+        
+        <span class="n">result</span> <span class="o">=</span> <span class="n">OptimizeResult</span><span class="p">(</span>
+            <span class="n">fun</span><span class="o">=</span><span class="n">cost</span><span class="p">,</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span>
+            <span class="n">success</span><span class="o">=</span><span class="n">cost</span> <span class="o">&lt;</span> <span class="n">success_threshold</span><span class="p">,</span>
+            <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;pyswarms optimization finished</span><span class="si">{</span><span class="s1">&#39; (early stopped)&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">early_stopped</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+            <span class="n">nfev</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">optimizer</span><span class="o">.</span><span class="n">cost_history</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_particles</span><span class="p">,</span>
+            <span class="n">nit</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">optimizer</span><span class="o">.</span><span class="n">cost_history</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">history</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">cost_history</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_discretize_cij</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cij_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Discretize Cij matrix by selecting the function with the highest probability,</span>
+<span class="sd">        respecting a threshold.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">discrete_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;discrete_params&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">threshold</span> <span class="o">=</span> <span class="n">discrete_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;threshold&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+
+        <span class="n">discretized_matrix</span> <span class="o">=</span> <span class="n">cij_matrix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">node_idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">node_indices_to_optimize</span><span class="p">:</span>
+            <span class="n">num_functions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nf</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">num_functions</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">discretized_matrix</span><span class="p">[</span><span class="n">node_idx</span><span class="p">,</span> <span class="p">:</span><span class="n">num_functions</span><span class="p">]</span>
+                <span class="n">max_prob_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                <span class="n">new_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_functions</span><span class="p">)</span>
+                <span class="c1"># Only select the function if its probability is above the threshold</span>
+                <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="n">max_prob_idx</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">:</span>
+                    <span class="n">new_row</span><span class="p">[</span><span class="n">max_prob_idx</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># If no function meets the threshold, the result remains the</span>
+                    <span class="c1"># highest probability one, but this indicates uncertainty.</span>
+                    <span class="c1"># We still pick the best one to ensure a valid discrete state.</span>
+                    <span class="n">new_row</span><span class="p">[</span><span class="n">max_prob_idx</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Discretization warning: Highest probability for node </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="n">node_idx</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="n">max_prob_idx</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">) is below threshold (</span><span class="si">{</span><span class="n">threshold</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+
+                <span class="n">padded_new_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">cij_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+                <span class="n">padded_new_row</span><span class="p">[:</span><span class="n">num_functions</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_row</span>
+                <span class="n">discretized_matrix</span><span class="p">[</span><span class="n">node_idx</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">padded_new_row</span>
+        <span class="k">return</span> <span class="n">discretized_matrix</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_detect_stagnation_periods</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect periods where optimization stagnated&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        
+        <span class="n">stagnation_periods</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">current_start</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">history</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">history</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">tolerance</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">current_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">current_start</span> <span class="o">=</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">current_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">-</span> <span class="n">current_start</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>  <span class="c1"># At least 5 iterations of stagnation</span>
+                    <span class="n">stagnation_periods</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">current_start</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">current_start</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="c1"># Check if we ended in a stagnation period</span>
+        <span class="k">if</span> <span class="n">current_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">-</span> <span class="n">current_start</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="n">stagnation_periods</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">current_start</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        
+        <span class="k">return</span> <span class="n">stagnation_periods</span>
+
+<div class="viewcode-block" id="ParameterOptimizer.plot_optimization_history">
+<a class="viewcode-back" href="../../parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer.plot_optimization_history">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_optimization_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">OptimizeResult</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                                 <span class="n">show_stagnation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">log_scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the optimization history (MSE over iterations).</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        result : OptimizeResult</span>
+<span class="sd">            The optimization result object</span>
+<span class="sd">        save_path : str, optional</span>
+<span class="sd">            Path to save the plot. If None, displays the plot.</span>
+<span class="sd">        show_stagnation : bool, optional</span>
+<span class="sd">            Whether to highlight stagnation periods</span>
+<span class="sd">        log_scale : bool, optional</span>
+<span class="sd">            Whether to use logarithmic scale for y-axis</span>
+<span class="sd">        sorted: bool, optional</span>
+<span class="sd">            Whether to sort the optimization history by MSE</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s1">&#39;history&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">history</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No optimization history available for plotting.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        
+        <span class="n">history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">history</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">sorted</span><span class="p">:</span>
+            <span class="n">history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">history</span><span class="p">,</span> <span class="s1">&#39;b-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;MSE&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">log_scale</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">show_stagnation</span><span class="p">:</span>
+            <span class="n">stagnation_periods</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detect_stagnation_periods</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="n">stagnation_periods</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">axvspan</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Stagnation&#39;</span> <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="n">stagnation_periods</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Iteration&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Mean Squared Error (MSE)&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Optimization History&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        
+        <span class="c1"># Add text box with final statistics</span>
+        <span class="n">stats_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Final MSE: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s1">.6f</span><span class="si">}</span><span class="se">\n</span><span class="s1">Iterations: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">nit</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.98</span><span class="p">,</span> <span class="n">stats_text</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> 
+                <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">boxstyle</span><span class="o">=</span><span class="s1">&#39;round&#39;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;wheat&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">))</span>
+        
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">save_path</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Plot saved to </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ParameterOptimizer.get_pbn_rules_string">
+<a class="viewcode-back" href="../../parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer.get_pbn_rules_string">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_pbn_rules_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Format the final PBN into a readable string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="p">,</span> <span class="s1">&#39;gene_functions&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;Could not format PBN rules: function strings not found in PBN object.&quot;</span>
+
+        <span class="n">rules_string</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">node_names</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        
+        <span class="k">for</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">node_names</span><span class="p">:</span>
+            <span class="n">node_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">gene_functions</span><span class="p">:</span>
+                <span class="n">functions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">gene_functions</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
+                <span class="n">probabilities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">cij</span><span class="p">[</span><span class="n">node_idx</span><span class="p">,</span> <span class="p">:]</span>
+                
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">func</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">functions</span><span class="p">):</span>
+                    <span class="n">prob</span> <span class="o">=</span> <span class="n">probabilities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">prob</span> <span class="o">&gt;</span> <span class="mf">1e-6</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">functions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)):</span>
+                        <span class="n">rules_string</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">prob</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rules_string</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParameterOptimizer.get_optimized_pbn">
+<a class="viewcode-back" href="../../parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer.get_optimized_pbn">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_optimized_pbn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">OptimizeResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a new PBN object with the optimized parameters from a result.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        result : OptimizationResult</span>
+<span class="sd">            The result object from a successful optimization run.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        ProbabilisticBN</span>
+<span class="sd">            A new PBN object with the optimized parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">optimized_pbn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span>
+        
+        <span class="c1"># Get the Cij matrix from the result parameters</span>
+        <span class="n">cij_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">_vector_to_cij_matrix</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+        
+        <span class="c1"># Discretize if the optimization was run in discrete mode</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">discrete</span><span class="p">:</span>
+            <span class="n">cij_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_discretize_cij</span><span class="p">(</span><span class="n">cij_matrix</span><span class="p">)</span>
+        
+        <span class="c1"># Update the new PBN with the final Cij matrix</span>
+        <span class="n">optimized_pbn</span><span class="o">.</span><span class="n">cij</span> <span class="o">=</span> <span class="n">cij_matrix</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">optimized_pbn</span><span class="p">,</span> <span class="s1">&#39;update_cumulative_probabilities&#39;</span><span class="p">):</span>
+            <span class="n">optimized_pbn</span><span class="o">.</span><span class="n">update_cumulative_probabilities</span><span class="p">()</span>
+            
+        <span class="k">return</span> <span class="n">optimized_pbn</span> </div>
+
+
+<div class="viewcode-block" id="ParameterOptimizer.test_steady_states">
+<a class="viewcode-back" href="../../parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer.test_steady_states">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_steady_states</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_experiments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">convergence_threshold</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Test steady state calculation methods for each experiment condition.</span>
+<span class="sd">        Uses the optimizer&#39;s existing configuration and reports timing and convergence.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        test_experiments : list, optional</span>
+<span class="sd">            List of experiment dictionaries to test. If None, uses self.evaluator.experiments</span>
+<span class="sd">        show_plot : bool, default=False</span>
+<span class="sd">            Whether to display convergence plots for each experiment</span>
+<span class="sd">        convergence_threshold : float, default=1.0</span>
+<span class="sd">            Threshold for considering convergence successful (in percentage)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=== Steady State Methods Testing ===&quot;</span><span class="p">)</span>
+        
+        <span class="n">experiments</span> <span class="o">=</span> <span class="n">test_experiments</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">experiments</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">experiments</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No experiments available for testing.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+            
+        <span class="c1"># Get steady state config from optimizer</span>
+        <span class="n">ss_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;steady_state&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">()[</span><span class="s1">&#39;steady_state&#39;</span><span class="p">])</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">ss_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="s1">&#39;tsmc&#39;</span><span class="p">)</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Testing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">experiments</span><span class="p">)</span><span class="si">}</span><span class="s2"> experimental conditions using </span><span class="si">{</span><span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2"> method...&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Steady state config: </span><span class="si">{</span><span class="n">ss_config</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;monte_carlo&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Convergence threshold: </span><span class="si">{</span><span class="n">convergence_threshold</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">()</span>
+        
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">converged_experiments</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">experiment</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">experiments</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Experiment </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: &quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            
+            <span class="c1"># Display experimental conditions briefly</span>
+            <span class="n">stimuli_str</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;stimuli&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;stimuli&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;None&quot;</span>
+            <span class="n">inhibitors_str</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;inhibitors&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;inhibitors&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;None&quot;</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stimuli=</span><span class="si">{</span><span class="n">stimuli_str</span><span class="si">}</span><span class="s2">, Inhibitors=</span><span class="si">{</span><span class="n">inhibitors_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">converged</span> <span class="o">=</span> <span class="kc">False</span>
+            
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Set experimental conditions</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">steady_state_calc</span><span class="o">.</span><span class="n">set_experimental_conditions</span><span class="p">(</span>
+                    <span class="n">stimuli</span><span class="o">=</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;stimuli&#39;</span><span class="p">],</span>
+                    <span class="n">stimuli_efficacy</span><span class="o">=</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;stimuli_efficacy&#39;</span><span class="p">],</span>
+                    <span class="n">inhibitors</span><span class="o">=</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;inhibitors&#39;</span><span class="p">],</span>
+                    <span class="n">inhibitors_efficacy</span><span class="o">=</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;inhibitors_efficacy&#39;</span><span class="p">]</span>
+                <span class="p">)</span>
+                
+                <span class="c1"># Run steady state calculation using optimizer&#39;s config</span>
+                <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;tsmc&#39;</span><span class="p">:</span>
+                    <span class="n">params</span> <span class="o">=</span> <span class="n">ss_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tsmc_params&#39;</span><span class="p">,</span> <span class="p">{})</span>
+                    <span class="c1"># Add seed for reproducibility</span>
+                    <span class="n">params</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;seed&#39;</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">steady_state_calc</span><span class="o">.</span><span class="n">compute_stationary_tsmc</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># monte_carlo</span>
+                    <span class="n">params</span> <span class="o">=</span> <span class="n">ss_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;monte_carlo_params&#39;</span><span class="p">,</span> <span class="p">{})</span>
+                    
+                    <span class="c1"># Use convergence analysis for Monte Carlo</span>
+                    <span class="n">params_with_convergence</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                    <span class="n">params_with_convergence</span><span class="p">[</span><span class="s1">&#39;analyze_convergence&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">params_with_convergence</span><span class="p">[</span><span class="s1">&#39;show_plot&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">show_plot</span>
+                    <span class="c1"># Add seed for reproducibility</span>
+                    <span class="n">params_with_convergence</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;seed&#39;</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
+                    
+                    <span class="c1"># Pick a measured node for convergence analysis if available</span>
+                    <span class="n">output_node</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="k">if</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]:</span>
+                        <span class="n">output_node</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">params_with_convergence</span><span class="p">[</span><span class="s1">&#39;output_node&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_node</span>
+                    
+                    <span class="n">result</span><span class="p">,</span> <span class="n">convergence_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">steady_state_calc</span><span class="o">.</span><span class="n">compute_stationary_mc</span><span class="p">(</span><span class="o">**</span><span class="n">params_with_convergence</span><span class="p">)</span>
+                    
+                    <span class="c1"># Check convergence success</span>
+                    <span class="n">final_change</span> <span class="o">=</span> <span class="n">convergence_info</span><span class="p">[</span><span class="s1">&#39;final_relative_change&#39;</span><span class="p">]</span>
+                    <span class="n">converged</span> <span class="o">=</span> <span class="n">final_change</span> <span class="o">&lt;=</span> <span class="n">convergence_threshold</span>
+                    <span class="k">if</span> <span class="n">converged</span><span class="p">:</span>
+                        <span class="n">converged_experiments</span> <span class="o">+=</span> <span class="mi">1</span>
+                
+                <span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+                <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
+                
+                <span class="c1"># Print results</span>
+                <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;monte_carlo&#39;</span><span class="p">:</span>
+                    <span class="n">convergence_status</span> <span class="o">=</span> <span class="s2">&quot;✓ Converged&quot;</span> <span class="k">if</span> <span class="n">converged</span> <span class="k">else</span> <span class="s2">&quot;✗ Not converged&quot;</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Time: </span><span class="si">{</span><span class="n">elapsed_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s, Final change: </span><span class="si">{</span><span class="n">final_change</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%, </span><span class="si">{</span><span class="n">convergence_status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Time: </span><span class="si">{</span><span class="n">elapsed_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+                
+                <span class="c1"># Reset conditions</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">steady_state_calc</span><span class="o">.</span><span class="n">reset_network_conditions</span><span class="p">()</span>
+                
+                <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;experiment_id&#39;</span><span class="p">:</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span>
+                    <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">elapsed_time</span><span class="p">,</span>
+                    <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
+                    <span class="s1">&#39;converged&#39;</span><span class="p">:</span> <span class="n">converged</span> <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;monte_carlo&#39;</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s1">&#39;final_change&#39;</span><span class="p">:</span> <span class="n">final_change</span> <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;monte_carlo&#39;</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="p">})</span>
+                
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  FAILED after </span><span class="si">{</span><span class="n">elapsed_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;experiment_id&#39;</span><span class="p">:</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">elapsed_time</span><span class="p">,</span>
+                    <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
+                    <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="p">})</span>
+        
+        <span class="c1"># Summary</span>
+        <span class="n">successes</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;success&#39;</span><span class="p">])</span>
+        <span class="n">total_time</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">)</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Summary: </span><span class="si">{</span><span class="n">successes</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2"> experiments successful, total time: </span><span class="si">{</span><span class="n">total_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;monte_carlo&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Convergence: </span><span class="si">{</span><span class="n">converged_experiments</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2"> experiments converged (threshold: </span><span class="si">{</span><span class="n">convergence_threshold</span><span class="si">}</span><span class="s2">%)&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">results</span> </div>
+</div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, IlyaLab
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

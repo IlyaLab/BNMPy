@@ -172,7 +172,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
       </label>
     </div>
@@ -193,6 +193,8 @@
   <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimization_guide.html">BNMPy Optimizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="steady_state_guide.html">Steady State Calculation Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
 <ul>
@@ -203,6 +205,12 @@
 <li class="toctree-l2"><a class="reference internal" href="steady_state.html">BNMPy.steady_state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vis.html">BNMPy.vis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="build_bn_from_kg.html">BNMPy.build_bn_from_kg</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html">BNMPy.model_parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html">BNMPy.parameter_optimizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation_evaluator.html">BNMPy.simulation_evaluator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_data.html">BNMPy.experiment_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html">BNMPy.result_evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_compressor.html">BNMPy.model_compressor</a></li>
 </ul>
 </li>
 </ul>
@@ -238,7 +246,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
           </label>
         </div>
@@ -247,43 +255,9 @@
 <h1>Welcome to BNMPy’s documentation!<a class="headerlink" href="#welcome-to-bnmpy-s-documentation" title="Link to this heading">¶</a></h1>
 <p>BNMPy is a Python library for Boolean Network (BN) and Probabilistic Boolean Network (PBN) modeling, simulation, optimization, and analysis with applications in systems biology. It also supports building models from knowledge graphs and integrating them with BNs and PBNs.
 For more details, please refer to the <a class="reference external" href="https://github.com/ilyalab/BNMPy">GitHub repository</a>.</p>
-<section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
-<p>To install BNMPy:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
-</pre></div>
-</div>
 </section>
-<section id="quick-start">
-<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">BNMPy</span>
-
-<span class="c1"># Load a network</span>
-<span class="n">network_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">A = A</span>
-<span class="s2">B = C</span>
-<span class="s2">C = !E</span>
-<span class="s2">D = A | B</span>
-<span class="s2">E = C &amp; D</span>
-<span class="s2">F = !A &amp; B</span>
-<span class="s2">&quot;&quot;&quot;</span>
-<span class="n">network</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network_from_string</span><span class="p">(</span><span class="n">network_string</span><span class="p">,</span> <span class="n">initial_state</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-
-<span class="c1"># Visualize the network</span>
-<span class="n">BNMPy</span><span class="o">.</span><span class="n">vis_network</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">output_html</span><span class="o">=</span><span class="s2">&quot;SimpleBN.html&quot;</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="c1"># Simulate with noise</span>
-<span class="n">network</span><span class="o">.</span><span class="n">update_noise</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-
-<span class="c1"># Calculate steady states</span>
-<span class="n">calc</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">SteadyStateCalculator</span><span class="p">(</span><span class="n">network</span><span class="p">)</span>
-<span class="n">steady_state</span> <span class="o">=</span> <span class="n">calc</span><span class="o">.</span><span class="n">compute_steady_state</span><span class="p">(</span><span class="n">n_runs</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">n_steps</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-</section>
-<section id="documentation-contents">
-<h1>Documentation Contents<a class="headerlink" href="#documentation-contents" title="Link to this heading">¶</a></h1>
+<section id="documentation">
+<h1>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
 <ul>
@@ -297,6 +271,18 @@ For more details, please refer to the <a class="reference external" href="https:
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#next-steps">Next Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#examples">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#applications">Applications</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="optimization_guide.html">BNMPy Optimizer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="optimization_guide.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimization_guide.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimization_guide.html#model-compression">Model Compression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimization_guide.html#sensitivity-analysis">Sensitivity Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimization_guide.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="steady_state_guide.html">Steady State Calculation Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="steady_state_guide.html#steadystatecalculator-for-bnmpy">SteadyStateCalculator for BNMPy</a></li>
 </ul>
 </li>
 </ul>
@@ -356,32 +342,8 @@ For more details, please refer to the <a class="reference external" href="https:
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">Welcome to BNMPy’s documentation!</a><ul>
-<li><a class="reference internal" href="#installation">Installation</a></li>
-<li><a class="reference internal" href="#quick-start">Quick Start</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#documentation-contents">Documentation Contents</a><ul>
-</ul>
-</li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>

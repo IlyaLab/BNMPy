@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="BNMPy.BMatrix" href="bmatrix.html"><link rel="prev" title="Getting Started" href="getting_started.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="BNMPy.BMatrix" href="bmatrix.html"><link rel="prev" title="Steady State Calculation Guide" href="steady_state_guide.html">
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2025.09.25 -->
         <title>API Reference - BNMPy 0.1 documentation</title>
@@ -193,6 +193,8 @@
   <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimization_guide.html">BNMPy Optimizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="steady_state_guide.html">Steady State Calculation Guide</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
 <ul class="current">
@@ -203,6 +205,12 @@
 <li class="toctree-l2"><a class="reference internal" href="steady_state.html">BNMPy.steady_state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vis.html">BNMPy.vis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="build_bn_from_kg.html">BNMPy.build_bn_from_kg</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html">BNMPy.model_parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html">BNMPy.parameter_optimizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation_evaluator.html">BNMPy.simulation_evaluator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_data.html">BNMPy.experiment_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html">BNMPy.result_evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_compressor.html">BNMPy.model_compressor</a></li>
 </ul>
 </li>
 </ul>
@@ -315,12 +323,84 @@
 <li class="toctree-l2"><a class="reference internal" href="build_bn_from_kg.html#BNMPy.build_bn_from_kg.merge_PBN_string"><code class="docutils literal notranslate"><span class="pre">merge_PBN_string()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="model_parser.html">BNMPy.model_parser</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html#BNMPy.model_parser.simplify_expression"><code class="docutils literal notranslate"><span class="pre">simplify_expression()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html#BNMPy.model_parser.parse_expression"><code class="docutils literal notranslate"><span class="pre">parse_expression()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html#BNMPy.model_parser.parse_equations"><code class="docutils literal notranslate"><span class="pre">parse_equations()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html#BNMPy.model_parser.get_upstream"><code class="docutils literal notranslate"><span class="pre">get_upstream()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html#BNMPy.model_parser.find_direct_targets"><code class="docutils literal notranslate"><span class="pre">find_direct_targets()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html#BNMPy.model_parser.check_inhibitor_wins_rule"><code class="docutils literal notranslate"><span class="pre">check_inhibitor_wins_rule()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html#BNMPy.model_parser.merge_networks"><code class="docutils literal notranslate"><span class="pre">merge_networks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html#BNMPy.model_parser.BN2PBN"><code class="docutils literal notranslate"><span class="pre">BN2PBN()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html#BNMPy.model_parser.extend_networks"><code class="docutils literal notranslate"><span class="pre">extend_networks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html#key-functions">Key Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html#example-usage">Example Usage</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
 <section id="optimization-modules">
 <h2>Optimization Modules<a class="headerlink" href="#optimization-modules" title="Link to this heading">¶</a></h2>
 <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="parameter_optimizer.html">BNMPy.parameter_optimizer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationResult"><code class="docutils literal notranslate"><span class="pre">OptimizationResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html#BNMPy.parameter_optimizer.OptimizationError"><code class="docutils literal notranslate"><span class="pre">OptimizationError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer"><code class="docutils literal notranslate"><span class="pre">ParameterOptimizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html#parameteroptimizer-class">ParameterOptimizer Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html#results">Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html#visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_evaluator.html">BNMPy.simulation_evaluator</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation_evaluator.html#BNMPy.simulation_evaluator.SimulationEvaluator"><code class="docutils literal notranslate"><span class="pre">SimulationEvaluator</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation_evaluator.html#simulationevaluator-class">SimulationEvaluator Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation_evaluator.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation_evaluator.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="experiment_data.html">BNMPy.experiment_data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="experiment_data.html#BNMPy.experiment_data.ExperimentData"><code class="docutils literal notranslate"><span class="pre">ExperimentData</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_data.html#BNMPy.experiment_data.extract_experiment_nodes"><code class="docutils literal notranslate"><span class="pre">extract_experiment_nodes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_data.html#BNMPy.experiment_data.generate_experiments"><code class="docutils literal notranslate"><span class="pre">generate_experiments()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_data.html#experimentdata-class">ExperimentData Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_data.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_data.html#data-format">Data Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_data.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_data.html#utility-functions">Utility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_data.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="result_evaluation.html">BNMPy.result_evaluation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html#BNMPy.result_evaluation.ResultEvaluator"><code class="docutils literal notranslate"><span class="pre">ResultEvaluator</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html#BNMPy.result_evaluation.evaluate_optimization_result"><code class="docutils literal notranslate"><span class="pre">evaluate_optimization_result()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html#BNMPy.result_evaluation.evaluate_pbn"><code class="docutils literal notranslate"><span class="pre">evaluate_pbn()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html#functions">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html#generated-plots">Generated Plots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html#output-files">Output Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="model_compressor.html">BNMPy.model_compressor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="model_compressor.html#BNMPy.model_compressor.ModelCompressor"><code class="docutils literal notranslate"><span class="pre">ModelCompressor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_compressor.html#BNMPy.model_compressor.compress_model"><code class="docutils literal notranslate"><span class="pre">compress_model()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_compressor.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_compressor.html#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_compressor.html#functions">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_compressor.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_compressor.html#step-by-step-compression">Step-by-Step Compression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_compressor.html#visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_compressor.html#see-also">See Also</a></li>
+</ul>
+</li>
+</ul>
 </div>
 </section>
 </section>
@@ -339,14 +419,14 @@
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="getting_started.html">
+          <a class="prev-page" href="steady_state_guide.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Getting Started</div>
+                <div class="title">Steady State Calculation Guide</div>
                 
               </div>
             </a>
