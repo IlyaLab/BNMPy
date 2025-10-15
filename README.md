@@ -13,7 +13,7 @@ To install, run `pip install -e .` in this directory.
 #### Basic operations
 
 - **Network loading**: Load networks from text files, SBML files, or string representations
-  - `load_network_from_file`, `load_network_from_string`
+  - `load_network()` - Automatically detects BN vs PBN and file vs string
 - **Network construction**: Build networks from connectivity matrices and Boolean functions
   - See [BMatrix README](./src/BMatrix_README.md)
 - **Network manipulation**: Knockout/knockdown specific nodes, rename nodes, merge networks
@@ -34,14 +34,12 @@ To install, run `pip install -e .` in this directory.
 
 Basic operations are similar to BNs.
 
-- **Network loading**: Load networks from text files, or string representations
-  - `load_pbn_from_file`, `load_pbn_from_string`
 - **Stochastic Simulation**: Run Monte Carlo simulations over steps
   - `pbn.update_noise()`
 - **Attractor analysis**: Find steady states (state distributions) via Monte Carlo or Two-state Markov Chain (TSMC) methods
   - `SteadyStateCalculator`
 
-### 3. Knowledge Graph (KG) integration
+### 3. Knowledge Graph (KG) augmentation
 
 BNMPy can build and extend models using the SIGNOR knowledge graph.
 
@@ -55,6 +53,12 @@ BNMPy can build and extend models using the SIGNOR knowledge graph.
 * **Targeted extension to PBN**: Extend an existing BN by adding nodes and rules informed by KG
 
   * `extend_networks`
+* **Phenotype scoring from KG paths**: Compute phenotype scores using simulation results and ProxPath-derived effects
+
+  * `phenotype_scores(genes, simulation_results, phenotypes=...)`
+    - Provide `genes` (preferred); used to query KG and to order columns in `simulation_results`
+    - Accepts `simulation_results` as pandas Series/DataFrame, numpy array, or BN attractor dict
+    - Column mapping priority: genes > network.nodeDict > existing pandas labels
 
 ### 4. PBN Optimization
 
@@ -95,7 +99,7 @@ Other utilities:
 sys.path.append('./src')
 import BNMPy
 
-# Load a network
+# Load a network (auto-detects BN vs PBN, file vs string)
 network_string = """
 A = A
 B = C
@@ -108,7 +112,7 @@ F = !A & B
 x0 = [0, 0, 0, 0, 0, 0]  # array: order matches gene order in string
 # or
 x0 = {'A': 0, 'B': 1, 'C': 0, 'D': 0, 'E': 0, 'F': 0}  # dict: keys are gene names
-network = BNMPy.load_network_from_string(network_string, initial_state=x0)
+network = BNMPy.load_network(network_string, initial_state=x0)
 
 # Visualize the network
 BNMPy.vis_network(network, output_html="SimpleBN.html", interactive=True)
