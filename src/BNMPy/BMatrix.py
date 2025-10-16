@@ -13,31 +13,44 @@ import os
 
 BUILT_INS = {'0', '1', 'True', 'False'}
 
-def get_equations(file):
-    with open(file, 'r') as file:
-        file_equations = file.readlines()
-    # Filter out empty lines and comment lines (starting with #)
-    # For non-comment lines, remove inline comments (after #)
+def get_equations(file = None, string = None):
+    if file is not None:
+        with open(file, 'r') as file:
+            string = file.readlines()
+    elif string is not None:
+        string = string.split('\n')
+    else:
+        raise ValueError("Either file or string must be provided")
+    seen_genes = set()
+    duplicate_genes = []
     equations = []
-    for equation in file_equations:
+    for equation in string:
         equation = equation.strip()
         if len(equation) > 0 and not equation.startswith('#'):
             # Remove inline comments
             if '#' in equation:
                 equation = equation.split('#')[0].strip()
-            if len(equation) > 0:
-                equations.append(equation)
+            if len(equation) > 0 and '=' in equation:
+                parts = equation.split('=')
+                gene = parts[0].strip()
+                if gene and gene not in seen_genes:
+                    seen_genes.add(gene)
+                    equations.append(equation)
+                elif gene and gene in seen_genes:
+                    duplicate_genes.append(gene)
+    if len(duplicate_genes) > 0:
+        print(f"Duplicate genes found: {duplicate_genes}\nUsing the first occurrence of each gene.")
     return equations
+
 
 def get_gene_dict(equations):
     left_side = []
-    
     for equation in equations:
         parts = equation.split('=')
         value = parts[0].strip()
         if value not in left_side:
             left_side.append(value)
-
+    
     genes = left_side
     
     # making a dictionary for the genes starting from 0
@@ -400,19 +413,8 @@ def load_network_from_string(network_string, initial_state=None):
         If None, random initial values are used.
     """
     from .booleanNetwork import BooleanNetwork
-    equations = [x.strip() for x in network_string.strip().split('\n') if x.strip()]
-    # Filter out empty lines and comment lines (starting with #)
-    # For non-comment lines, remove inline comments (after #)
-    processed_equations = []
-    for eq in equations:
-        if len(eq) > 0 and not eq.startswith('#'):
-            # Remove inline comments
-            if '#' in eq:
-                eq = eq.split('#')[0].strip()
-            if len(eq) > 0:
-                processed_equations.append(eq)
-    
-    equations = processed_equations
+    equations = get_equations(string = network_string)
+
     ngenes = len(equations)
     gene_dict = get_gene_dict(equations)
     upstream_genes = get_upstream_genes(equations)
@@ -498,6 +500,7 @@ def load_pbn_from_file(filename, initial_state=None):
 
     gene_funcs = {}
     gene_probs = {}
+    seen_gene_funcs = {}  # Track which gene-function combinations we've seen
     
     for line in lines:
         # Check if line contains probability
@@ -514,6 +517,12 @@ def load_pbn_from_file(filename, initial_state=None):
         gene, equation = func_part.split('=', 1)
         gene = gene.strip()
         equation = equation.strip()
+        
+        # Check for duplicate gene-function pairs
+        gene_func_key = (gene, equation, probability)
+        if gene_func_key in seen_gene_funcs:
+            continue  # Skip duplicate
+        seen_gene_funcs[gene_func_key] = True
         
         if gene not in gene_funcs:
             gene_funcs[gene] = []
@@ -636,6 +645,7 @@ def load_pbn_from_string(network_string, initial_state=None):
 
     gene_funcs = {}
     gene_probs = {}
+    seen_gene_funcs = {}  # Track which gene-function combinations we've seen
     
     for line in lines:
         # Skip empty lines
@@ -657,6 +667,12 @@ def load_pbn_from_string(network_string, initial_state=None):
         gene, equation = func_part.split('=', 1)
         gene = gene.strip()
         equation = equation.strip()
+        
+        # Check for duplicate gene-function pairs
+        gene_func_key = (gene, equation, probability)
+        if gene_func_key in seen_gene_funcs:
+            continue  # Skip duplicate
+        seen_gene_funcs[gene_func_key] = True
         
         if gene not in gene_funcs:
             gene_funcs[gene] = []
@@ -743,6 +759,132 @@ def load_pbn_from_string(network_string, initial_state=None):
     network.equations = all_equations  # Store the expanded equations
     print(f"PBN loaded successfully. There are {ngenes} genes in the network.")
     return network
+
+def load_network(source, initial_state=None, network_type='auto'):
+    """
+    Unified function to load a Boolean Network or Probabilistic Boolean Network from a file or string.
+    
+    This function automatically detects whether the input is a file path or a network string,
+    and whether it represents a Boolean Network (BN) or Probabilistic Boolean Network (PBN).
+    
+    Parameters:
+    -----------
+    source : str
+        Either a file path to a network definition file, or a string containing the network definition.
+        The function automatically detects which one it is.
+        
+    initial_state : array-like or dict, optional
+        Initial values for each node. If array-like, order matches gene order in the network.
+        If dict, keys are gene names and values are initial states (0 or 1).
+        If None, random initial values are used.
+        
+    network_type : str, optional
+        Type of network to load. Options are:
+        - 'auto' (default): Automatically detect BN vs PBN based on presence of probabilities
+        - 'bn': Force loading as Boolean Network
+        - 'pbn': Force loading as Probabilistic Boolean Network
+    
+    Returns:
+    --------
+    BooleanNetwork or ProbabilisticBN
+        A network object of the appropriate type
+    
+    Examples:
+    ---------
+    Load a BN from file:
+    
+    >>> network = load_network('my_network.txt')
+    
+    Load a BN from string:
+    
+    >>> network_str = '''
+    ... A = A
+    ... B = A & C
+    ... C = B | A
+    ... '''
+    >>> network = load_network(network_str)
+    
+    Load a PBN from file:
+    
+    >>> pbn = load_network('my_pbn.txt')
+    
+    Load a PBN from string with initial state:
+    
+    >>> pbn_str = '''
+    ... x1 = (x1 | x2), 0.6
+    ... x1 = (!x1 & x2), 0.4
+    ... x2 = x1 & x2
+    ... '''
+    >>> pbn = load_network(pbn_str, initial_state={'x1': 1, 'x2': 0})
+    
+    Notes:
+    ------
+    - For BN format: Each line should have format 'gene = boolean_expression'
+    - For PBN format: Each line should have format 'gene = boolean_expression, probability'
+    - Probabilities can be omitted if there's only one function for a gene
+    - Duplicate equations for the same gene are automatically filtered (first occurrence is kept)
+    - Comments (lines starting with #) and inline comments (after #) are ignored
+    - Constant values (0 or 1) are supported for genes
+    """
+    # Detect if source is a file or string
+    is_file = os.path.isfile(source)
+    
+    # Get raw lines for detection
+    if is_file:
+        with open(source, 'r') as f:
+            raw_lines = f.readlines()
+    else:
+        raw_lines = source.strip().split('\n')
+    
+    # Clean and filter lines for detection
+    detection_lines = []
+    for line in raw_lines:
+        line = line.strip()
+        if len(line) > 0 and not line.startswith('#'):
+            # Remove inline comments
+            if '#' in line:
+                line = line.split('#')[0].strip()
+            if len(line) > 0 and '=' in line:
+                detection_lines.append(line)
+    
+    # Auto-detect network type if needed
+    if network_type == 'auto':
+        is_pbn = False
+        for line in detection_lines:
+            # Check if line contains a comma after the equation (probability indicator)
+            if '=' in line:
+                parts = line.split('=', 1)
+                if len(parts) == 2:
+                    right_side = parts[1].strip()
+                    # Check if there's a comma that's not inside parentheses
+                    paren_count = 0
+                    for i, char in enumerate(right_side):
+                        if char == '(':
+                            paren_count += 1
+                        elif char == ')':
+                            paren_count -= 1
+                        elif char == ',' and paren_count == 0:
+                            # Found a comma outside parentheses - this is a probability
+                            is_pbn = True
+                            break
+            if is_pbn:
+                break
+        
+        network_type = 'pbn' if is_pbn else 'bn'
+    
+    # Load the appropriate network type
+    if network_type == 'bn':
+        if is_file:
+            return load_network_from_file(source, initial_state)
+        else:
+            return load_network_from_string(source, initial_state)
+    elif network_type == 'pbn':
+        if is_file:
+            return load_pbn_from_file(source, initial_state)
+        else:
+            return load_pbn_from_string(source, initial_state)
+    else:
+        raise ValueError(f"Invalid network_type: {network_type}. Must be 'auto', 'bn', or 'pbn'")
 
 def rename_nodes(network, mapping, expand_complexes=False):
     """

@@ -257,7 +257,7 @@ def merge_networks(BNs, method="OR", prob=0.9, descriptive=False):
     merged_network_string = "\n".join(merged_lines)
     return merged_network_string
 
-def BN2PBN(bn_string, prob=0.5, fixed_nodes=None):
+def BN2PBN(bn, prob=0.5, fixed_nodes=None):
     """
     Expand the boolean network to a PBN by adding a self-loop as alternative function
     prob: probability of the equations from the original BN
@@ -267,12 +267,12 @@ def BN2PBN(bn_string, prob=0.5, fixed_nodes=None):
         pbn_string: string of the PBN
         nodes_to_optimize: list of nodes excludes input nodes
     """
-    # Parse equations from BN
+    # Parse equations from BN to a dictionary, seperate by '='
     bn_equations = {}
-    for line in bn_string.strip().split('\n'):
-        if '=' in line:
-            target, rule = line.split('=', 1)
-            bn_equations[target.strip()] = rule.strip()
+    for eqn in bn.equations:
+        if '=' in eqn:
+            target, expr = eqn.split('=', 1)
+            bn_equations[target.strip()] = expr.strip()
     
     # Expand rules
     pbn_equations = []
