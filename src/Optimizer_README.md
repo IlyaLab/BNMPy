@@ -1,24 +1,16 @@
 # BNMPy Optimizer
 
-A Python implementation of PBN parameter optimization based on the optPBN framework. This module enables parameter estimation for Probabilistic Boolean Networks (PBNs) using experimental data.
+A Python implementation of Probabilistic Boolean Network (PBN) parameter optimization based on the optPBN framework. This module enables parameter estimation for PBNs using experimental data.
 
-## Installation
-
-The optimizer is part of BNMPy. Required dependencies:
-
-```bash
-pip install numpy scipy pandas pyswarms matplotlib networkx
-```
-
-## Usage
+## Optimization
 
 ### Basic Usage
 
 ```python
-from BNMPy.BMatrix import load_pbn_from_string, ParameterOptimizer
+import BNMPy
 
 # Load or create your PBN
-pbn = load_pbn_from_string(...)
+pbn = BNMPy.load_network(...)
 
 # Initialize optimizer
 optimizer = ParameterOptimizer(pbn, "experiments.csv", nodes_to_optimize=['Cas3'], verbose=False)
@@ -52,6 +44,8 @@ Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nod
 - `Measured_nodes`: Nodes with experimental measurements
 - `Measured_values`: Corresponding values (0-1, normalized)
 
+See [Examples/files/experiments_example.csv](../Examples/files/experiments_example.csv) for an example file.
+
 **Efficacy Values:**
 
 - **1.0 (default)**: Full efficacy - node is completely knocked out/stimulated
@@ -63,7 +57,7 @@ Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nod
 
 #### PBN Data
 
-A ProbabilisticBN, see BNMPy.
+A ProbabilisticBN object, see [PBN_simulation.ipynb](../Examples/PBN_simulation.ipynb).
 
 ### Configurations
 
@@ -80,7 +74,6 @@ config = {
     'seed': 9,                        # Global seed for random number generation (affects all stochastic processes)
     'success_threshold': 0.005,       # Global success threshold for final result evaluation
     'max_try': 3,                     # Try up to 3 times if optimization fails
-    'display_rules_every': 50,        # Display optimized rules every N iterations (0 = disabled)
 
 # Differential Evolution parameters
     'de_params': {
@@ -140,7 +133,7 @@ Two approaches:
 **Final Success Determination:**
 
 - Both methods use the global `success_threshold` to determine if the final result is considered successful
-- This evaluation happens after optimization completes, regardless of early stopping
+- If unsuccessful, the optimizer will run up to `max_try` times.
 
 #### Discrete Mode
 
@@ -163,7 +156,7 @@ result = optimizer.optimize(
 
 ### Results
 
-The optimization returns an enhanced `OptimizeResult` object containing:
+The optimization returns an `OptimizeResult` object containing:
 
 - `success`: Boolean indicating if the optimizer terminated successfully
 - `message`: Status message
@@ -213,190 +206,6 @@ The `evaluate_optimization_result` function generates several plots to assess op
 1. **Prediction vs Experimental Plot (`prediction_vs_experimental.png`)**
 2. **Residuals Plot (`residuals.png`)**
 3. **Optimization History Plot (`optimization_history.png`)**
-
-## Model Compression
-
-The Optimizer module includes model compression functionality to simplify Boolean Networks before optimization. Currently supports Boolean Networks only. This will allow to:
-
-1. **Remove non-observable nodes**: Nodes that don't influence any measured species
-2. **Remove non-controllable nodes**: Nodes that aren't influenced by any perturbed species
-3. **Collapse linear paths**: Simplify cascades of intermediate nodes that don't branch
-4. **Visualize compression results**: Show which nodes and edges were removed
-
-### Example
-
-Compression can automatically extract measured and perturbed nodes from experimental data:
-
-```python
-from BNMPy import ParameterOptimizer, extract_experiment_nodes, compress_model, load_network_from_file
-
-# Load network and experimental data
-network = load_network_from_file("network.txt")
-
-# Extract nodes from experimental data
-measured_nodes, perturbed_nodes = extract_experiment_nodes("experiments.csv")
-
-# Compress network using experimental information
-compressed_network, compression_info = compress_model(
-    network,
-    measured_nodes=measured_nodes,
-    perturbed_nodes=perturbed_nodes
-)
-
-# Visualize compression results
-from BNMPy import vis_compression
-vis_compression(
-    network,
-    compressed_network,
-    compression_info,
-    "compression_results.html"
-)
-
-# Run optimization on compressed network
-optimizer = ParameterOptimizer(compressed_network, "experiments.csv")
-result = optimizer.optimize(method='differential_evolution')
-```
-
-## Sensitivity Analysis
-
-The Optimizer module includes sensitivity analysis tools to identify the most influential nodes affecting measurements and network behavior:
-
-```python
-from BNMPy.sensitivity_analysis import sensitivity_analysis, influence_analysis
-
-# Run traditional sensitivity analysis
-results = sensitivity_analysis(
-    network, 
-    experiments, 
-    config=config,
-    top_n=5
-)
-
-# Run influence analysis (no experiments needed)
-influence_results = influence_analysis(
-    network,
-    config=config,
-    verbose=True
-)
-```
-
-### Methods
-
-1. **Traditional Sensitivity Analysis**: Analyzes how parameter changes affect steady-state measurements
-
-   - **Morris Analysis**: One-at-a-time sensitivity analysis using Morris trajectories
-   - **Sobol Analysis**: Variance-based sensitivity analysis for comprehensive parameter importance
-2. **Influence Analysis**: Analyzes how nodes influence each other in the steady state
-3. **MSE Sensitivity Analysis**: Measures how parameter changes affect MSE vs experimental data. Use with trained/optimized PBNs
-
-### Influence Analysis
-
-For understanding network structure and node interactions without experimental data:
-
-```python
-from BNMPy.sensitivity_analysis import influence_analysis, plot_influence_results
-
-# Basic influence analysis
-results = influence_analysis(
-    network, 
-    config={
-        'method': 'tsmc',
-        'samples': 10000,
-        'burn_in': 2000,
-        'thin': 5
-    }
-)
-
-# Get ranking for specific node
-node_ranking = influence_analysis(
-    network, 
-    output_node='YourNodeName',
-    top_n=10
-)
-
-# Visualize results
-plot_influence_results(
-    results['influence_df'],
-    results['sensitivity_df'],
-    top_n=20,
-    save_path='influence_analysis.png'
-)
-```
-
-### MSE Sensitivity Analysis
-
-For optimized PBNs, analyze which nodes are most critical for maintaining model fit:
-
-```python
-from BNMPy.sensitivity_analysis import mse_sensitivity_analysis, plot_mse_sensitivity_results
-
-# Run MSE sensitivity analysis on optimized PBN
-results = mse_sensitivity_analysis(
-    optimized_network, 
-    experiments, 
-    config={
-        'perturbation_magnitude': 0.3,
-        'steady_state': {
-            'method': 'tsmc',
-            'tsmc_params': {
-                'epsilon': 0.01,
-                'max_iterations': 1000
-            }
-        }
-    },
-    top_n=5
-)
-
-# Visualize results
-plot_mse_sensitivity_results(
-    results['sensitivity_df'], 
-    results['baseline_mse'], 
-    top_n=20,
-    save_path='mse_sensitivity_results.png'
-)
-```
-
-### Configuration Options
-
-```python
-# Traditional sensitivity analysis
-config = {
-    'sensitivity_method': 'morris',  # 'morris', 'sobol', or 'fast_morris'
-    'morris_trajectories': 20,
-    'sobol_samples': 512,
-    'parallel': True,
-    'n_workers': -1,  # Use all CPUs
-    'steady_state': {
-        'method': 'tsmc',
-        'tsmc_params': {
-            'epsilon': 0.01,
-            'max_iterations': 1000
-        }
-    }
-}
-
-# Influence analysis
-config = {
-    'method': 'tsmc',           # 'tsmc' or 'monte_carlo'
-    'samples': 20000,           # Number of steady state samples
-    'burn_in': 5000,            # Burn-in steps
-    'thin': 10,                 # Thinning interval
-    'epsilon': 0.001,           # Convergence threshold
-    'seed': 42                  # Random seed
-}
-
-# MSE sensitivity analysis
-config = {
-    'perturbation_magnitude': 0.3,  # How much to perturb probabilities (0.1-0.5)
-    'steady_state': {
-        'method': 'tsmc',
-        'tsmc_params': {
-            'epsilon': 0.01,
-            'max_iterations': 1000
-        }
-    }
-}
-```
 
 ## References
 

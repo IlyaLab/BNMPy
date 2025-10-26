@@ -2,6 +2,8 @@
 
 A Python library for Boolean Network (BN) and Probabilistic Boolean Network (PBN) modeling, simulation, optimization, and analysis with applications in systems biology.
 
+See [https://ilyalab.github.io/BNMPy/](https://ilyalab.github.io/BNMPy/) for detailed documentation.
+
 ## Installation
 
 To install, run `pip install -e .` in this directory.
@@ -13,52 +15,31 @@ To install, run `pip install -e .` in this directory.
 #### Basic operations
 
 - **Network loading**: Load networks from text files, SBML files, or string representations
-  - `load_network()` - Automatically detects BN vs PBN and file vs string
 - **Network construction**: Build networks from connectivity matrices and Boolean functions
-  - See [BMatrix README](./src/BMatrix_README.md)
 - **Network manipulation**: Knockout/knockdown specific nodes, rename nodes, merge networks
-  - `merge_networks`, `BN2PBN`, `extend_networks`
 - **Network visualization**: Interactive network visualizations with igraph and matplotlib
-  - `vis_network`, `vis_compression`, `vis_extension`
 
 #### Simulation
 
 - **Deterministic update**: Synchronous and asynchronous update schemes
-  - `network.update()`
 - **Stochastic update**: Add noise to represent biological uncertainty
-  - `network.update_noise()`
 - **Attractor analysis**: Find steady states and limit cycles
-  - `SteadyStateCalculator`
 
 ### 2. Probabilistic Boolean network
 
 Basic operations are similar to BNs.
 
 - **Stochastic Simulation**: Run Monte Carlo simulations over steps
-  - `pbn.update_noise()`
 - **Attractor analysis**: Find steady states (state distributions) via Monte Carlo or Two-state Markov Chain (TSMC) methods
-  - `SteadyStateCalculator`
 
 ### 3. Knowledge Graph (KG) augmentation
 
 BNMPy can build and extend models using the SIGNOR knowledge graph.
 
 * **Build KG-derived BN**: Build a Boolean Network (BN) directly from a Knowledge Graph (KG)
-
-  * `load_signor_network`
 * **Merge models**: Merge an original BN with a KG-derived model into either a BN or a PBN
-
-  * Deterministic: `merge_networks`
-  * Probabilistic (PBN): `merge_networks`
 * **Targeted extension to PBN**: Extend an existing BN by adding nodes and rules informed by KG
-
-  * `extend_networks`
-* **Phenotype scoring from KG paths**: Compute phenotype scores using simulation results and ProxPath-derived effects
-
-  * `phenotype_scores(genes, simulation_results, phenotypes=...)`
-    - Provide `genes` (preferred); used to query KG and to order columns in `simulation_results`
-    - Accepts `simulation_results` as pandas Series/DataFrame, numpy array, or BN attractor dict
-    - Column mapping priority: genes > network.nodeDict > existing pandas labels
+* **Phenotype scoring from KG paths**: Compute phenotype scores using gene-phenotype relations from KG
 
 ### 4. PBN Optimization
 
@@ -66,12 +47,9 @@ BNMPy can build and extend models using the SIGNOR knowledge graph.
 
 - **Objective function**: MSE-based optimization for experimental data fitting
 - **Optimization algorithms**: Differential evolution, particle swarm optimization
-  - `ParameterOptimizer`
 - **Discrete optimization**: Support for discrete parameter spaces
 - **Result Evaluation**: Compare predictions with experimental observations
-  - `SimulationEvaluator`, `ExperimentData`, `extract_experiment_nodes`, `generate_experiments`, `evaluate_optimization_result`, `evaluate_pbn`
 - **Model compression**: Simplify models while preserving behavior
-  - `compress_model`
 
 ## Examples
 
@@ -80,6 +58,7 @@ Tutorials:
 - **[BN_simulation.ipynb](./Examples/BN_simulation.ipynb)**: Basic Boolean network simulation
 - **[PBN_simulation.ipynb](./Examples/PBN_simulation.ipynb)**: Probabilistic Boolean network simulation
 - **[knowledge_graph.ipynb](./Examples/knowledge_graph.ipynb)**: Build from SIGNOR, extend, and merge into BN/PBN
+- **[phenotype_score.ipynb](./Examples/phenotype_score.ipynb)**: Calculate phenotype scores using simulation results
 - **[Optimization.ipynb](./Examples/Optimization.ipynb)**: Parameter optimization with experimental data
 - **[workflow_example.ipynb](./Examples/workflow_example.ipynb)**: Complete workflow from data to optimized model
 

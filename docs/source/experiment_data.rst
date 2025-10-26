@@ -1,25 +1,13 @@
 BNMPy.experiment_data
 =====================
 
-The experiment_data module provides tools for loading and managing experimental data for PBN optimization.
+The ExperimentData class loads and validates experimental data from CSV files. It handles stimuli, inhibitors, and measured values for model optimization.
 
 .. automodule:: BNMPy.experiment_data
    :members:
    :undoc-members:
    :show-inheritance:
 
-ExperimentData Class
---------------------
-
-.. autoclass:: BNMPy.experiment_data.ExperimentData
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Overview
---------
-
-The ExperimentData class loads and validates experimental data from CSV files. It handles stimuli, inhibitors, and measured values for model optimization.
 
 Data Format
 -----------
@@ -55,85 +43,3 @@ Efficacy Values
   - For stimuli (target=1): P(node=1) = efficacy, P(node=0) = 1-efficacy
 
 - **Example**: ``PI3K,0.7`` means PI3K inhibition has 70% probability of setting PI3K=0, 30% of PI3K=1
-
-Basic Usage
------------
-
-.. code-block:: python
-
-   import BNMPy
-
-   # Load experimental data
-   exp_data = BNMPy.ExperimentData("experiments.csv")
-
-   # Access experiment information
-   print(f"Number of experiments: {len(exp_data.experiments)}")
-   print(f"Measured nodes: {exp_data.get_measured_nodes()}")
-   print(f"Perturbed nodes: {exp_data.get_perturbed_nodes()}")
-
-   # Iterate through experiments
-   for exp in exp_data.experiments:
-       print(f"Experiment {exp['id']}:")
-       print(f"  Stimuli: {exp['stimuli']}")
-       print(f"  Inhibitors: {exp['inhibitors']}")
-       print(f"  Measurements: {exp['measurements']}")
-
-Utility Functions
------------------
-
-extract_experiment_nodes
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Extract measured and perturbed nodes from experimental data:
-
-.. code-block:: python
-
-   measured_nodes, perturbed_nodes = BNMPy.extract_experiment_nodes("experiments.csv")
-   print(f"Measured: {measured_nodes}")
-   print(f"Perturbed: {perturbed_nodes}")
-
-This is useful for model compression:
-
-.. code-block:: python
-
-   # Extract nodes from experiments
-   measured_nodes, perturbed_nodes = BNMPy.extract_experiment_nodes("experiments.csv")
-
-   # Compress model based on experimental information
-   compressed_network, info = BNMPy.compress_model(
-       network,
-       measured_nodes=measured_nodes,
-       perturbed_nodes=perturbed_nodes
-   )
-
-generate_experiments
-~~~~~~~~~~~~~~~~~~~~
-
-Generate hypothesized experimental values using the current PBN parameters:
-
-.. code-block:: python
-
-   # Generate predictions for experiments
-   results_df = BNMPy.generate_experiments(
-       pbn,
-       experiment_csv="experiments.csv",
-       output_csv="predicted_experiments.csv",
-       config={'steady_state': {'method': 'monte_carlo'}}
-   )
-
-   # The output DataFrame contains:
-   # - Original experiment conditions in experiment_csv
-   # - Predicted values based on current PBN parameters
-
-This is useful for:
-
-- Validating model predictions before optimization
-- Comparing different parameter sets
-- Generating synthetic data for testing
-
-See Also
---------
-
-- :doc:`parameter_optimizer` - Main optimization interface
-- :doc:`simulation_evaluator` - Simulation evaluation
-- :doc:`model_compressor` - Model compression

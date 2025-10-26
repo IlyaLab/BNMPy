@@ -8,28 +8,6 @@ The result_evaluation module provides tools for evaluating optimization results.
    :undoc-members:
    :show-inheritance:
 
-Overview
---------
-
-This module provides functions to evaluate and visualize optimization results, including prediction quality, residual analysis, and model performance metrics.
-
-Functions
----------
-
-evaluate_optimization_result
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autofunction:: BNMPy.result_evaluation.evaluate_optimization_result
-
-Comprehensive evaluation of optimization results with plots and reports.
-
-evaluate_pbn
-~~~~~~~~~~~~
-
-.. autofunction:: BNMPy.result_evaluation.evaluate_pbn
-
-Evaluate a PBN against experimental data directly.
-
 Basic Usage
 -----------
 
