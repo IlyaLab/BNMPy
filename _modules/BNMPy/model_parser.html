@@ -192,6 +192,7 @@
   <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../knowledge_graph_guide.html">Knowledge Graph Augmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../optimization_guide.html">BNMPy Optimizer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../steady_state_guide.html">Steady State Calculation Guide</a></li>
 </ul>
@@ -205,6 +206,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../vis.html">BNMPy.vis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../build_bn_from_kg.html">BNMPy.build_bn_from_kg</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../model_parser.html">BNMPy.model_parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../phenotype_score.html">Phenotype Score Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../parameter_optimizer.html">BNMPy.parameter_optimizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../simulation_evaluator.html">BNMPy.simulation_evaluator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../experiment_data.html">BNMPy.experiment_data</a></li>
@@ -527,7 +529,7 @@
 
 <div class="viewcode-block" id="BN2PBN">
 <a class="viewcode-back" href="../../model_parser.html#BNMPy.model_parser.BN2PBN">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">BN2PBN</span><span class="p">(</span><span class="n">bn_string</span><span class="p">,</span> <span class="n">prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">fixed_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">BN2PBN</span><span class="p">(</span><span class="n">bn</span><span class="p">,</span> <span class="n">prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">fixed_nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Expand the boolean network to a PBN by adding a self-loop as alternative function</span>
 <span class="sd">    prob: probability of the equations from the original BN</span>
@@ -537,12 +539,12 @@
 <span class="sd">        pbn_string: string of the PBN</span>
 <span class="sd">        nodes_to_optimize: list of nodes excludes input nodes</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Parse equations from BN</span>
+    <span class="c1"># Parse equations from BN to a dictionary, seperate by &#39;=&#39;</span>
     <span class="n">bn_equations</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">bn_string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
-        <span class="k">if</span> <span class="s1">&#39;=&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-            <span class="n">target</span><span class="p">,</span> <span class="n">rule</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">bn_equations</span><span class="p">[</span><span class="n">target</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">eqn</span> <span class="ow">in</span> <span class="n">bn</span><span class="o">.</span><span class="n">equations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;=&#39;</span> <span class="ow">in</span> <span class="n">eqn</span><span class="p">:</span>
+            <span class="n">target</span><span class="p">,</span> <span class="n">expr</span> <span class="o">=</span> <span class="n">eqn</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">bn_equations</span><span class="p">[</span><span class="n">target</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
     
     <span class="c1"># Expand rules</span>
     <span class="n">pbn_equations</span> <span class="o">=</span> <span class="p">[]</span>

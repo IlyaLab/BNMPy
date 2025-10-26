@@ -28,6 +28,7 @@ Knowledge Graph Integration
 
    build_bn_from_kg
    model_parser
+   phenotype_score
 
 Optimization Modules
 --------------------

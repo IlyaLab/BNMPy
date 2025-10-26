@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="BNMPy.parameter_optimizer" href="parameter_optimizer.html"><link rel="prev" title="BNMPy.build_bn_from_kg" href="build_bn_from_kg.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Phenotype Score Module" href="phenotype_score.html"><link rel="prev" title="BNMPy.build_bn_from_kg" href="build_bn_from_kg.html">
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2025.09.25 -->
         <title>BNMPy.model_parser - BNMPy 0.1 documentation</title>
@@ -193,6 +193,7 @@
   <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="knowledge_graph_guide.html">Knowledge Graph Augmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimization_guide.html">BNMPy Optimizer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="steady_state_guide.html">Steady State Calculation Guide</a></li>
 </ul>
@@ -206,6 +207,7 @@
 <li class="toctree-l2"><a class="reference internal" href="vis.html">BNMPy.vis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="build_bn_from_kg.html">BNMPy.build_bn_from_kg</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">BNMPy.model_parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phenotype_score.html">Phenotype Score Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html">BNMPy.parameter_optimizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation_evaluator.html">BNMPy.simulation_evaluator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="experiment_data.html">BNMPy.experiment_data</a></li>
@@ -328,7 +330,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="BNMPy.model_parser.BN2PBN">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.model_parser.</span></span><span class="sig-name descname"><span class="pre">BN2PBN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bn_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/model_parser.html#BN2PBN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.model_parser.BN2PBN" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">BNMPy.model_parser.</span></span><span class="sig-name descname"><span class="pre">BN2PBN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/model_parser.html#BN2PBN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.model_parser.BN2PBN" title="Link to this definition">¶</a></dt>
 <dd><p>Expand the boolean network to a PBN by adding a self-loop as alternative function
 prob: probability of the equations from the original BN
 fixed_nodes: list of nodes that are fixed (e.g., output nodes)</p>
@@ -393,7 +395,7 @@ This will return a PBN where:
 <p>Convert a Boolean Network to a Probabilistic Boolean Network by adding a self-loop as alternative function.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="id1">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.model_parser.</span></span><span class="sig-name descname"><span class="pre">BN2PBN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bn_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/model_parser.html#BN2PBN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">BNMPy.model_parser.</span></span><span class="sig-name descname"><span class="pre">BN2PBN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/model_parser.html#BN2PBN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
 <dd><p>Expand the boolean network to a PBN by adding a self-loop as alternative function
 prob: probability of the equations from the original BN
 fixed_nodes: list of nodes that are fixed (e.g., output nodes)</p>
@@ -479,12 +481,12 @@ This will return a PBN where:
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="parameter_optimizer.html">
+          <a class="next-page" href="phenotype_score.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">BNMPy.parameter_optimizer</div>
+                <div class="title">Phenotype Score Module</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

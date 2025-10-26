@@ -33,16 +33,16 @@ Quick Start
 Loading a Network
 ~~~~~~~~~~~~~~~~~
 
-BNMPy supports loading networks from text files or strings:
+BNMPy provides a unified function to load networks from files or strings. The function automatically detects the format (Boolean Network or Probabilistic Boolean Network):
 
 .. code-block:: python
 
    import BNMPy
 
    # From a text file
-   network = BNMPy.load_network_from_file("network.txt")
+   network = BNMPy.load_network("network.txt")
 
-   # From a string
+   # Or from a string
    network_string = """
    A = A
    B = C
@@ -51,7 +51,7 @@ BNMPy supports loading networks from text files or strings:
    E = C & D
    F = !A & B
    """
-   network = BNMPy.load_network_from_string(
+   network = BNMPy.load_network(
        network_string,
        initial_state=[0, 0, 0, 0, 0, 0]
    )
@@ -101,6 +101,25 @@ You can specify initial states in two ways:
    )
 
 Gene order can be obtained from ``network.nodeDict``.
+
+Phenotype Scoring (KG)
+----------------------
+
+Use SIGNOR-derived paths to compute phenotype scores given simulation results:
+
+.. code-block:: python
+
+   from BNMPy import phenotype_scores
+
+   # genes serves both to query KG and define the mapping of simulation columns
+   genes = list(network.nodeDict.keys())
+   scores = phenotype_scores(
+       genes=genes,
+       simulation_results=steady_state,  # pandas/numpy/dict supported
+       phenotypes=['APOPTOSIS', 'PROLIFERATION', 'DIFFERENTIATION']
+   )
+
+Mapping priority for simulation columns is: genes > network.nodeDict > existing pandas labels.
 
 Basic Simulation
 ----------------
@@ -178,34 +197,36 @@ Probabilistic Boolean Networks
 Loading a PBN
 ~~~~~~~~~~~~~
 
+PBNs are loaded using the same ``load_network()`` function. The function automatically detects the PBN format based on probabilities:
+
 .. code-block:: python
 
    # From file
-   pbn = BNMPy.load_pbn_from_file("pbn_network.txt")
+   pbn = BNMPy.load_network("pbn_network.txt")
 
-   # From string
+   # Or from string
    pbn_string = """
-   Gene1 = Gene2 & Gene3 | 0.6
-   Gene1 = Gene4 | 0.4
+   Gene1 = Gene2 & Gene3, 0.6
+   Gene1 = Gene4, 0.4
    Gene2 = !Gene1
    """
-   pbn = BNMPy.load_pbn_from_string(pbn_string)
+   pbn = BNMPy.load_network(pbn_string)
 
 PBN Format
 ~~~~~~~~~~
 
-Each gene can have multiple rules with probabilities:
+Each gene can have multiple rules with probabilities (format: ``gene = expression, probability``):
 
 .. code-block:: text
 
    # Gene with two alternative rules
-   GeneA = GeneB & GeneC | 0.7
-   GeneA = !GeneD | 0.3
+   GeneA = GeneB & GeneC, 0.7
+   GeneA = !GeneD, 0.3
 
-   # Gene with single rule
+   # Gene with single rule (probability defaults to 1.0)
    GeneB = GeneA
 
-Probabilities must sum to 1.0 for each gene.
+Probabilities must sum to 1.0 for each gene with multiple rules.
 
 
 PBN Simulation
@@ -252,8 +273,8 @@ Combine multiple networks:
 .. code-block:: python
 
    # Load networks
-   network1 = BNMPy.load_network_from_file("network1.txt")
-   network2 = BNMPy.load_network_from_file("network2.txt")
+   network1 = BNMPy.load_network("network1.txt")
+   network2 = BNMPy.load_network("network2.txt")
 
    # Merge into Boolean Network using Inhibitor Wins method
    merged_bn = BNMPy.merge_networks([network1, network2], method='Inhibitor Wins')
@@ -261,10 +282,8 @@ Combine multiple networks:
    # Merge into PBN (creates alternative rules with probability 0.9)
    merged_pbn = BNMPy.merge_networks([network1, network2], method='PBN', prob=0.9)
 
-Next Steps
+More Information
 ----------
-
-Now that you've learned the basics, explore:
 
 - :doc:`tutorials` - Detailed tutorials with examples
 - :doc:`steady_state_guide` - Advanced steady state analysis

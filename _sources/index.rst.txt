@@ -15,6 +15,7 @@ Documentation
    :caption: User Guide:
 
    getting_started
+   knowledge_graph_guide
    optimization_guide
    steady_state_guide
 

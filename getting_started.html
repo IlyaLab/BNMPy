@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="BNMPy Optimizer" href="optimization_guide.html"><link rel="prev" title="Welcome to BNMPy’s documentation!" href="index.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Knowledge Graph Augmentation" href="knowledge_graph_guide.html"><link rel="prev" title="Welcome to BNMPy’s documentation!" href="index.html">
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2025.09.25 -->
         <title>Getting Started - BNMPy 0.1 documentation</title>
@@ -193,6 +193,7 @@
   <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
 <ul class="current">
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="knowledge_graph_guide.html">Knowledge Graph Augmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimization_guide.html">BNMPy Optimizer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="steady_state_guide.html">Steady State Calculation Guide</a></li>
 </ul>
@@ -206,6 +207,7 @@
 <li class="toctree-l2"><a class="reference internal" href="vis.html">BNMPy.vis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="build_bn_from_kg.html">BNMPy.build_bn_from_kg</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model_parser.html">BNMPy.model_parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phenotype_score.html">Phenotype Score Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html">BNMPy.parameter_optimizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation_evaluator.html">BNMPy.simulation_evaluator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="experiment_data.html">BNMPy.experiment_data</a></li>
@@ -279,13 +281,13 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">¶</a></h2>
 <section id="loading-a-network">
 <h3>Loading a Network<a class="headerlink" href="#loading-a-network" title="Link to this heading">¶</a></h3>
-<p>BNMPy supports loading networks from text files or strings:</p>
+<p>BNMPy provides a unified function to load networks from files or strings. The function automatically detects the format (Boolean Network or Probabilistic Boolean Network):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">BNMPy</span>
 
 <span class="c1"># From a text file</span>
-<span class="n">network</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network_from_file</span><span class="p">(</span><span class="s2">&quot;network.txt&quot;</span><span class="p">)</span>
+<span class="n">network</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="s2">&quot;network.txt&quot;</span><span class="p">)</span>
 
-<span class="c1"># From a string</span>
+<span class="c1"># Or from a string</span>
 <span class="n">network_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">A = A</span>
 <span class="s2">B = C</span>
@@ -294,7 +296,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <span class="s2">E = C &amp; D</span>
 <span class="s2">F = !A &amp; B</span>
 <span class="s2">&quot;&quot;&quot;</span>
-<span class="n">network</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network_from_string</span><span class="p">(</span>
+<span class="n">network</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span>
     <span class="n">network_string</span><span class="p">,</span>
     <span class="n">initial_state</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 <span class="p">)</span>
@@ -339,6 +341,22 @@ Gene5 = !Gene1 &amp; Gene2
 </div>
 <p>Gene order can be obtained from <code class="docutils literal notranslate"><span class="pre">network.nodeDict</span></code>.</p>
 </section>
+</section>
+<section id="phenotype-scoring-kg">
+<h2>Phenotype Scoring (KG)<a class="headerlink" href="#phenotype-scoring-kg" title="Link to this heading">¶</a></h2>
+<p>Use SIGNOR-derived paths to compute phenotype scores given simulation results:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">BNMPy</span><span class="w"> </span><span class="kn">import</span> <span class="n">phenotype_scores</span>
+
+<span class="c1"># genes serves both to query KG and define the mapping of simulation columns</span>
+<span class="n">genes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">network</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">phenotype_scores</span><span class="p">(</span>
+    <span class="n">genes</span><span class="o">=</span><span class="n">genes</span><span class="p">,</span>
+    <span class="n">simulation_results</span><span class="o">=</span><span class="n">steady_state</span><span class="p">,</span>  <span class="c1"># pandas/numpy/dict supported</span>
+    <span class="n">phenotypes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;APOPTOSIS&#39;</span><span class="p">,</span> <span class="s1">&#39;PROLIFERATION&#39;</span><span class="p">,</span> <span class="s1">&#39;DIFFERENTIATION&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Mapping priority for simulation columns is: genes &gt; network.nodeDict &gt; existing pandas labels.</p>
 </section>
 <section id="basic-simulation">
 <h2>Basic Simulation<a class="headerlink" href="#basic-simulation" title="Link to this heading">¶</a></h2>
@@ -404,31 +422,32 @@ Gene5 = !Gene1 &amp; Gene2
 <h2>Probabilistic Boolean Networks<a class="headerlink" href="#probabilistic-boolean-networks" title="Link to this heading">¶</a></h2>
 <section id="loading-a-pbn">
 <h3>Loading a PBN<a class="headerlink" href="#loading-a-pbn" title="Link to this heading">¶</a></h3>
+<p>PBNs are loaded using the same <code class="docutils literal notranslate"><span class="pre">load_network()</span></code> function. The function automatically detects the PBN format based on probabilities:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># From file</span>
-<span class="n">pbn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_pbn_from_file</span><span class="p">(</span><span class="s2">&quot;pbn_network.txt&quot;</span><span class="p">)</span>
+<span class="n">pbn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="s2">&quot;pbn_network.txt&quot;</span><span class="p">)</span>
 
-<span class="c1"># From string</span>
+<span class="c1"># Or from string</span>
 <span class="n">pbn_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">Gene1 = Gene2 &amp; Gene3 | 0.6</span>
-<span class="s2">Gene1 = Gene4 | 0.4</span>
+<span class="s2">Gene1 = Gene2 &amp; Gene3, 0.6</span>
+<span class="s2">Gene1 = Gene4, 0.4</span>
 <span class="s2">Gene2 = !Gene1</span>
 <span class="s2">&quot;&quot;&quot;</span>
-<span class="n">pbn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_pbn_from_string</span><span class="p">(</span><span class="n">pbn_string</span><span class="p">)</span>
+<span class="n">pbn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="n">pbn_string</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="pbn-format">
 <h3>PBN Format<a class="headerlink" href="#pbn-format" title="Link to this heading">¶</a></h3>
-<p>Each gene can have multiple rules with probabilities:</p>
+<p>Each gene can have multiple rules with probabilities (format: <code class="docutils literal notranslate"><span class="pre">gene</span> <span class="pre">=</span> <span class="pre">expression,</span> <span class="pre">probability</span></code>):</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span># Gene with two alternative rules
-GeneA = GeneB &amp; GeneC | 0.7
-GeneA = !GeneD | 0.3
+GeneA = GeneB &amp; GeneC, 0.7
+GeneA = !GeneD, 0.3
 
-# Gene with single rule
+# Gene with single rule (probability defaults to 1.0)
 GeneB = GeneA
 </pre></div>
 </div>
-<p>Probabilities must sum to 1.0 for each gene.</p>
+<p>Probabilities must sum to 1.0 for each gene with multiple rules.</p>
 </section>
 <section id="pbn-simulation">
 <h3>PBN Simulation<a class="headerlink" href="#pbn-simulation" title="Link to this heading">¶</a></h3>
@@ -466,8 +485,8 @@ GeneB = GeneA
 <h3>Merging Networks<a class="headerlink" href="#merging-networks" title="Link to this heading">¶</a></h3>
 <p>Combine multiple networks:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load networks</span>
-<span class="n">network1</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network_from_file</span><span class="p">(</span><span class="s2">&quot;network1.txt&quot;</span><span class="p">)</span>
-<span class="n">network2</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network_from_file</span><span class="p">(</span><span class="s2">&quot;network2.txt&quot;</span><span class="p">)</span>
+<span class="n">network1</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="s2">&quot;network1.txt&quot;</span><span class="p">)</span>
+<span class="n">network2</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="s2">&quot;network2.txt&quot;</span><span class="p">)</span>
 
 <span class="c1"># Merge into Boolean Network using Inhibitor Wins method</span>
 <span class="n">merged_bn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">merge_networks</span><span class="p">([</span><span class="n">network1</span><span class="p">,</span> <span class="n">network2</span><span class="p">],</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;Inhibitor Wins&#39;</span><span class="p">)</span>
@@ -478,9 +497,8 @@ GeneB = GeneA
 </div>
 </section>
 </section>
-<section id="next-steps">
-<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">¶</a></h2>
-<p>Now that you’ve learned the basics, explore:</p>
+<section id="more-information">
+<h2>More Information<a class="headerlink" href="#more-information" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><span class="xref std std-doc">tutorials</span> - Detailed tutorials with examples</p></li>
 <li><p><a class="reference internal" href="steady_state_guide.html"><span class="doc">Steady State Calculation Guide</span></a> - Advanced steady state analysis</p></li>
@@ -512,12 +530,12 @@ GeneB = GeneA
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="optimization_guide.html">
+          <a class="next-page" href="knowledge_graph_guide.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">BNMPy Optimizer</div>
+                <div class="title">Knowledge Graph Augmentation</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -573,6 +591,7 @@ GeneB = GeneA
 <li><a class="reference internal" href="#initial-states">Initial States</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#phenotype-scoring-kg">Phenotype Scoring (KG)</a></li>
 <li><a class="reference internal" href="#basic-simulation">Basic Simulation</a><ul>
 <li><a class="reference internal" href="#deterministic-update">Deterministic Update</a></li>
 <li><a class="reference internal" href="#stochastic-update">Stochastic Update</a></li>
@@ -591,7 +610,7 @@ GeneB = GeneA
 <li><a class="reference internal" href="#merging-networks">Merging Networks</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#next-steps">Next Steps</a></li>
+<li><a class="reference internal" href="#more-information">More Information</a></li>
 <li><a class="reference internal" href="#examples">Examples</a></li>
 <li><a class="reference internal" href="#applications">Applications</a></li>
 </ul>

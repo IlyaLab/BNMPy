@@ -192,6 +192,7 @@
   <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../knowledge_graph_guide.html">Knowledge Graph Augmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../optimization_guide.html">BNMPy Optimizer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../steady_state_guide.html">Steady State Calculation Guide</a></li>
 </ul>
@@ -205,6 +206,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../vis.html">BNMPy.vis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../build_bn_from_kg.html">BNMPy.build_bn_from_kg</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../model_parser.html">BNMPy.model_parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../phenotype_score.html">Phenotype Score Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../parameter_optimizer.html">BNMPy.parameter_optimizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../simulation_evaluator.html">BNMPy.simulation_evaluator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../experiment_data.html">BNMPy.experiment_data</a></li>
@@ -262,34 +264,47 @@
 
 <div class="viewcode-block" id="get_equations">
 <a class="viewcode-back" href="../../bmatrix.html#BNMPy.BMatrix.get_equations">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_equations</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-        <span class="n">file_equations</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-    <span class="c1"># Filter out empty lines and comment lines (starting with #)</span>
-    <span class="c1"># For non-comment lines, remove inline comments (after #)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_equations</span><span class="p">(</span><span class="n">file</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">string</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">string</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">string</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either file or string must be provided&quot;</span><span class="p">)</span>
+    <span class="n">seen_genes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">duplicate_genes</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">equations</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">file_equations</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">string</span><span class="p">:</span>
         <span class="n">equation</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">equation</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">equation</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
             <span class="c1"># Remove inline comments</span>
             <span class="k">if</span> <span class="s1">&#39;#&#39;</span> <span class="ow">in</span> <span class="n">equation</span><span class="p">:</span>
                 <span class="n">equation</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">equation</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">equation</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">equation</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="s1">&#39;=&#39;</span> <span class="ow">in</span> <span class="n">equation</span><span class="p">:</span>
+                <span class="n">parts</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+                <span class="n">gene</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">gene</span> <span class="ow">and</span> <span class="n">gene</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_genes</span><span class="p">:</span>
+                    <span class="n">seen_genes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gene</span><span class="p">)</span>
+                    <span class="n">equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">equation</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">gene</span> <span class="ow">and</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">seen_genes</span><span class="p">:</span>
+                    <span class="n">duplicate_genes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gene</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">duplicate_genes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Duplicate genes found: </span><span class="si">{</span><span class="n">duplicate_genes</span><span class="si">}</span><span class="se">\n</span><span class="s2">Using the first occurrence of each gene.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">equations</span></div>
+
 
 
 <div class="viewcode-block" id="get_gene_dict">
 <a class="viewcode-back" href="../../bmatrix.html#BNMPy.BMatrix.get_gene_dict">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_gene_dict</span><span class="p">(</span><span class="n">equations</span><span class="p">):</span>
     <span class="n">left_side</span> <span class="o">=</span> <span class="p">[]</span>
-    
     <span class="k">for</span> <span class="n">equation</span> <span class="ow">in</span> <span class="n">equations</span><span class="p">:</span>
         <span class="n">parts</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">left_side</span><span class="p">:</span>
             <span class="n">left_side</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-
+    
     <span class="n">genes</span> <span class="o">=</span> <span class="n">left_side</span>
     
     <span class="c1"># making a dictionary for the genes starting from 0</span>
@@ -682,19 +697,8 @@
 <span class="sd">        If None, random initial values are used.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">.booleanNetwork</span><span class="w"> </span><span class="kn">import</span> <span class="n">BooleanNetwork</span>
-    <span class="n">equations</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">network_string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
-    <span class="c1"># Filter out empty lines and comment lines (starting with #)</span>
-    <span class="c1"># For non-comment lines, remove inline comments (after #)</span>
-    <span class="n">processed_equations</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">eq</span> <span class="ow">in</span> <span class="n">equations</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">eq</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
-            <span class="c1"># Remove inline comments</span>
-            <span class="k">if</span> <span class="s1">&#39;#&#39;</span> <span class="ow">in</span> <span class="n">eq</span><span class="p">:</span>
-                <span class="n">eq</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">processed_equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
-    
-    <span class="n">equations</span> <span class="o">=</span> <span class="n">processed_equations</span>
+    <span class="n">equations</span> <span class="o">=</span> <span class="n">get_equations</span><span class="p">(</span><span class="n">string</span> <span class="o">=</span> <span class="n">network_string</span><span class="p">)</span>
+
     <span class="n">ngenes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span>
     <span class="n">gene_dict</span> <span class="o">=</span> <span class="n">get_gene_dict</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span>
     <span class="n">upstream_genes</span> <span class="o">=</span> <span class="n">get_upstream_genes</span><span class="p">(</span><span class="n">equations</span><span class="p">)</span>
@@ -783,6 +787,7 @@
 
     <span class="n">gene_funcs</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">gene_probs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">seen_gene_funcs</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Track which gene-function combinations we&#39;ve seen</span>
     
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
         <span class="c1"># Check if line contains probability</span>
@@ -799,6 +804,12 @@
         <span class="n">gene</span><span class="p">,</span> <span class="n">equation</span> <span class="o">=</span> <span class="n">func_part</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">gene</span> <span class="o">=</span> <span class="n">gene</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="n">equation</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        
+        <span class="c1"># Check for duplicate gene-function pairs</span>
+        <span class="n">gene_func_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">gene</span><span class="p">,</span> <span class="n">equation</span><span class="p">,</span> <span class="n">probability</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">gene_func_key</span> <span class="ow">in</span> <span class="n">seen_gene_funcs</span><span class="p">:</span>
+            <span class="k">continue</span>  <span class="c1"># Skip duplicate</span>
+        <span class="n">seen_gene_funcs</span><span class="p">[</span><span class="n">gene_func_key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         
         <span class="k">if</span> <span class="n">gene</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gene_funcs</span><span class="p">:</span>
             <span class="n">gene_funcs</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -924,6 +935,7 @@
 
     <span class="n">gene_funcs</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">gene_probs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">seen_gene_funcs</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Track which gene-function combinations we&#39;ve seen</span>
     
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
         <span class="c1"># Skip empty lines</span>
@@ -945,6 +957,12 @@
         <span class="n">gene</span><span class="p">,</span> <span class="n">equation</span> <span class="o">=</span> <span class="n">func_part</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">gene</span> <span class="o">=</span> <span class="n">gene</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="n">equation</span> <span class="o">=</span> <span class="n">equation</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        
+        <span class="c1"># Check for duplicate gene-function pairs</span>
+        <span class="n">gene_func_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">gene</span><span class="p">,</span> <span class="n">equation</span><span class="p">,</span> <span class="n">probability</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">gene_func_key</span> <span class="ow">in</span> <span class="n">seen_gene_funcs</span><span class="p">:</span>
+            <span class="k">continue</span>  <span class="c1"># Skip duplicate</span>
+        <span class="n">seen_gene_funcs</span><span class="p">[</span><span class="n">gene_func_key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         
         <span class="k">if</span> <span class="n">gene</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gene_funcs</span><span class="p">:</span>
             <span class="n">gene_funcs</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1031,6 +1049,135 @@
     <span class="n">network</span><span class="o">.</span><span class="n">equations</span> <span class="o">=</span> <span class="n">all_equations</span>  <span class="c1"># Store the expanded equations</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PBN loaded successfully. There are </span><span class="si">{</span><span class="n">ngenes</span><span class="si">}</span><span class="s2"> genes in the network.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">network</span></div>
+
+
+<div class="viewcode-block" id="load_network">
+<a class="viewcode-back" href="../../bmatrix.html#BNMPy.BMatrix.load_network">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_network</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">initial_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">network_type</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unified function to load a Boolean Network or Probabilistic Boolean Network from a file or string.</span>
+<span class="sd">    </span>
+<span class="sd">    This function automatically detects whether the input is a file path or a network string,</span>
+<span class="sd">    and whether it represents a Boolean Network (BN) or Probabilistic Boolean Network (PBN).</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    source : str</span>
+<span class="sd">        Either a file path to a network definition file, or a string containing the network definition.</span>
+<span class="sd">        The function automatically detects which one it is.</span>
+<span class="sd">        </span>
+<span class="sd">    initial_state : array-like or dict, optional</span>
+<span class="sd">        Initial values for each node. If array-like, order matches gene order in the network.</span>
+<span class="sd">        If dict, keys are gene names and values are initial states (0 or 1).</span>
+<span class="sd">        If None, random initial values are used.</span>
+<span class="sd">        </span>
+<span class="sd">    network_type : str, optional</span>
+<span class="sd">        Type of network to load. Options are:</span>
+<span class="sd">        - &#39;auto&#39; (default): Automatically detect BN vs PBN based on presence of probabilities</span>
+<span class="sd">        - &#39;bn&#39;: Force loading as Boolean Network</span>
+<span class="sd">        - &#39;pbn&#39;: Force loading as Probabilistic Boolean Network</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    BooleanNetwork or ProbabilisticBN</span>
+<span class="sd">        A network object of the appropriate type</span>
+<span class="sd">    </span>
+<span class="sd">    Examples:</span>
+<span class="sd">    ---------</span>
+<span class="sd">    Load a BN from file:</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; network = load_network(&#39;my_network.txt&#39;)</span>
+<span class="sd">    </span>
+<span class="sd">    Load a BN from string:</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; network_str = &#39;&#39;&#39;</span>
+<span class="sd">    ... A = A</span>
+<span class="sd">    ... B = A &amp; C</span>
+<span class="sd">    ... C = B | A</span>
+<span class="sd">    ... &#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; network = load_network(network_str)</span>
+<span class="sd">    </span>
+<span class="sd">    Load a PBN from file:</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; pbn = load_network(&#39;my_pbn.txt&#39;)</span>
+<span class="sd">    </span>
+<span class="sd">    Load a PBN from string with initial state:</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; pbn_str = &#39;&#39;&#39;</span>
+<span class="sd">    ... x1 = (x1 | x2), 0.6</span>
+<span class="sd">    ... x1 = (!x1 &amp; x2), 0.4</span>
+<span class="sd">    ... x2 = x1 &amp; x2</span>
+<span class="sd">    ... &#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; pbn = load_network(pbn_str, initial_state={&#39;x1&#39;: 1, &#39;x2&#39;: 0})</span>
+<span class="sd">    </span>
+<span class="sd">    Notes:</span>
+<span class="sd">    ------</span>
+<span class="sd">    - For BN format: Each line should have format &#39;gene = boolean_expression&#39;</span>
+<span class="sd">    - For PBN format: Each line should have format &#39;gene = boolean_expression, probability&#39;</span>
+<span class="sd">    - Probabilities can be omitted if there&#39;s only one function for a gene</span>
+<span class="sd">    - Duplicate equations for the same gene are automatically filtered (first occurrence is kept)</span>
+<span class="sd">    - Comments (lines starting with #) and inline comments (after #) are ignored</span>
+<span class="sd">    - Constant values (0 or 1) are supported for genes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Detect if source is a file or string</span>
+    <span class="n">is_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    
+    <span class="c1"># Get raw lines for detection</span>
+    <span class="k">if</span> <span class="n">is_file</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">raw_lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">raw_lines</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># Clean and filter lines for detection</span>
+    <span class="n">detection_lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">raw_lines</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
+            <span class="c1"># Remove inline comments</span>
+            <span class="k">if</span> <span class="s1">&#39;#&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="s1">&#39;=&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">detection_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    
+    <span class="c1"># Auto-detect network type if needed</span>
+    <span class="k">if</span> <span class="n">network_type</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+        <span class="n">is_pbn</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">detection_lines</span><span class="p">:</span>
+            <span class="c1"># Check if line contains a comma after the equation (probability indicator)</span>
+            <span class="k">if</span> <span class="s1">&#39;=&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">right_side</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="c1"># Check if there&#39;s a comma that&#39;s not inside parentheses</span>
+                    <span class="n">paren_count</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">right_side</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;(&#39;</span><span class="p">:</span>
+                            <span class="n">paren_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">elif</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;)&#39;</span><span class="p">:</span>
+                            <span class="n">paren_count</span> <span class="o">-=</span> <span class="mi">1</span>
+                        <span class="k">elif</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;,&#39;</span> <span class="ow">and</span> <span class="n">paren_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="c1"># Found a comma outside parentheses - this is a probability</span>
+                            <span class="n">is_pbn</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="k">break</span>
+            <span class="k">if</span> <span class="n">is_pbn</span><span class="p">:</span>
+                <span class="k">break</span>
+        
+        <span class="n">network_type</span> <span class="o">=</span> <span class="s1">&#39;pbn&#39;</span> <span class="k">if</span> <span class="n">is_pbn</span> <span class="k">else</span> <span class="s1">&#39;bn&#39;</span>
+    
+    <span class="c1"># Load the appropriate network type</span>
+    <span class="k">if</span> <span class="n">network_type</span> <span class="o">==</span> <span class="s1">&#39;bn&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_file</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">load_network_from_file</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">initial_state</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">load_network_from_string</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">initial_state</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">network_type</span> <span class="o">==</span> <span class="s1">&#39;pbn&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_file</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">load_pbn_from_file</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">initial_state</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">load_pbn_from_string</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">initial_state</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid network_type: </span><span class="si">{</span><span class="n">network_type</span><span class="si">}</span><span class="s2">. Must be &#39;auto&#39;, &#39;bn&#39;, or &#39;pbn&#39;&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="rename_nodes">
