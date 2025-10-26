@@ -14,10 +14,11 @@ Documentation
    :maxdepth: 2
    :caption: User Guide:
 
-   getting_started
+   basic_simulation
    knowledge_graph_guide
-   optimization_guide
+   phenotype_score_guide
    steady_state_guide
+   optimization_guide
 
 .. toctree::
    :maxdepth: 2

@@ -178,6 +178,7 @@ The function supports multiple simulation result formats:
 - numpy arrays
 - BN attractor dictionaries
 
+See documentation for :doc:`phenotype_score_guide` for more details.
 
 Complete Workflow Example
 -------------------------

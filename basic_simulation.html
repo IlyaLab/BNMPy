@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Knowledge Graph Augmentation" href="knowledge_graph_guide.html"><link rel="prev" title="Welcome to BNMPy’s documentation!" href="index.html">
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2025.09.25 -->
-        <title>Getting Started - BNMPy 0.1 documentation</title>
+        <title>Basic Simulation - BNMPy 0.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=580074bf" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -161,7 +161,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">BNMPy 0.1 documentation</div></a>
+      <a href="index.html"><div class="brand">BNMPy 0.2 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -182,7 +182,7 @@
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
-  <span class="sidebar-brand-text">BNMPy 0.1 documentation</span>
+  <span class="sidebar-brand-text">BNMPy 0.2 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -192,10 +192,11 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
 <ul class="current">
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Getting Started</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Basic Simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="knowledge_graph_guide.html">Knowledge Graph Augmentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="optimization_guide.html">BNMPy Optimizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phenotype_score_guide.html">Phenotype Score</a></li>
 <li class="toctree-l1"><a class="reference internal" href="steady_state_guide.html">Steady State Calculation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimization_guide.html">BNMPy Optimizer</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
 <ul>
@@ -207,7 +208,7 @@
 <li class="toctree-l2"><a class="reference internal" href="vis.html">BNMPy.vis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="build_bn_from_kg.html">BNMPy.build_bn_from_kg</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model_parser.html">BNMPy.model_parser</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phenotype_score.html">Phenotype Score Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phenotype_score.html">BNMPy.phenotype_score</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html">BNMPy.parameter_optimizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation_evaluator.html">BNMPy.simulation_evaluator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="experiment_data.html">BNMPy.experiment_data</a></li>
@@ -235,7 +236,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="_sources/getting_started.rst.txt" title="View this page">
+  <a class="muted-link" href="_sources/basic_simulation.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -253,8 +254,8 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h1>
+          <section id="basic-simulation">
+<h1>Basic Simulation<a class="headerlink" href="#basic-simulation" title="Link to this heading">¶</a></h1>
 <p>Welcome to BNMPy! This guide will help you get started with Boolean Network and Probabilistic Boolean Network modeling.</p>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
@@ -267,14 +268,15 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <h3>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">¶</a></h3>
 <p>BNMPy requires the following packages:</p>
 <ul class="simple">
-<li><p>numpy</p></li>
-<li><p>scipy</p></li>
 <li><p>pandas</p></li>
-<li><p>matplotlib</p></li>
+<li><p>numpy</p></li>
+<li><p>typing</p></li>
+<li><p>dataclasses</p></li>
 <li><p>networkx</p></li>
-<li><p>pyswarms (for optimization)</p></li>
+<li><p>scipy == 1.15.2</p></li>
+<li><p>pyswarms == 1.3.0</p></li>
 </ul>
-<p>These will be installed automatically when you install BNMPy.</p>
+<p>These will be installed automatically when you install BNMPy using the command above.</p>
 </section>
 </section>
 <section id="quick-start">
@@ -342,24 +344,8 @@ Gene5 = !Gene1 &amp; Gene2
 <p>Gene order can be obtained from <code class="docutils literal notranslate"><span class="pre">network.nodeDict</span></code>.</p>
 </section>
 </section>
-<section id="phenotype-scoring-kg">
-<h2>Phenotype Scoring (KG)<a class="headerlink" href="#phenotype-scoring-kg" title="Link to this heading">¶</a></h2>
-<p>Use SIGNOR-derived paths to compute phenotype scores given simulation results:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">BNMPy</span><span class="w"> </span><span class="kn">import</span> <span class="n">phenotype_scores</span>
-
-<span class="c1"># genes serves both to query KG and define the mapping of simulation columns</span>
-<span class="n">genes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">network</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-<span class="n">scores</span> <span class="o">=</span> <span class="n">phenotype_scores</span><span class="p">(</span>
-    <span class="n">genes</span><span class="o">=</span><span class="n">genes</span><span class="p">,</span>
-    <span class="n">simulation_results</span><span class="o">=</span><span class="n">steady_state</span><span class="p">,</span>  <span class="c1"># pandas/numpy/dict supported</span>
-    <span class="n">phenotypes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;APOPTOSIS&#39;</span><span class="p">,</span> <span class="s1">&#39;PROLIFERATION&#39;</span><span class="p">,</span> <span class="s1">&#39;DIFFERENTIATION&#39;</span><span class="p">]</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>Mapping priority for simulation columns is: genes &gt; network.nodeDict &gt; existing pandas labels.</p>
-</section>
-<section id="basic-simulation">
-<h2>Basic Simulation<a class="headerlink" href="#basic-simulation" title="Link to this heading">¶</a></h2>
+<section id="id1">
+<h2>Basic Simulation<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
 <section id="deterministic-update">
 <h3>Deterministic Update<a class="headerlink" href="#deterministic-update" title="Link to this heading">¶</a></h3>
 <p>Synchronous update (all nodes update simultaneously):</p>
@@ -500,7 +486,8 @@ GeneB = GeneA
 <section id="more-information">
 <h2>More Information<a class="headerlink" href="#more-information" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><span class="xref std std-doc">tutorials</span> - Detailed tutorials with examples</p></li>
+<li><p><a class="reference internal" href="knowledge_graph_guide.html"><span class="doc">Knowledge Graph Augmentation</span></a> - Knowledge graph integration</p></li>
+<li><p><a class="reference internal" href="phenotype_score_guide.html"><span class="doc">Phenotype Score</span></a> - Phenotype scoring</p></li>
 <li><p><a class="reference internal" href="steady_state_guide.html"><span class="doc">Steady State Calculation Guide</span></a> - Advanced steady state analysis</p></li>
 <li><p><a class="reference internal" href="optimization_guide.html"><span class="doc">BNMPy Optimizer</span></a> - Parameter optimization</p></li>
 <li><p><a class="reference internal" href="api.html"><span class="doc">API Reference</span></a> - Complete API reference</p></li>
@@ -580,7 +567,7 @@ GeneB = GeneA
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Getting Started</a><ul>
+<li><a class="reference internal" href="#">Basic Simulation</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a><ul>
 <li><a class="reference internal" href="#dependencies">Dependencies</a></li>
 </ul>
@@ -591,8 +578,7 @@ GeneB = GeneA
 <li><a class="reference internal" href="#initial-states">Initial States</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#phenotype-scoring-kg">Phenotype Scoring (KG)</a></li>
-<li><a class="reference internal" href="#basic-simulation">Basic Simulation</a><ul>
+<li><a class="reference internal" href="#id1">Basic Simulation</a><ul>
 <li><a class="reference internal" href="#deterministic-update">Deterministic Update</a></li>
 <li><a class="reference internal" href="#stochastic-update">Stochastic Update</a></li>
 <li><a class="reference internal" href="#steady-state-analysis">Steady State Analysis</a></li>
@@ -624,7 +610,7 @@ GeneB = GeneA
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=2709fde1"></script>
+</div><script src="_static/documentation_options.js?v=10f1778b"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>
