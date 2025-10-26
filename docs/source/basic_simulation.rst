@@ -1,4 +1,4 @@
-Getting Started
+Basic Simulation
 ===============
 
 Welcome to BNMPy! This guide will help you get started with Boolean Network and Probabilistic Boolean Network modeling.
@@ -18,14 +18,15 @@ Dependencies
 
 BNMPy requires the following packages:
 
-- numpy
-- scipy
 - pandas
-- matplotlib
+- numpy
+- typing
+- dataclasses
 - networkx
-- pyswarms (for optimization)
+- scipy == 1.15.2
+- pyswarms == 1.3.0
 
-These will be installed automatically when you install BNMPy.
+These will be installed automatically when you install BNMPy using the command above.
 
 Quick Start
 -----------
@@ -102,24 +103,6 @@ You can specify initial states in two ways:
 
 Gene order can be obtained from ``network.nodeDict``.
 
-Phenotype Scoring (KG)
-----------------------
-
-Use SIGNOR-derived paths to compute phenotype scores given simulation results:
-
-.. code-block:: python
-
-   from BNMPy import phenotype_scores
-
-   # genes serves both to query KG and define the mapping of simulation columns
-   genes = list(network.nodeDict.keys())
-   scores = phenotype_scores(
-       genes=genes,
-       simulation_results=steady_state,  # pandas/numpy/dict supported
-       phenotypes=['APOPTOSIS', 'PROLIFERATION', 'DIFFERENTIATION']
-   )
-
-Mapping priority for simulation columns is: genes > network.nodeDict > existing pandas labels.
 
 Basic Simulation
 ----------------
@@ -285,7 +268,8 @@ Combine multiple networks:
 More Information
 ----------
 
-- :doc:`tutorials` - Detailed tutorials with examples
+- :doc:`knowledge_graph_guide` - Knowledge graph integration
+- :doc:`phenotype_score_guide` - Phenotype scoring
 - :doc:`steady_state_guide` - Advanced steady state analysis
 - :doc:`optimization_guide` - Parameter optimization
 - :doc:`api` - Complete API reference
