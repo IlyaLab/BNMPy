@@ -285,47 +285,6 @@ If simulation_results is not provided, it will return the formula to calculate t
 Otherwise, it will return the phenotype score directly as a DataFrame.</p>
 </dd></dl>
 
-<section id="key-functions">
-<h2>Key Functions<a class="headerlink" href="#key-functions" title="Link to this heading">¶</a></h2>
-<section id="get-phenotypes">
-<h3>get_phenotypes<a class="headerlink" href="#get-phenotypes" title="Link to this heading">¶</a></h3>
-<dl class="py function">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.phenotype_score.</span></span><span class="sig-name descname"><span class="pre">get_phenotypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/runner/work/BNMPy/BNMPy/KG_files/significant_paths_to_phenotypes.txt'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/phenotype_score.html#get_phenotypes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</section>
-<section id="proxpath">
-<h3>proxpath<a class="headerlink" href="#proxpath" title="Link to this heading">¶</a></h3>
-<dl class="py function">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.phenotype_score.</span></span><span class="sig-name descname"><span class="pre">proxpath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">genes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phenotypes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['APOPTOSIS',</span> <span class="pre">'DIFFERENTIATION',</span> <span class="pre">'PROLIFERATION']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/runner/work/BNMPy/BNMPy/KG_files/significant_paths_to_phenotypes.txt'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/phenotype_score.html#proxpath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
-<dd><p>This function is used to get the phenotype score for a given list of genes and phenotypes using ProxPath.
-Args:</p>
-<blockquote>
-<div><p>genes: list of genes
-phenotypes: list of phenotypes
-file_path: path to the ProxPath file</p>
-</div></blockquote>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>pheno_df: dataframe with the phenotype score</p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-<section id="phenotype-scores">
-<h3>phenotype_scores<a class="headerlink" href="#phenotype-scores" title="Link to this heading">¶</a></h3>
-<dl class="py function">
-<dt class="sig sig-object py" id="id2">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.phenotype_score.</span></span><span class="sig-name descname"><span class="pre">phenotype_scores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phenotypes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['APOPTOSIS',</span> <span class="pre">'DIFFERENTIATION',</span> <span class="pre">'PROLIFERATION']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/runner/work/BNMPy/BNMPy/KG_files/significant_paths_to_phenotypes.txt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">genes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/phenotype_score.html#phenotype_scores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
-<dd><p>Calculate phenotype scores for given genes and phenotypes using ProxPath.
-If simulation_results is not provided, it will return the formula to calculate the score.
-Otherwise, it will return the phenotype score directly as a DataFrame.</p>
-</dd></dl>
-
-</section>
-</section>
 </section>
 
         </article>
@@ -387,21 +346,6 @@ Otherwise, it will return the phenotype score directly as a DataFrame.</p>
 <li><a class="reference internal" href="#BNMPy.phenotype_score.get_phenotypes"><code class="docutils literal notranslate"><span class="pre">get_phenotypes()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.phenotype_score.proxpath"><code class="docutils literal notranslate"><span class="pre">proxpath()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.phenotype_score.phenotype_scores"><code class="docutils literal notranslate"><span class="pre">phenotype_scores()</span></code></a></li>
-<li><a class="reference internal" href="#key-functions">Key Functions</a><ul>
-<li><a class="reference internal" href="#get-phenotypes">get_phenotypes</a><ul>
-<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">get_phenotypes()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#proxpath">proxpath</a><ul>
-<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">proxpath()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#phenotype-scores">phenotype_scores</a><ul>
-<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">phenotype_scores()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>

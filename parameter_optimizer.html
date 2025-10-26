@@ -330,19 +330,19 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id5" title="BNMPy.parameter_optimizer.ParameterOptimizer.get_optimized_pbn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_optimized_pbn</span></code></a>(result)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.parameter_optimizer.ParameterOptimizer.get_optimized_pbn" title="BNMPy.parameter_optimizer.ParameterOptimizer.get_optimized_pbn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_optimized_pbn</span></code></a>(result)</p></td>
 <td><p>Get a new PBN object with the optimized parameters from a result.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id4" title="BNMPy.parameter_optimizer.ParameterOptimizer.get_pbn_rules_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_pbn_rules_string</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.parameter_optimizer.ParameterOptimizer.get_pbn_rules_string" title="BNMPy.parameter_optimizer.ParameterOptimizer.get_pbn_rules_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_pbn_rules_string</span></code></a>()</p></td>
 <td><p>Format the final PBN into a readable string.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id2" title="BNMPy.parameter_optimizer.ParameterOptimizer.optimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code></a>([method])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.parameter_optimizer.ParameterOptimizer.optimize" title="BNMPy.parameter_optimizer.ParameterOptimizer.optimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code></a>([method])</p></td>
 <td><p>Run parameter optimization using specified method.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id3" title="BNMPy.parameter_optimizer.ParameterOptimizer.plot_optimization_history"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_optimization_history</span></code></a>(result[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.parameter_optimizer.ParameterOptimizer.plot_optimization_history" title="BNMPy.parameter_optimizer.ParameterOptimizer.plot_optimization_history"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_optimization_history</span></code></a>(result[, ...])</p></td>
 <td><p>Plot the optimization history (MSE over iterations).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id6" title="BNMPy.parameter_optimizer.ParameterOptimizer.test_steady_states"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_steady_states</span></code></a>([test_experiments, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.parameter_optimizer.ParameterOptimizer.test_steady_states" title="BNMPy.parameter_optimizer.ParameterOptimizer.test_steady_states"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_steady_states</span></code></a>([test_experiments, ...])</p></td>
 <td><p>Test steady state calculation methods for each experiment condition.</p></td>
 </tr>
 </tbody>
@@ -387,79 +387,6 @@ Uses the optimizer’s existing configuration and reports timing and convergence
 
 </dd></dl>
 
-<section id="parameteroptimizer-class">
-<h2>ParameterOptimizer Class<a class="headerlink" href="#parameteroptimizer-class" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="id0">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">BNMPy.parameter_optimizer.</span></span><span class="sig-name descname"><span class="pre">ParameterOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pbn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes_to_optimize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discrete</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/parameter_optimizer.html#ParameterOptimizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Parameter optimization for Probabilistic Boolean Networks using experimental data.</p>
-<p class="rubric">Methods</p>
-<div class="table-wrapper autosummary longtable docutils container">
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id5" title="BNMPy.parameter_optimizer.ParameterOptimizer.get_optimized_pbn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_optimized_pbn</span></code></a>(result)</p></td>
-<td><p>Get a new PBN object with the optimized parameters from a result.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id4" title="BNMPy.parameter_optimizer.ParameterOptimizer.get_pbn_rules_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_pbn_rules_string</span></code></a>()</p></td>
-<td><p>Format the final PBN into a readable string.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id2" title="BNMPy.parameter_optimizer.ParameterOptimizer.optimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code></a>([method])</p></td>
-<td><p>Run parameter optimization using specified method.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id3" title="BNMPy.parameter_optimizer.ParameterOptimizer.plot_optimization_history"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_optimization_history</span></code></a>(result[, ...])</p></td>
-<td><p>Plot the optimization history (MSE over iterations).</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id6" title="BNMPy.parameter_optimizer.ParameterOptimizer.test_steady_states"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_steady_states</span></code></a>([test_experiments, ...])</p></td>
-<td><p>Test steady state calculation methods for each experiment condition.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pbn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes_to_optimize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discrete</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/parameter_optimizer.html#ParameterOptimizer.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize the parameter optimizer.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id2">
-<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'differential_evolution'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/parameter_optimizer.html#ParameterOptimizer.optimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
-<dd><p>Run parameter optimization using specified method.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id3">
-<span class="sig-name descname"><span class="pre">plot_optimization_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OptimizeResult</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_stagnation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sorted</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/parameter_optimizer.html#ParameterOptimizer.plot_optimization_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
-<dd><p>Plot the optimization history (MSE over iterations).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id4">
-<span class="sig-name descname"><span class="pre">get_pbn_rules_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/BNMPy/parameter_optimizer.html#ParameterOptimizer.get_pbn_rules_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
-<dd><p>Format the final PBN into a readable string.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id5">
-<span class="sig-name descname"><span class="pre">get_optimized_pbn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OptimizeResult</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="_modules/BNMPy/parameter_optimizer.html#ParameterOptimizer.get_optimized_pbn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
-<dd><p>Get a new PBN object with the optimized parameters from a result.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id6">
-<span class="sig-name descname"><span class="pre">test_steady_states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test_experiments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/parameter_optimizer.html#ParameterOptimizer.test_steady_states"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
-<dd><p>Test steady state calculation methods for each experiment condition.
-Uses the optimizer’s existing configuration and reports timing and convergence.</p>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
-<p>The ParameterOptimizer enables parameter estimation for Probabilistic Boolean Networks (PBNs) using experimental data. It supports multiple optimization algorithms and provides comprehensive result evaluation.</p>
-</section>
 <section id="basic-usage">
 <h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">BNMPy</span>
@@ -662,19 +589,6 @@ Uses the optimizer’s existing configuration and reports timing and convergence
 <li><a class="reference internal" href="#BNMPy.parameter_optimizer.ParameterOptimizer.test_steady_states"><code class="docutils literal notranslate"><span class="pre">ParameterOptimizer.test_steady_states()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#parameteroptimizer-class">ParameterOptimizer Class</a><ul>
-<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">ParameterOptimizer</span></code></a><ul>
-<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">ParameterOptimizer.__init__()</span></code></a></li>
-<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">ParameterOptimizer.optimize()</span></code></a></li>
-<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">ParameterOptimizer.plot_optimization_history()</span></code></a></li>
-<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">ParameterOptimizer.get_pbn_rules_string()</span></code></a></li>
-<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">ParameterOptimizer.get_optimized_pbn()</span></code></a></li>
-<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">ParameterOptimizer.test_steady_states()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
 <li><a class="reference internal" href="#configuration">Configuration</a><ul>
 <li><a class="reference internal" href="#optimization-methods">Optimization Methods</a></li>

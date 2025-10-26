@@ -348,33 +348,6 @@
 <dd><p>Evaluate a PBN directly against experiment data (list or CSV).</p>
 </dd></dl>
 
-<section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
-<p>This module provides functions to evaluate and visualize optimization results, including prediction quality, residual analysis, and model performance metrics.</p>
-</section>
-<section id="functions">
-<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">¶</a></h2>
-<section id="evaluate-optimization-result">
-<h3>evaluate_optimization_result<a class="headerlink" href="#evaluate-optimization-result" title="Link to this heading">¶</a></h3>
-<dl class="py function">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.result_evaluation.</span></span><span class="sig-name descname"><span class="pre">evaluate_optimization_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_residuals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detailed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(8,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_confidence_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#BNMPy.result_evaluation.ResultEvaluator" title="BNMPy.result_evaluation.ResultEvaluator"><span class="pre">ResultEvaluator</span></a></span></span><a class="reference internal" href="_modules/BNMPy/result_evaluation.html#evaluate_optimization_result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
-<dd><p>Convenience function to perform a complete evaluation of optimization results.</p>
-</dd></dl>
-
-<p>Comprehensive evaluation of optimization results with plots and reports.</p>
-</section>
-<section id="evaluate-pbn">
-<h3>evaluate_pbn<a class="headerlink" href="#evaluate-pbn" title="Link to this heading">¶</a></h3>
-<dl class="py function">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.result_evaluation.</span></span><span class="sig-name descname"><span class="pre">evaluate_pbn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pbn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_plots</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_report</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/result_evaluation.html#evaluate_pbn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
-<dd><p>Evaluate a PBN directly against experiment data (list or CSV).</p>
-</dd></dl>
-
-<p>Evaluate a PBN against experimental data directly.</p>
-</section>
-</section>
 <section id="basic-usage">
 <h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">¶</a></h2>
 <section id="evaluating-optimization-results">
@@ -585,18 +558,6 @@ Function evaluations: 3675
 </li>
 <li><a class="reference internal" href="#BNMPy.result_evaluation.evaluate_optimization_result"><code class="docutils literal notranslate"><span class="pre">evaluate_optimization_result()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.result_evaluation.evaluate_pbn"><code class="docutils literal notranslate"><span class="pre">evaluate_pbn()</span></code></a></li>
-<li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#functions">Functions</a><ul>
-<li><a class="reference internal" href="#evaluate-optimization-result">evaluate_optimization_result</a><ul>
-<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">evaluate_optimization_result()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#evaluate-pbn">evaluate_pbn</a><ul>
-<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">evaluate_pbn()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li><a class="reference internal" href="#basic-usage">Basic Usage</a><ul>
 <li><a class="reference internal" href="#evaluating-optimization-results">Evaluating Optimization Results</a></li>
 <li><a class="reference internal" href="#evaluating-a-pbn">Evaluating a PBN</a></li>

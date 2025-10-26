@@ -268,28 +268,28 @@ nodes and collapsing linear paths to simplify the network structure.</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id6" title="BNMPy.model_compressor.ModelCompressor.collapse_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">collapse_paths</span></code></a>(paths)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.model_compressor.ModelCompressor.collapse_paths" title="BNMPy.model_compressor.ModelCompressor.collapse_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">collapse_paths</span></code></a>(paths)</p></td>
 <td><p>Collapse linear paths by removing intermediate nodes and creating direct connections.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id8" title="BNMPy.model_compressor.ModelCompressor.compress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compress</span></code></a>([remove_non_observable, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.model_compressor.ModelCompressor.compress" title="BNMPy.model_compressor.ModelCompressor.compress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compress</span></code></a>([remove_non_observable, ...])</p></td>
 <td><p>Compress the model by removing non-observable/non-controllable nodes and collapsing linear paths.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id5" title="BNMPy.model_compressor.ModelCompressor.find_collapsible_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_collapsible_paths</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.model_compressor.ModelCompressor.find_collapsible_paths" title="BNMPy.model_compressor.ModelCompressor.find_collapsible_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_collapsible_paths</span></code></a>()</p></td>
 <td><p>Find linear paths that can be collapsed.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id4" title="BNMPy.model_compressor.ModelCompressor.find_non_controllable_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_non_controllable_nodes</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.model_compressor.ModelCompressor.find_non_controllable_nodes" title="BNMPy.model_compressor.ModelCompressor.find_non_controllable_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_non_controllable_nodes</span></code></a>()</p></td>
 <td><p>Find nodes that are non-controllable (no path from perturbed species).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id3" title="BNMPy.model_compressor.ModelCompressor.find_non_observable_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_non_observable_nodes</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.model_compressor.ModelCompressor.find_non_observable_nodes" title="BNMPy.model_compressor.ModelCompressor.find_non_observable_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_non_observable_nodes</span></code></a>()</p></td>
 <td><p>Find nodes that are non-observable (no path to measured species).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id9" title="BNMPy.model_compressor.ModelCompressor.get_compression_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_compression_summary</span></code></a>(compression_info)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.model_compressor.ModelCompressor.get_compression_summary" title="BNMPy.model_compressor.ModelCompressor.get_compression_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_compression_summary</span></code></a>(compression_info)</p></td>
 <td><p>Generate a summary of the compression results.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id7" title="BNMPy.model_compressor.ModelCompressor.remove_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_nodes</span></code></a>(nodes_to_remove)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.model_compressor.ModelCompressor.remove_nodes" title="BNMPy.model_compressor.ModelCompressor.remove_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_nodes</span></code></a>(nodes_to_remove)</p></td>
 <td><p>Remove specified nodes from the network.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id10" title="BNMPy.model_compressor.ModelCompressor.visualize_compression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_compression</span></code></a>(original_network[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.model_compressor.ModelCompressor.visualize_compression" title="BNMPy.model_compressor.ModelCompressor.visualize_compression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_compression</span></code></a>(original_network[, ...])</p></td>
 <td><p>Visualize the compression results showing removed nodes and edges.</p></td>
 </tr>
 </tbody>
@@ -361,10 +361,6 @@ and collapsing linear paths.</p>
 <dd><p>Convenience function to compress a model in one step.</p>
 </dd></dl>
 
-<section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
-<p>Model compression simplifies networks while preserving relevant behavior. Currently supports Boolean Networks only.</p>
-</section>
 <section id="features">
 <h2>Features<a class="headerlink" href="#features" title="Link to this heading">¶</a></h2>
 <p>The compressor can:</p>
@@ -375,127 +371,12 @@ and collapsing linear paths.</p>
 <li><p><strong>Visualize results</strong>: Show which nodes and edges were removed</p></li>
 </ol>
 </section>
-<section id="functions">
-<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">¶</a></h2>
-<section id="compress-model">
-<h3>compress_model<a class="headerlink" href="#compress-model" title="Link to this heading">¶</a></h3>
-<dl class="py function">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.model_compressor.</span></span><span class="sig-name descname"><span class="pre">compress_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbed_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_non_observable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_non_controllable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collapse_linear_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/model_compressor.html#compress_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
-<dd><p>Convenience function to compress a model in one step.</p>
-</dd></dl>
-
-<p>Main compression function with automatic processing.</p>
-</section>
-<section id="modelcompressor-class">
-<h3>ModelCompressor Class<a class="headerlink" href="#modelcompressor-class" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="id1">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">BNMPy.model_compressor.</span></span><span class="sig-name descname"><span class="pre">ModelCompressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbed_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/model_compressor.html#ModelCompressor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Model compression for Boolean Networks.</p>
-<p>Provides methods to compress models by removing non-observable/non-controllable
-nodes and collapsing linear paths to simplify the network structure.</p>
-<p class="rubric">Methods</p>
-<div class="table-wrapper autosummary longtable docutils container">
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id6" title="BNMPy.model_compressor.ModelCompressor.collapse_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">collapse_paths</span></code></a>(paths)</p></td>
-<td><p>Collapse linear paths by removing intermediate nodes and creating direct connections.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id8" title="BNMPy.model_compressor.ModelCompressor.compress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compress</span></code></a>([remove_non_observable, ...])</p></td>
-<td><p>Compress the model by removing non-observable/non-controllable nodes and collapsing linear paths.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id5" title="BNMPy.model_compressor.ModelCompressor.find_collapsible_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_collapsible_paths</span></code></a>()</p></td>
-<td><p>Find linear paths that can be collapsed.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id4" title="BNMPy.model_compressor.ModelCompressor.find_non_controllable_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_non_controllable_nodes</span></code></a>()</p></td>
-<td><p>Find nodes that are non-controllable (no path from perturbed species).</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id3" title="BNMPy.model_compressor.ModelCompressor.find_non_observable_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_non_observable_nodes</span></code></a>()</p></td>
-<td><p>Find nodes that are non-observable (no path to measured species).</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id9" title="BNMPy.model_compressor.ModelCompressor.get_compression_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_compression_summary</span></code></a>(compression_info)</p></td>
-<td><p>Generate a summary of the compression results.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id7" title="BNMPy.model_compressor.ModelCompressor.remove_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_nodes</span></code></a>(nodes_to_remove)</p></td>
-<td><p>Remove specified nodes from the network.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id10" title="BNMPy.model_compressor.ModelCompressor.visualize_compression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_compression</span></code></a>(original_network[, ...])</p></td>
-<td><p>Visualize the compression results showing removed nodes and edges.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="id2">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbed_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/model_compressor.html#ModelCompressor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize the model compressor.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id3">
-<span class="sig-name descname"><span class="pre">find_non_observable_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/BNMPy/model_compressor.html#ModelCompressor.find_non_observable_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
-<dd><p>Find nodes that are non-observable (no path to measured species).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id4">
-<span class="sig-name descname"><span class="pre">find_non_controllable_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/BNMPy/model_compressor.html#ModelCompressor.find_non_controllable_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
-<dd><p>Find nodes that are non-controllable (no path from perturbed species).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id5">
-<span class="sig-name descname"><span class="pre">find_collapsible_paths</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/BNMPy/model_compressor.html#ModelCompressor.find_collapsible_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
-<dd><p>Find linear paths that can be collapsed.</p>
-<p>A collapsible path is a series of nodes that form a linear cascade,
-where intermediate nodes can be removed without losing connectivity.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id6">
-<span class="sig-name descname"><span class="pre">collapse_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/BNMPy/model_compressor.html#ModelCompressor.collapse_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
-<dd><p>Collapse linear paths by removing intermediate nodes and creating direct connections.
-For each path, update all references to any relay node in the path to the ultimate source.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id7">
-<span class="sig-name descname"><span class="pre">remove_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes_to_remove</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/BNMPy/model_compressor.html#ModelCompressor.remove_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
-<dd><p>Remove specified nodes from the network.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id8">
-<span class="sig-name descname"><span class="pre">compress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remove_non_observable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_non_controllable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collapse_linear_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/BNMPy/model_compressor.html#ModelCompressor.compress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
-<dd><p>Compress the model by removing non-observable/non-controllable nodes
-and collapsing linear paths.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id9">
-<span class="sig-name descname"><span class="pre">get_compression_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compression_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/BNMPy/model_compressor.html#ModelCompressor.get_compression_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id9" title="Link to this definition">¶</a></dt>
-<dd><p>Generate a summary of the compression results.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id10">
-<span class="sig-name descname"><span class="pre">visualize_compression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">original_network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_html</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'compression_visualization.html'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/model_compressor.html#ModelCompressor.visualize_compression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id10" title="Link to this definition">¶</a></dt>
-<dd><p>Visualize the compression results showing removed nodes and edges.</p>
-</dd></dl>
-
-</dd></dl>
-
-<p>For advanced compression with step-by-step control.</p>
-</section>
-</section>
 <section id="basic-usage">
 <h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">BNMPy</span>
 
 <span class="c1"># Load network</span>
-<span class="n">network</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network_from_file</span><span class="p">(</span><span class="s2">&quot;network.txt&quot;</span><span class="p">)</span>
+<span class="n">network</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="s2">&quot;network.txt&quot;</span><span class="p">)</span>
 
 <span class="c1"># Define nodes</span>
 <span class="n">measured_nodes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Output1&#39;</span><span class="p">,</span> <span class="s1">&#39;Output2&#39;</span><span class="p">,</span> <span class="s1">&#39;Biomarker&#39;</span><span class="p">}</span>
@@ -508,9 +389,6 @@ and collapsing linear paths.</p>
     <span class="n">perturbed_nodes</span><span class="o">=</span><span class="n">perturbed_nodes</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Original: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">network</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">)</span><span class="si">}</span><span class="s2"> nodes&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Compressed: </span><span class="si">{</span><span class="n">compressed_network</span><span class="o">.</span><span class="n">N</span><span class="si">}</span><span class="s2"> nodes&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Extract nodes directly from experimental data:</p>
@@ -580,25 +458,15 @@ and collapsing linear paths.</p>
 <span class="n">BNMPy</span><span class="o">.</span><span class="n">vis_compression</span><span class="p">(</span>
     <span class="n">network</span><span class="p">,</span>                    <span class="c1"># Original network</span>
     <span class="n">compressed_network</span><span class="p">,</span>         <span class="c1"># Compressed network</span>
-    <span class="n">compression_info</span><span class="p">,</span>          <span class="c1"># Compression information</span>
-    <span class="s2">&quot;compression_results.html&quot;</span> <span class="c1"># Output file</span>
+    <span class="n">compression_info</span><span class="p">,</span>           <span class="c1"># Compression information</span>
+    <span class="s2">&quot;compression_results.html&quot;</span>  <span class="c1"># Output file</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 <p>Visualization:</p>
 <ul class="simple">
-<li><p><strong>Node colors</strong>: Source nodes (grey), sink nodes (orange), intermediate (blue)</p></li>
-<li><p><strong>Removed nodes</strong>: Shown in light grey</p></li>
-<li><p><strong>Edge styling</strong>: Different colors for inhibitory vs activating edges</p></li>
-<li><p><strong>Interactive</strong>: Draggable nodes with physics simulation</p></li>
-</ul>
-</section>
-<section id="see-also">
-<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="parameter_optimizer.html"><span class="doc">BNMPy.parameter_optimizer</span></a> - Main optimization interface</p></li>
-<li><p><a class="reference internal" href="experiment_data.html"><span class="doc">BNMPy.experiment_data</span></a> - Experimental data handling</p></li>
-<li><p><a class="reference internal" href="vis.html"><span class="doc">BNMPy.vis</span></a> - Visualization functions</p></li>
+<li><p><strong>Node colors</strong>: Perturbed nodes (red), measured nodes (orange), intermediate nodes (blue)</p></li>
+<li><p><strong>Removed nodes and edges</strong>: Shown in light grey and dashed</p></li>
 </ul>
 </section>
 </section>
@@ -664,34 +532,10 @@ and collapsing linear paths.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#BNMPy.model_compressor.compress_model"><code class="docutils literal notranslate"><span class="pre">compress_model()</span></code></a></li>
-<li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#features">Features</a></li>
-<li><a class="reference internal" href="#functions">Functions</a><ul>
-<li><a class="reference internal" href="#compress-model">compress_model</a><ul>
-<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">compress_model()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#modelcompressor-class">ModelCompressor Class</a><ul>
-<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">ModelCompressor</span></code></a><ul>
-<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">ModelCompressor.__init__()</span></code></a></li>
-<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">ModelCompressor.find_non_observable_nodes()</span></code></a></li>
-<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">ModelCompressor.find_non_controllable_nodes()</span></code></a></li>
-<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">ModelCompressor.find_collapsible_paths()</span></code></a></li>
-<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">ModelCompressor.collapse_paths()</span></code></a></li>
-<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate"><span class="pre">ModelCompressor.remove_nodes()</span></code></a></li>
-<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">ModelCompressor.compress()</span></code></a></li>
-<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">ModelCompressor.get_compression_summary()</span></code></a></li>
-<li><a class="reference internal" href="#id10"><code class="docutils literal notranslate"><span class="pre">ModelCompressor.visualize_compression()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
 <li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
 <li><a class="reference internal" href="#step-by-step-compression">Step-by-Step Compression</a></li>
 <li><a class="reference internal" href="#visualization">Visualization</a></li>
-<li><a class="reference internal" href="#see-also">See Also</a></li>
 </ul>
 </li>
 </ul>

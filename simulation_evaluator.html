@@ -267,10 +267,10 @@ Handles experiment simulation and SSE calculation</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id3" title="BNMPy.simulation_evaluator.SimulationEvaluator.get_parameter_bounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_parameter_bounds</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.simulation_evaluator.SimulationEvaluator.get_parameter_bounds" title="BNMPy.simulation_evaluator.SimulationEvaluator.get_parameter_bounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_parameter_bounds</span></code></a>()</p></td>
 <td><p>Get bounds for optimization parameters Now returns bounds only for nodes being optimized</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id2" title="BNMPy.simulation_evaluator.SimulationEvaluator.objective_function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">objective_function</span></code></a>(cij_vector)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.simulation_evaluator.SimulationEvaluator.objective_function" title="BNMPy.simulation_evaluator.SimulationEvaluator.objective_function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">objective_function</span></code></a>(cij_vector)</p></td>
 <td><p>Calculate objective function (MSE) for given parameters</p></td>
 </tr>
 </tbody>
@@ -297,62 +297,6 @@ Now returns bounds only for nodes being optimized</p>
 
 </dd></dl>
 
-<section id="simulationevaluator-class">
-<h2>SimulationEvaluator Class<a class="headerlink" href="#simulationevaluator-class" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="id0">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">BNMPy.simulation_evaluator.</span></span><span class="sig-name descname"><span class="pre">SimulationEvaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pbn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes_to_optimize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/simulation_evaluator.html#SimulationEvaluator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Evaluation engine for PBN parameter optimization
-Handles experiment simulation and SSE calculation</p>
-<p class="rubric">Methods</p>
-<div class="table-wrapper autosummary longtable docutils container">
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id3" title="BNMPy.simulation_evaluator.SimulationEvaluator.get_parameter_bounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_parameter_bounds</span></code></a>()</p></td>
-<td><p>Get bounds for optimization parameters Now returns bounds only for nodes being optimized</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id2" title="BNMPy.simulation_evaluator.SimulationEvaluator.objective_function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">objective_function</span></code></a>(cij_vector)</p></td>
-<td><p>Calculate objective function (MSE) for given parameters</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pbn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes_to_optimize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/simulation_evaluator.html#SimulationEvaluator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize evaluator with PBN and experiments</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id2">
-<span class="sig-name descname"><span class="pre">objective_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cij_vector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/BNMPy/simulation_evaluator.html#SimulationEvaluator.objective_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
-<dd><p>Calculate objective function (MSE) for given parameters</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id3">
-<span class="sig-name descname"><span class="pre">get_parameter_bounds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/BNMPy/simulation_evaluator.html#SimulationEvaluator.get_parameter_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
-<dd><p>Get bounds for optimization parameters
-Now returns bounds only for nodes being optimized</p>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
-<p>The SimulationEvaluator calculates the objective function for optimization by comparing PBN steady-state predictions with experimental measurements. It handles experimental conditions (stimuli/inhibitors) and computes mean squared error (MSE).</p>
-<p>This module is automatically used by ParameterOptimizer.</p>
-</section>
-<section id="see-also">
-<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="parameter_optimizer.html"><span class="doc">BNMPy.parameter_optimizer</span></a> - Main optimization interface</p></li>
-<li><p><a class="reference internal" href="experiment_data.html"><span class="doc">BNMPy.experiment_data</span></a> - Experimental data handling</p></li>
-<li><p><a class="reference internal" href="steady_state.html"><span class="doc">BNMPy.steady_state</span></a> - Steady state calculation methods</p></li>
-</ul>
-</section>
 </section>
 
         </article>
@@ -417,17 +361,6 @@ Now returns bounds only for nodes being optimized</p>
 <li><a class="reference internal" href="#BNMPy.simulation_evaluator.SimulationEvaluator.get_parameter_bounds"><code class="docutils literal notranslate"><span class="pre">SimulationEvaluator.get_parameter_bounds()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#simulationevaluator-class">SimulationEvaluator Class</a><ul>
-<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">SimulationEvaluator</span></code></a><ul>
-<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">SimulationEvaluator.__init__()</span></code></a></li>
-<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">SimulationEvaluator.objective_function()</span></code></a></li>
-<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">SimulationEvaluator.get_parameter_bounds()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#see-also">See Also</a></li>
 </ul>
 </li>
 </ul>

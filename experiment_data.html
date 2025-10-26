@@ -256,7 +256,7 @@
         <article role="main" id="furo-main-content">
           <section id="bnmpy-experiment-data">
 <h1>BNMPy.experiment_data<a class="headerlink" href="#bnmpy-experiment-data" title="Link to this heading">¶</a></h1>
-<p>The experiment_data module provides tools for loading and managing experimental data for PBN optimization.</p>
+<p>The ExperimentData class loads and validates experimental data from CSV files. It handles stimuli, inhibitors, and measured values for model optimization.</p>
 <span class="target" id="module-BNMPy.experiment_data"></span><dl class="py class">
 <dt class="sig sig-object py" id="BNMPy.experiment_data.ExperimentData">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">BNMPy.experiment_data.</span></span><span class="sig-name descname"><span class="pre">ExperimentData</span></span><a class="reference internal" href="_modules/BNMPy/experiment_data.html#ExperimentData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.experiment_data.ExperimentData" title="Link to this definition">¶</a></dt>
@@ -266,13 +266,13 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id3" title="BNMPy.experiment_data.ExperimentData.get_experiment_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_experiment_summary</span></code></a>(experiments)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.experiment_data.ExperimentData.get_experiment_summary" title="BNMPy.experiment_data.ExperimentData.get_experiment_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_experiment_summary</span></code></a>(experiments)</p></td>
 <td><p>Get summary of experiments for debugging/inspection</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id1" title="BNMPy.experiment_data.ExperimentData.load_from_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_from_csv</span></code></a>(csv_file)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.experiment_data.ExperimentData.load_from_csv" title="BNMPy.experiment_data.ExperimentData.load_from_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_from_csv</span></code></a>(csv_file)</p></td>
 <td><p>Load experiments from CSV file</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id2" title="BNMPy.experiment_data.ExperimentData.validate_experiments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_experiments</span></code></a>(experiments, node_dict)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.experiment_data.ExperimentData.validate_experiments" title="BNMPy.experiment_data.ExperimentData.validate_experiments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_experiments</span></code></a>(experiments, node_dict)</p></td>
 <td><p>Validate experiments against PBN structure</p></td>
 </tr>
 </tbody>
@@ -325,67 +325,6 @@ Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nod
 PBN parameters and generates predicted values for the measured nodes.</p>
 </dd></dl>
 
-<section id="experimentdata-class">
-<h2>ExperimentData Class<a class="headerlink" href="#experimentdata-class" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="id0">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">BNMPy.experiment_data.</span></span><span class="sig-name descname"><span class="pre">ExperimentData</span></span><a class="reference internal" href="_modules/BNMPy/experiment_data.html#ExperimentData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Handle experimental data from CSV files</p>
-<p class="rubric">Methods</p>
-<div class="table-wrapper autosummary longtable docutils container">
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id3" title="BNMPy.experiment_data.ExperimentData.get_experiment_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_experiment_summary</span></code></a>(experiments)</p></td>
-<td><p>Get summary of experiments for debugging/inspection</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id1" title="BNMPy.experiment_data.ExperimentData.load_from_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_from_csv</span></code></a>(csv_file)</p></td>
-<td><p>Load experiments from CSV file</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id2" title="BNMPy.experiment_data.ExperimentData.validate_experiments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_experiments</span></code></a>(experiments, node_dict)</p></td>
-<td><p>Validate experiments against PBN structure</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="id1">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/experiment_data.html#ExperimentData.load_from_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
-<dd><p>Load experiments from CSV file</p>
-<p>Only required columns are used. Extra columns in the CSV are ignored.</p>
-<p>CSV Format:
-Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values
-1,TGFa,1,TNFa,1,”NFkB,ERK,C8,Akt”,”0.7,0.88,0,1”
-2,TNFa,1,TGFa,1,”NFkB,ERK,C8,Akt”,”0.3,0.12,1,0”
-3,”TGFa,TNFa”,”1,1”,,,”NFkB,ERK,C8,Akt”,”1,1,1,1”
-4,”TGFa,TNFa”,”1,1”,PI3K,0.7,”NFkB,ERK,C8,Akt”,”0.3,0.12,1,0”</p>
-<p>Note:
-- The measured values are normalized to be between 0 and 1 if not already.
-- Simply divide the measured values by the maximum value of the measured values.
-- Stimuli_efficacy and Inhibitors_efficacy are optional columns.
-- If efficacy is not specified, defaults to 1.0 (full efficacy).
-- Efficacy &lt; 1 means the probability of achieving the target state is reduced.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id2">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_experiments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/experiment_data.html#ExperimentData.validate_experiments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
-<dd><p>Validate experiments against PBN structure</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id3">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_experiment_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiments</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/experiment_data.html#ExperimentData.get_experiment_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
-<dd><p>Get summary of experiments for debugging/inspection</p>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-<section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
-<p>The ExperimentData class loads and validates experimental data from CSV files. It handles stimuli, inhibitors, and measured values for model optimization.</p>
-</section>
 <section id="data-format">
 <h2>Data Format<a class="headerlink" href="#data-format" title="Link to this heading">¶</a></h2>
 <p>CSV file format:</p>
@@ -421,82 +360,6 @@ Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nod
 <li><p><strong>Example</strong>: <code class="docutils literal notranslate"><span class="pre">PI3K,0.7</span></code> means PI3K inhibition has 70% probability of setting PI3K=0, 30% of PI3K=1</p></li>
 </ul>
 </section>
-</section>
-<section id="basic-usage">
-<h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">BNMPy</span>
-
-<span class="c1"># Load experimental data</span>
-<span class="n">exp_data</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">ExperimentData</span><span class="p">(</span><span class="s2">&quot;experiments.csv&quot;</span><span class="p">)</span>
-
-<span class="c1"># Access experiment information</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of experiments: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">exp_data</span><span class="o">.</span><span class="n">experiments</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Measured nodes: </span><span class="si">{</span><span class="n">exp_data</span><span class="o">.</span><span class="n">get_measured_nodes</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Perturbed nodes: </span><span class="si">{</span><span class="n">exp_data</span><span class="o">.</span><span class="n">get_perturbed_nodes</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-<span class="c1"># Iterate through experiments</span>
-<span class="k">for</span> <span class="n">exp</span> <span class="ow">in</span> <span class="n">exp_data</span><span class="o">.</span><span class="n">experiments</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Experiment </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Stimuli: </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;stimuli&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Inhibitors: </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;inhibitors&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Measurements: </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="utility-functions">
-<h2>Utility Functions<a class="headerlink" href="#utility-functions" title="Link to this heading">¶</a></h2>
-<section id="extract-experiment-nodes">
-<h3>extract_experiment_nodes<a class="headerlink" href="#extract-experiment-nodes" title="Link to this heading">¶</a></h3>
-<p>Extract measured and perturbed nodes from experimental data:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">measured_nodes</span><span class="p">,</span> <span class="n">perturbed_nodes</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">extract_experiment_nodes</span><span class="p">(</span><span class="s2">&quot;experiments.csv&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Measured: </span><span class="si">{</span><span class="n">measured_nodes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Perturbed: </span><span class="si">{</span><span class="n">perturbed_nodes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This is useful for model compression:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract nodes from experiments</span>
-<span class="n">measured_nodes</span><span class="p">,</span> <span class="n">perturbed_nodes</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">extract_experiment_nodes</span><span class="p">(</span><span class="s2">&quot;experiments.csv&quot;</span><span class="p">)</span>
-
-<span class="c1"># Compress model based on experimental information</span>
-<span class="n">compressed_network</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">compress_model</span><span class="p">(</span>
-    <span class="n">network</span><span class="p">,</span>
-    <span class="n">measured_nodes</span><span class="o">=</span><span class="n">measured_nodes</span><span class="p">,</span>
-    <span class="n">perturbed_nodes</span><span class="o">=</span><span class="n">perturbed_nodes</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="generate-experiments">
-<h3>generate_experiments<a class="headerlink" href="#generate-experiments" title="Link to this heading">¶</a></h3>
-<p>Generate hypothesized experimental values using the current PBN parameters:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generate predictions for experiments</span>
-<span class="n">results_df</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">generate_experiments</span><span class="p">(</span>
-    <span class="n">pbn</span><span class="p">,</span>
-    <span class="n">experiment_csv</span><span class="o">=</span><span class="s2">&quot;experiments.csv&quot;</span><span class="p">,</span>
-    <span class="n">output_csv</span><span class="o">=</span><span class="s2">&quot;predicted_experiments.csv&quot;</span><span class="p">,</span>
-    <span class="n">config</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;steady_state&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;monte_carlo&#39;</span><span class="p">}}</span>
-<span class="p">)</span>
-
-<span class="c1"># The output DataFrame contains:</span>
-<span class="c1"># - Original experiment conditions in experiment_csv</span>
-<span class="c1"># - Predicted values based on current PBN parameters</span>
-</pre></div>
-</div>
-<p>This is useful for:</p>
-<ul class="simple">
-<li><p>Validating model predictions before optimization</p></li>
-<li><p>Comparing different parameter sets</p></li>
-<li><p>Generating synthetic data for testing</p></li>
-</ul>
-</section>
-</section>
-<section id="see-also">
-<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="parameter_optimizer.html"><span class="doc">BNMPy.parameter_optimizer</span></a> - Main optimization interface</p></li>
-<li><p><a class="reference internal" href="simulation_evaluator.html"><span class="doc">BNMPy.simulation_evaluator</span></a> - Simulation evaluation</p></li>
-<li><p><a class="reference internal" href="model_compressor.html"><span class="doc">BNMPy.model_compressor</span></a> - Model compression</p></li>
-</ul>
 </section>
 </section>
 
@@ -564,28 +427,11 @@ Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nod
 </li>
 <li><a class="reference internal" href="#BNMPy.experiment_data.extract_experiment_nodes"><code class="docutils literal notranslate"><span class="pre">extract_experiment_nodes()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.experiment_data.generate_experiments"><code class="docutils literal notranslate"><span class="pre">generate_experiments()</span></code></a></li>
-<li><a class="reference internal" href="#experimentdata-class">ExperimentData Class</a><ul>
-<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">ExperimentData</span></code></a><ul>
-<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">ExperimentData.load_from_csv()</span></code></a></li>
-<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">ExperimentData.validate_experiments()</span></code></a></li>
-<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">ExperimentData.get_experiment_summary()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#data-format">Data Format</a><ul>
 <li><a class="reference internal" href="#column-descriptions">Column Descriptions</a></li>
 <li><a class="reference internal" href="#efficacy-values">Efficacy Values</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
-<li><a class="reference internal" href="#utility-functions">Utility Functions</a><ul>
-<li><a class="reference internal" href="#extract-experiment-nodes">extract_experiment_nodes</a></li>
-<li><a class="reference internal" href="#generate-experiments">generate_experiments</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#see-also">See Also</a></li>
 </ul>
 </li>
 </ul>

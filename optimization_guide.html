@@ -256,22 +256,15 @@
         <article role="main" id="furo-main-content">
           <section id="bnmpy-optimizer">
 <h1>BNMPy Optimizer<a class="headerlink" href="#bnmpy-optimizer" title="Link to this heading">¶</a></h1>
-<p>A Python implementation of PBN parameter optimization based on the optPBN framework. This module enables parameter estimation for Probabilistic Boolean Networks (PBNs) using experimental data.</p>
-<section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
-<p>The optimizer is part of BNMPy. Required dependencies:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>numpy<span class="w"> </span>scipy<span class="w"> </span>pandas<span class="w"> </span>pyswarms<span class="w"> </span>matplotlib<span class="w"> </span>networkx
-</pre></div>
-</div>
-</section>
-<section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
+<p>A Python implementation of Probabilistic Boolean Network (PBN) parameter optimization based on the optPBN framework. This module enables parameter estimation for PBNs using experimental data.</p>
+<section id="optimization">
+<h2>Optimization<a class="headerlink" href="#optimization" title="Link to this heading">¶</a></h2>
 <section id="basic-usage">
 <h3>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">BNMPy.BMatrix</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_pbn_from_string</span><span class="p">,</span> <span class="n">ParameterOptimizer</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">BNMPy</span>
 
 <span class="c1"># Load or create your PBN</span>
-<span class="n">pbn</span> <span class="o">=</span> <span class="n">load_pbn_from_string</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">pbn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 
 <span class="c1"># Initialize optimizer</span>
 <span class="n">optimizer</span> <span class="o">=</span> <span class="n">ParameterOptimizer</span><span class="p">(</span><span class="n">pbn</span><span class="p">,</span> <span class="s2">&quot;experiments.csv&quot;</span><span class="p">,</span> <span class="n">nodes_to_optimize</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Cas3&#39;</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -305,6 +298,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">Measured_nodes</span></code>: Nodes with experimental measurements</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Measured_values</span></code>: Corresponding values (0-1, normalized)</p></li>
 </ul>
+<p>See <a class="reference internal" href="#../Examples/files/experiments_example.csv"><span class="xref myst">Examples/files/experiments_example.csv</span></a> for an example file.</p>
 <p><strong>Efficacy Values:</strong></p>
 <ul class="simple">
 <li><p><strong>1.0 (default)</strong>: Full efficacy - node is completely knocked out/stimulated</p></li>
@@ -320,7 +314,7 @@
 </section>
 <section id="pbn-data">
 <h4>PBN Data<a class="headerlink" href="#pbn-data" title="Link to this heading">¶</a></h4>
-<p>A ProbabilisticBN, see BNMPy.</p>
+<p>A ProbabilisticBN object, see <a class="reference internal" href="#../Examples/PBN_simulation.ipynb"><span class="xref myst">PBN_simulation.ipynb</span></a>.</p>
 </section>
 </section>
 <section id="configurations">
@@ -336,7 +330,6 @@
     <span class="s1">&#39;seed&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>                        <span class="c1"># Global seed for random number generation (affects all stochastic processes)</span>
     <span class="s1">&#39;success_threshold&#39;</span><span class="p">:</span> <span class="mf">0.005</span><span class="p">,</span>       <span class="c1"># Global success threshold for final result evaluation</span>
     <span class="s1">&#39;max_try&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>                     <span class="c1"># Try up to 3 times if optimization fails</span>
-    <span class="s1">&#39;display_rules_every&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>        <span class="c1"># Display optimized rules every N iterations (0 = disabled)</span>
 
 <span class="c1"># Differential Evolution parameters</span>
     <span class="s1">&#39;de_params&#39;</span><span class="p">:</span> <span class="p">{</span>
@@ -394,7 +387,7 @@
 <p><strong>Final Success Determination:</strong></p>
 <ul class="simple">
 <li><p>Both methods use the global <code class="docutils literal notranslate"><span class="pre">success_threshold</span></code> to determine if the final result is considered successful</p></li>
-<li><p>This evaluation happens after optimization completes, regardless of early stopping</p></li>
+<li><p>If unsuccessful, the optimizer will run up to <code class="docutils literal notranslate"><span class="pre">max_try</span></code> times.</p></li>
 </ul>
 </section>
 <section id="discrete-mode">
@@ -418,7 +411,7 @@
 </section>
 <section id="results">
 <h3>Results<a class="headerlink" href="#results" title="Link to this heading">¶</a></h3>
-<p>The optimization returns an enhanced <code class="docutils literal notranslate"><span class="pre">OptimizeResult</span></code> object containing:</p>
+<p>The optimization returns an <code class="docutils literal notranslate"><span class="pre">OptimizeResult</span></code> object containing:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">success</span></code>: Boolean indicating if the optimizer terminated successfully</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">message</span></code>: Status message</p></li>
@@ -469,191 +462,6 @@
 <li><p><strong>Optimization History Plot (<code class="docutils literal notranslate"><span class="pre">optimization_history.png</span></code>)</strong></p></li>
 </ol>
 </section>
-</section>
-</section>
-<section id="model-compression">
-<h2>Model Compression<a class="headerlink" href="#model-compression" title="Link to this heading">¶</a></h2>
-<p>The Optimizer module includes model compression functionality to simplify Boolean Networks before optimization. Currently supports Boolean Networks only. This will allow to:</p>
-<ol class="arabic simple">
-<li><p><strong>Remove non-observable nodes</strong>: Nodes that don’t influence any measured species</p></li>
-<li><p><strong>Remove non-controllable nodes</strong>: Nodes that aren’t influenced by any perturbed species</p></li>
-<li><p><strong>Collapse linear paths</strong>: Simplify cascades of intermediate nodes that don’t branch</p></li>
-<li><p><strong>Visualize compression results</strong>: Show which nodes and edges were removed</p></li>
-</ol>
-<section id="example">
-<h3>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h3>
-<p>Compression can automatically extract measured and perturbed nodes from experimental data:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">BNMPy</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParameterOptimizer</span><span class="p">,</span> <span class="n">extract_experiment_nodes</span><span class="p">,</span> <span class="n">compress_model</span><span class="p">,</span> <span class="n">load_network_from_file</span>
-
-<span class="c1"># Load network and experimental data</span>
-<span class="n">network</span> <span class="o">=</span> <span class="n">load_network_from_file</span><span class="p">(</span><span class="s2">&quot;network.txt&quot;</span><span class="p">)</span>
-
-<span class="c1"># Extract nodes from experimental data</span>
-<span class="n">measured_nodes</span><span class="p">,</span> <span class="n">perturbed_nodes</span> <span class="o">=</span> <span class="n">extract_experiment_nodes</span><span class="p">(</span><span class="s2">&quot;experiments.csv&quot;</span><span class="p">)</span>
-
-<span class="c1"># Compress network using experimental information</span>
-<span class="n">compressed_network</span><span class="p">,</span> <span class="n">compression_info</span> <span class="o">=</span> <span class="n">compress_model</span><span class="p">(</span>
-    <span class="n">network</span><span class="p">,</span>
-    <span class="n">measured_nodes</span><span class="o">=</span><span class="n">measured_nodes</span><span class="p">,</span>
-    <span class="n">perturbed_nodes</span><span class="o">=</span><span class="n">perturbed_nodes</span>
-<span class="p">)</span>
-
-<span class="c1"># Visualize compression results</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">BNMPy</span><span class="w"> </span><span class="kn">import</span> <span class="n">vis_compression</span>
-<span class="n">vis_compression</span><span class="p">(</span>
-    <span class="n">network</span><span class="p">,</span>
-    <span class="n">compressed_network</span><span class="p">,</span>
-    <span class="n">compression_info</span><span class="p">,</span>
-    <span class="s2">&quot;compression_results.html&quot;</span>
-<span class="p">)</span>
-
-<span class="c1"># Run optimization on compressed network</span>
-<span class="n">optimizer</span> <span class="o">=</span> <span class="n">ParameterOptimizer</span><span class="p">(</span><span class="n">compressed_network</span><span class="p">,</span> <span class="s2">&quot;experiments.csv&quot;</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;differential_evolution&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-</section>
-<section id="sensitivity-analysis">
-<h2>Sensitivity Analysis<a class="headerlink" href="#sensitivity-analysis" title="Link to this heading">¶</a></h2>
-<p>The Optimizer module includes sensitivity analysis tools to identify the most influential nodes affecting measurements and network behavior:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">BNMPy.sensitivity_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">sensitivity_analysis</span><span class="p">,</span> <span class="n">influence_analysis</span>
-
-<span class="c1"># Run traditional sensitivity analysis</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">sensitivity_analysis</span><span class="p">(</span>
-    <span class="n">network</span><span class="p">,</span>
-    <span class="n">experiments</span><span class="p">,</span>
-    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-    <span class="n">top_n</span><span class="o">=</span><span class="mi">5</span>
-<span class="p">)</span>
-
-<span class="c1"># Run influence analysis (no experiments needed)</span>
-<span class="n">influence_results</span> <span class="o">=</span> <span class="n">influence_analysis</span><span class="p">(</span>
-    <span class="n">network</span><span class="p">,</span>
-    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<section id="methods">
-<h3>Methods<a class="headerlink" href="#methods" title="Link to this heading">¶</a></h3>
-<ol class="arabic simple">
-<li><p><strong>Traditional Sensitivity Analysis</strong>: Analyzes how parameter changes affect steady-state measurements</p>
-<ul class="simple">
-<li><p><strong>Morris Analysis</strong>: One-at-a-time sensitivity analysis using Morris trajectories</p></li>
-<li><p><strong>Sobol Analysis</strong>: Variance-based sensitivity analysis for comprehensive parameter importance</p></li>
-</ul>
-</li>
-<li><p><strong>Influence Analysis</strong>: Analyzes how nodes influence each other in the steady state</p></li>
-<li><p><strong>MSE Sensitivity Analysis</strong>: Measures how parameter changes affect MSE vs experimental data. Use with trained/optimized PBNs</p></li>
-</ol>
-</section>
-<section id="influence-analysis">
-<h3>Influence Analysis<a class="headerlink" href="#influence-analysis" title="Link to this heading">¶</a></h3>
-<p>For understanding network structure and node interactions without experimental data:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">BNMPy.sensitivity_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">influence_analysis</span><span class="p">,</span> <span class="n">plot_influence_results</span>
-
-<span class="c1"># Basic influence analysis</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">influence_analysis</span><span class="p">(</span>
-    <span class="n">network</span><span class="p">,</span>
-    <span class="n">config</span><span class="o">=</span><span class="p">{</span>
-        <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;tsmc&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;samples&#39;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
-        <span class="s1">&#39;burn_in&#39;</span><span class="p">:</span> <span class="mi">2000</span><span class="p">,</span>
-        <span class="s1">&#39;thin&#39;</span><span class="p">:</span> <span class="mi">5</span>
-    <span class="p">}</span>
-<span class="p">)</span>
-
-<span class="c1"># Get ranking for specific node</span>
-<span class="n">node_ranking</span> <span class="o">=</span> <span class="n">influence_analysis</span><span class="p">(</span>
-    <span class="n">network</span><span class="p">,</span>
-    <span class="n">output_node</span><span class="o">=</span><span class="s1">&#39;YourNodeName&#39;</span><span class="p">,</span>
-    <span class="n">top_n</span><span class="o">=</span><span class="mi">10</span>
-<span class="p">)</span>
-
-<span class="c1"># Visualize results</span>
-<span class="n">plot_influence_results</span><span class="p">(</span>
-    <span class="n">results</span><span class="p">[</span><span class="s1">&#39;influence_df&#39;</span><span class="p">],</span>
-    <span class="n">results</span><span class="p">[</span><span class="s1">&#39;sensitivity_df&#39;</span><span class="p">],</span>
-    <span class="n">top_n</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
-    <span class="n">save_path</span><span class="o">=</span><span class="s1">&#39;influence_analysis.png&#39;</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="mse-sensitivity-analysis">
-<h3>MSE Sensitivity Analysis<a class="headerlink" href="#mse-sensitivity-analysis" title="Link to this heading">¶</a></h3>
-<p>For optimized PBNs, analyze which nodes are most critical for maintaining model fit:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">BNMPy.sensitivity_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">mse_sensitivity_analysis</span><span class="p">,</span> <span class="n">plot_mse_sensitivity_results</span>
-
-<span class="c1"># Run MSE sensitivity analysis on optimized PBN</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">mse_sensitivity_analysis</span><span class="p">(</span>
-    <span class="n">optimized_network</span><span class="p">,</span>
-    <span class="n">experiments</span><span class="p">,</span>
-    <span class="n">config</span><span class="o">=</span><span class="p">{</span>
-        <span class="s1">&#39;perturbation_magnitude&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
-        <span class="s1">&#39;steady_state&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;tsmc&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;tsmc_params&#39;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s1">&#39;epsilon&#39;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
-                <span class="s1">&#39;max_iterations&#39;</span><span class="p">:</span> <span class="mi">1000</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-    <span class="p">},</span>
-    <span class="n">top_n</span><span class="o">=</span><span class="mi">5</span>
-<span class="p">)</span>
-
-<span class="c1"># Visualize results</span>
-<span class="n">plot_mse_sensitivity_results</span><span class="p">(</span>
-    <span class="n">results</span><span class="p">[</span><span class="s1">&#39;sensitivity_df&#39;</span><span class="p">],</span>
-    <span class="n">results</span><span class="p">[</span><span class="s1">&#39;baseline_mse&#39;</span><span class="p">],</span>
-    <span class="n">top_n</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
-    <span class="n">save_path</span><span class="o">=</span><span class="s1">&#39;mse_sensitivity_results.png&#39;</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="configuration-options">
-<h3>Configuration Options<a class="headerlink" href="#configuration-options" title="Link to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Traditional sensitivity analysis</span>
-<span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;sensitivity_method&#39;</span><span class="p">:</span> <span class="s1">&#39;morris&#39;</span><span class="p">,</span>  <span class="c1"># &#39;morris&#39;, &#39;sobol&#39;, or &#39;fast_morris&#39;</span>
-    <span class="s1">&#39;morris_trajectories&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
-    <span class="s1">&#39;sobol_samples&#39;</span><span class="p">:</span> <span class="mi">512</span><span class="p">,</span>
-    <span class="s1">&#39;parallel&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="s1">&#39;n_workers&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Use all CPUs</span>
-    <span class="s1">&#39;steady_state&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;tsmc&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;tsmc_params&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;epsilon&#39;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
-            <span class="s1">&#39;max_iterations&#39;</span><span class="p">:</span> <span class="mi">1000</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="c1"># Influence analysis</span>
-<span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;tsmc&#39;</span><span class="p">,</span>           <span class="c1"># &#39;tsmc&#39; or &#39;monte_carlo&#39;</span>
-    <span class="s1">&#39;samples&#39;</span><span class="p">:</span> <span class="mi">20000</span><span class="p">,</span>           <span class="c1"># Number of steady state samples</span>
-    <span class="s1">&#39;burn_in&#39;</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span>            <span class="c1"># Burn-in steps</span>
-    <span class="s1">&#39;thin&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>                 <span class="c1"># Thinning interval</span>
-    <span class="s1">&#39;epsilon&#39;</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">,</span>           <span class="c1"># Convergence threshold</span>
-    <span class="s1">&#39;seed&#39;</span><span class="p">:</span> <span class="mi">42</span>                  <span class="c1"># Random seed</span>
-<span class="p">}</span>
-
-<span class="c1"># MSE sensitivity analysis</span>
-<span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;perturbation_magnitude&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>  <span class="c1"># How much to perturb probabilities (0.1-0.5)</span>
-    <span class="s1">&#39;steady_state&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;tsmc&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;tsmc_params&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;epsilon&#39;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
-            <span class="s1">&#39;max_iterations&#39;</span><span class="p">:</span> <span class="mi">1000</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
 </section>
 </section>
 <section id="references">
@@ -721,8 +529,7 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">BNMPy Optimizer</a><ul>
-<li><a class="reference internal" href="#installation">Installation</a></li>
-<li><a class="reference internal" href="#usage">Usage</a><ul>
+<li><a class="reference internal" href="#optimization">Optimization</a><ul>
 <li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
 <li><a class="reference internal" href="#input-data-format">Input Data Format</a><ul>
 <li><a class="reference internal" href="#experimental-data">Experimental Data</a></li>
@@ -740,17 +547,6 @@
 <li><a class="reference internal" href="#evaluation-plots">Evaluation Plots</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li><a class="reference internal" href="#model-compression">Model Compression</a><ul>
-<li><a class="reference internal" href="#example">Example</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#sensitivity-analysis">Sensitivity Analysis</a><ul>
-<li><a class="reference internal" href="#methods">Methods</a></li>
-<li><a class="reference internal" href="#influence-analysis">Influence Analysis</a></li>
-<li><a class="reference internal" href="#mse-sensitivity-analysis">MSE Sensitivity Analysis</a></li>
-<li><a class="reference internal" href="#configuration-options">Configuration Options</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#references">References</a></li>

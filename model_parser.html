@@ -354,77 +354,6 @@ This will return a PBN where:
 - The rest of the rules are kept the same with a probability of 1.</p>
 </dd></dl>
 
-<section id="key-functions">
-<h2>Key Functions<a class="headerlink" href="#key-functions" title="Link to this heading">¶</a></h2>
-<section id="merge-networks">
-<h3>merge_networks<a class="headerlink" href="#merge-networks" title="Link to this heading">¶</a></h3>
-<p>Merge multiple Boolean Networks or convert them to Probabilistic Boolean Networks.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.model_parser.</span></span><span class="sig-name descname"><span class="pre">merge_networks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">BNs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'OR'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descriptive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/model_parser.html#merge_networks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
-<dd><p>Merge multiple Boolean-network models using one of four strategies.</p>
-<dl class="field-list">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>BNs</strong><span class="classifier">list[BooleanNetwork]</span></dt><dd><p>List of Boolean-network objects</p>
-</dd>
-<dt><strong>method</strong><span class="classifier">{“OR”, “AND”, “Inhibitor Wins”, “PBN”}</span></dt><dd><p>Merge strategy.</p>
-</dd>
-<dt><strong>prob</strong><span class="classifier">float, default 0.9</span></dt><dd><p>Only used for PBN.  Probability given to equations from the first model</p>
-</dd>
-<dt><strong>descriptive</strong><span class="classifier">bool, default False</span></dt><dd><p>If True, prints a human-readable merge log.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl>
-<dt>str</dt><dd><p>A newline-separated network definition string suitable for writing to file.
-• deterministic modes:   gene = Boolean-expression
-• PBN mode:              gene = expr1, p1</p>
-<blockquote>
-<div><p>gene = expr2, p2 …  (one line per rule)</p>
-</div></blockquote>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-<section id="bn2pbn">
-<h3>BN2PBN<a class="headerlink" href="#bn2pbn" title="Link to this heading">¶</a></h3>
-<p>Convert a Boolean Network to a Probabilistic Boolean Network by adding a self-loop as alternative function.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.model_parser.</span></span><span class="sig-name descname"><span class="pre">BN2PBN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/model_parser.html#BN2PBN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
-<dd><p>Expand the boolean network to a PBN by adding a self-loop as alternative function
-prob: probability of the equations from the original BN
-fixed_nodes: list of nodes that are fixed (e.g., output nodes)</p>
-<dl class="simple">
-<dt>Returns:</dt><dd><p>pbn_string: string of the PBN
-nodes_to_optimize: list of nodes excludes input nodes</p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-<section id="extend-networks">
-<h3>extend_networks<a class="headerlink" href="#extend-networks" title="Link to this heading">¶</a></h3>
-<p>Extend an existing Boolean Network by adding nodes and rules informed by a Knowledge Graph.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="id2">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.model_parser.</span></span><span class="sig-name descname"><span class="pre">extend_networks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">original_network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes_to_extend</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descriptive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/model_parser.html#extend_networks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
-<dd><p>Extend the original network by adding the nodes_to_extend (and their rules) from the new network.
-This will return a PBN where:
-- rules for the nodes_to_extend are added to the original network with a probability of prob.
-- rules for the nodes_to_extend from the original network will have a probability of 1-prob.
-- in case the new rules for nodes_to_extend include new nodes, they will also be added with a probability of 1.
-- The direct targets of nodes_to_extend are also extended with both rules and probabilities.
-- The rest of the rules are kept the same with a probability of 1.</p>
-</dd></dl>
-
-</section>
-</section>
 <section id="example-usage">
 <h2>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">¶</a></h2>
 <section id="merging-networks">
@@ -542,21 +471,6 @@ This will return a PBN where:
 <li><a class="reference internal" href="#BNMPy.model_parser.merge_networks"><code class="docutils literal notranslate"><span class="pre">merge_networks()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.model_parser.BN2PBN"><code class="docutils literal notranslate"><span class="pre">BN2PBN()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.model_parser.extend_networks"><code class="docutils literal notranslate"><span class="pre">extend_networks()</span></code></a></li>
-<li><a class="reference internal" href="#key-functions">Key Functions</a><ul>
-<li><a class="reference internal" href="#merge-networks">merge_networks</a><ul>
-<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">merge_networks()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#bn2pbn">BN2PBN</a><ul>
-<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">BN2PBN()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#extend-networks">extend_networks</a><ul>
-<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">extend_networks()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li><a class="reference internal" href="#example-usage">Example Usage</a><ul>
 <li><a class="reference internal" href="#merging-networks">Merging Networks</a></li>
 <li><a class="reference internal" href="#converting-bn-to-pbn">Converting BN to PBN</a></li>
