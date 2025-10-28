@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="BNMPy Optimizer" href="optimization_guide.html"><link rel="prev" title="Phenotype Score" href="phenotype_score_guide.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="BNMPy Optimizer" href="optimization_guide.html"><link rel="prev" title="Knowledge Graph Augmentation" href="knowledge_graph_guide.html">
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2025.09.25 -->
         <title>Steady State Calculation Guide - BNMPy 0.2 documentation</title>
@@ -194,7 +194,6 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="basic_simulation.html">Basic Simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="knowledge_graph_guide.html">Knowledge Graph Augmentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phenotype_score_guide.html">Phenotype Score</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Steady State Calculation Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimization_guide.html">BNMPy Optimizer</a></li>
 </ul>
@@ -263,21 +262,6 @@
 <h3>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">SteadyStateCalculator</span></code> class provides steady-state calculation capabilities for both Boolean Networks and Probabilistic Boolean Networks in BNMPy.</p>
 </section>
-<section id="features">
-<h3>Features<a class="headerlink" href="#features" title="Link to this heading">¶</a></h3>
-<ul class="simple">
-<li><p><strong>Dual Network Support</strong>: Works with both <code class="docutils literal notranslate"><span class="pre">BooleanNetwork</span></code> and <code class="docutils literal notranslate"><span class="pre">ProbabilisticBN</span></code> objects</p></li>
-<li><p><strong>Multiple Methods</strong>:</p>
-<ul>
-<li><p>Monte Carlo simulation</p></li>
-<li><p>Two-State Markov Chain (TSMC) with convergence analysis</p></li>
-<li><p>Deterministic attractor finding (for Boolean networks)</p></li>
-</ul>
-</li>
-<li><p><strong>Experimental Conditions</strong>: Support for stimuli and inhibitors with efficacy control</p></li>
-<li><p><strong>Convergence Analysis</strong>: Convergence checking for Monte Carlo method</p></li>
-</ul>
-</section>
 <section id="quick-start">
 <h3>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">BNMPy</span>
@@ -291,7 +275,7 @@
 <span class="s2">N3 = N1 &amp; !N2, 0.4</span>
 <span class="s2">&quot;&quot;&quot;</span>
 <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-<span class="n">network</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_pbn_from_string</span><span class="p">(</span><span class="n">network_string</span><span class="p">,</span> <span class="n">initial_state</span><span class="o">=</span><span class="n">x0</span><span class="p">)</span>
+<span class="n">network</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="n">network_string</span><span class="p">,</span> <span class="n">initial_state</span><span class="o">=</span><span class="n">x0</span><span class="p">)</span>
 
 <span class="c1"># Create calculator</span>
 <span class="n">calc</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">SteadyStateCalculator</span><span class="p">(</span><span class="n">network</span><span class="p">)</span>
@@ -455,7 +439,7 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">BNMPy</span>
 
 <span class="c1"># Load a Boolean network</span>
-<span class="n">network</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network_from_file</span><span class="p">(</span><span class="s2">&quot;network.txt&quot;</span><span class="p">)</span>
+<span class="n">network</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="s2">&quot;network.txt&quot;</span><span class="p">)</span>
 <span class="n">calc</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">SteadyStateCalculator</span><span class="p">(</span><span class="n">network</span><span class="p">)</span>
 
 <span class="c1"># Find attractors</span>
@@ -569,14 +553,14 @@
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="phenotype_score_guide.html">
+          <a class="prev-page" href="knowledge_graph_guide.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Phenotype Score</div>
+                <div class="title">Knowledge Graph Augmentation</div>
                 
               </div>
             </a>
@@ -613,7 +597,6 @@
 <li><a class="reference internal" href="#">Steady State Calculation Guide</a><ul>
 <li><a class="reference internal" href="#steadystatecalculator-for-bnmpy">SteadyStateCalculator for BNMPy</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#features">Features</a></li>
 <li><a class="reference internal" href="#quick-start">Quick Start</a></li>
 <li><a class="reference internal" href="#methods">Methods</a><ul>
 <li><a class="reference internal" href="#tsmc-method-two-state-markov-chain">1. TSMC Method (Two-State Markov Chain)</a></li>
