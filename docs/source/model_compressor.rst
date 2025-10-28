@@ -8,10 +8,6 @@ The model_compressor module provides tools for simplifying Boolean Networks befo
    :undoc-members:
    :show-inheritance:
 
-Overview
---------
-
-Model compression simplifies networks while preserving relevant behavior. Currently supports Boolean Networks only.
 
 Features
 --------------------
@@ -23,26 +19,6 @@ The compressor can:
 3. **Collapse linear paths**: Simplify cascades of intermediate nodes
 4. **Visualize results**: Show which nodes and edges were removed
 
-Functions
----------
-
-compress_model
-~~~~~~~~~~~~~~
-
-.. autofunction:: BNMPy.model_compressor.compress_model
-
-Main compression function with automatic processing.
-
-ModelCompressor Class
-~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: BNMPy.model_compressor.ModelCompressor
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-For advanced compression with step-by-step control.
-
 Basic Usage
 -----------
 
@@ -51,7 +27,7 @@ Basic Usage
    import BNMPy
 
    # Load network
-   network = BNMPy.load_network_from_file("network.txt")
+   network = BNMPy.load_network("network.txt")
 
    # Define nodes
    measured_nodes = {'Output1', 'Output2', 'Biomarker'}
@@ -64,9 +40,6 @@ Basic Usage
        perturbed_nodes=perturbed_nodes,
        verbose=True
    )
-
-   print(f"Original: {len(network.nodeDict)} nodes")
-   print(f"Compressed: {compressed_network.N} nodes")
 
 
 Extract nodes directly from experimental data:
@@ -144,21 +117,11 @@ The module provides visualization capabilities:
    BNMPy.vis_compression(
        network,                    # Original network
        compressed_network,         # Compressed network
-       compression_info,          # Compression information
-       "compression_results.html" # Output file
+       compression_info,           # Compression information
+       "compression_results.html"  # Output file
    )
 
 Visualization:
 
-- **Node colors**: Source nodes (grey), sink nodes (orange), intermediate (blue)
-- **Removed nodes**: Shown in light grey
-- **Edge styling**: Different colors for inhibitory vs activating edges
-- **Interactive**: Draggable nodes with physics simulation
-
-
-See Also
---------
-
-- :doc:`parameter_optimizer` - Main optimization interface
-- :doc:`experiment_data` - Experimental data handling
-- :doc:`vis` - Visualization functions
+- **Node colors**: Perturbed nodes (red), measured nodes (orange), intermediate nodes (blue)
+- **Removed nodes and edges**: Shown in light grey and dashed

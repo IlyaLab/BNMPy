@@ -8,19 +8,6 @@ The parameter_optimizer module provides PBN parameter optimization based on the 
    :undoc-members:
    :show-inheritance:
 
-ParameterOptimizer Class
-------------------------
-
-.. autoclass:: BNMPy.parameter_optimizer.ParameterOptimizer
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Overview
---------
-
-The ParameterOptimizer enables parameter estimation for Probabilistic Boolean Networks (PBNs) using experimental data. It supports multiple optimization algorithms and provides comprehensive result evaluation.
-
 Basic Usage
 -----------
 
@@ -147,4 +134,3 @@ References
 Based on the optPBN framework:
 
 Trairatphisan, P., et al. (2014). "optPBN: An Optimisation Toolbox for Probabilistic Boolean Networks." PLOS ONE 9(7): e98001.
-

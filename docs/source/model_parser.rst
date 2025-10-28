@@ -8,30 +8,6 @@ The model_parser module provides functions for merging, converting, and extendin
    :undoc-members:
    :show-inheritance:
 
-Key Functions
--------------
-
-merge_networks
-~~~~~~~~~~~~~~
-
-Merge multiple Boolean Networks or convert them to Probabilistic Boolean Networks.
-
-.. autofunction:: BNMPy.model_parser.merge_networks
-
-BN2PBN
-~~~~~~
-
-Convert a Boolean Network to a Probabilistic Boolean Network by adding a self-loop as alternative function.
-
-.. autofunction:: BNMPy.model_parser.BN2PBN
-
-extend_networks
-~~~~~~~~~~~~~~~
-
-Extend an existing Boolean Network by adding nodes and rules informed by a Knowledge Graph.
-
-.. autofunction:: BNMPy.model_parser.extend_networks
-
 Example Usage
 -------------
 
@@ -84,4 +60,3 @@ Extending Networks
        prob=0.5, # probability of the rules from the KG
        descriptive=True
    )
-
