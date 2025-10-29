@@ -146,6 +146,11 @@ def merge_networks(BNs, method="OR", prob=0.9, descriptive=False):
         else:
             prob_other = 0.0
 
+        # For each gene, store rule->prob in dict to allow probability summation
+        merged_network = defaultdict(dict)
+    else:
+        merged_network = {}
+
     for idx, network in enumerate(network_dicts, start=1):
 
         for gene, expression in network.items():
@@ -157,17 +162,17 @@ def merge_networks(BNs, method="OR", prob=0.9, descriptive=False):
 
                 # probability assignment
                 rule_prob = 1.0 if gene_occ[gene] == 1 else (prob if idx == 1 else prob_other)
-                rule_str  = f"{expression}, {round(rule_prob, 3)}"
+                rule_prob = round(rule_prob, 3)
 
-                # avoid duplicate rules
-                existing_rules = [r.split(',')[0].strip() for r in merged_network.get(gene, [])]
-                if expression in existing_rules:
-                    descriptions[gene].append((f"Model {idx}", f"duplicate {expression}"))
-                    continue
-
-                merged_network.setdefault(gene, []).append(rule_str)
-                descriptions[gene].append((f"Model {idx}", rule_str))
-                descriptions[gene].append(("Merged", merged_network[gene]))
+                if expression in merged_network[gene]:
+                    # If rule already present, add up the probability
+                    merged_network[gene][expression] += rule_prob
+                    descriptions[gene].append((f"Model {idx}", f"added prob {rule_prob} to existing rule {expression}"))
+                else:
+                    merged_network[gene][expression] = rule_prob
+                    descriptions[gene].append((f"Model {idx}", f"added new rule {expression} with prob {rule_prob}"))
+                # Track status for user output
+                descriptions[gene].append(("Merged", dict(merged_network[gene])))
                 continue  # go to next gene
 
             # DETERMINISTIC MODES
@@ -213,11 +218,11 @@ def merge_networks(BNs, method="OR", prob=0.9, descriptive=False):
             # first time this gene appears
             else:
                 if method == "PBN":
-                    # for unique genes we *already* handled prob=1 rule above,
-                    # but this branch never executes in PBN.
+                    # This branch is not executed for PBN since merged_network is defaultdict
                     pass
-                merged_network[gene] = expression
-                descriptions[gene].append((f"Model {idx}", expression))
+                else:
+                    merged_network[gene] = expression
+                    descriptions[gene].append((f"Model {idx}", expression))
 
     if descriptive:
         print(f"Merging Method: {method}")
@@ -245,10 +250,12 @@ def merge_networks(BNs, method="OR", prob=0.9, descriptive=False):
     # return the merged network string
     merged_lines = []
     if method == "PBN":
-        # each rule is already stored as "expr, p"  (string)
-        for gene, rules in merged_network.items():
-            for rule in rules:             # rule = "expr, prob"
-                merged_lines.append(f"{gene} = {rule}")
+        # output format: gene = expr, prob for each rule with sum-probabilities
+        for gene, rule_dict in merged_network.items():
+            for expr, rule_prob in rule_dict.items():
+                # Only include rules with prob > 0
+                if rule_prob > 0:
+                    merged_lines.append(f"{gene} = {expr}, {round(rule_prob, 3)}")
     else:
         for gene, expr in merged_network.items():
             merged_lines.append(f"{gene} = {expr}")
