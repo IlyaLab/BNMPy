@@ -269,7 +269,6 @@ More Information
 ----------
 
 - :doc:`knowledge_graph_guide` - Knowledge graph integration
-- :doc:`phenotype_score_guide` - Phenotype scoring
 - :doc:`steady_state_guide` - Advanced steady state analysis
 - :doc:`optimization_guide` - Parameter optimization
 - :doc:`api` - Complete API reference
