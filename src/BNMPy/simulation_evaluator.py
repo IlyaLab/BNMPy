@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 from typing import Dict, List, Union, Optional
 from BNMPy.steady_state import SteadyStateCalculator
 
@@ -44,6 +45,38 @@ class SimulationEvaluator:
         
         # Store original parameters for non-optimized nodes
         self._store_original_parameters()
+
+        # Check formula-based measurements and warn if measured values are outside theoretical range
+        formula_experiments = [exp for exp in self.experiments if exp.get('measured_formula')]
+        if formula_experiments:
+            formula = formula_experiments[0]['measured_formula']
+            variables = self._extract_variables_from_formula(formula)
+            
+            try:
+                # Calculate theoretical range by evaluating formula at all corners
+                n_vars = len(variables)
+                formula_values = []
+                
+                for combo in itertools.product([0.0, 1.0], repeat=n_vars):
+                    var_values = dict(zip(variables, combo))
+                    for node in self.pbn.nodeDict.keys():
+                        if node not in var_values:
+                            var_values[node] = 0.0
+                    value = self._safe_eval_formula(formula, var_values)
+                    formula_values.append(value)
+                
+                theoretical_min = float(np.min(formula_values))
+                theoretical_max = float(np.max(formula_values))
+                
+                # Check if any measured values are outside theoretical range
+                for exp in formula_experiments:
+                    mv = exp.get('measured_value')
+                    if mv is not None and (mv < theoretical_min or mv > theoretical_max):
+                        print(f"WARNING: Experiment {exp['id']} measured value {mv} is outside theoretical range [{theoretical_min}, {theoretical_max}]")
+                        print(f"         Formula: {formula}")
+                        print(f"         Consider rescaling your measured values to match the formula's range.")
+            except Exception as e:
+                print(f"Warning: Could not validate formula range: {e}")
         
     def _store_original_parameters(self):
         """Store original parameters for non-optimized nodes"""
@@ -85,10 +118,17 @@ class SimulationEvaluator:
                 if node not in node_dict:
                     raise ValueError(f"Inhibitor node {node} not found in network")
             
-            # Check measured nodes from the measurements dictionary keys
-            for node in exp['measurements'].keys():
-                if node not in node_dict:
-                    raise ValueError(f"Measured node {node} not found in network")
+            # Check measured nodes or formula
+            if exp.get('measured_formula'):
+                # Validate that variables in formula exist in node dict
+                vars_in_formula = self._extract_variables_from_formula(exp['measured_formula'])
+                for var in vars_in_formula:
+                    if var not in node_dict:
+                        raise ValueError(f"Variable {var} in measured formula not found in network")
+            else:
+                for node in exp['measurements'].keys():
+                    if node not in node_dict:
+                        raise ValueError(f"Measured node {node} not found in network")
     
     def objective_function(self, cij_vector: np.ndarray) -> float:
         """
@@ -140,12 +180,11 @@ class SimulationEvaluator:
             for retry in range(max_retries):
                 try:
                     predicted = self._simulate_experiment(experiment)
-                    # print(f"  Predicted steady state: {predicted}")
 
                     if np.any(np.isnan(predicted)) or np.any(np.isinf(predicted)):
                         raise ValueError("Invalid simulation results (NaN or Inf)")
                     
-                    sse = self._calculate_sse(predicted, experiment['measurements'])
+                    sse = self._calculate_sse(predicted, experiment)
                     # print(f"  SSE for experiment {i+1}: {sse}")
 
                     if np.isfinite(sse):
@@ -321,7 +360,7 @@ class SimulationEvaluator:
         
         return steady_state
     
-    def _calculate_sse(self, predicted: np.ndarray, measurements: Dict[str, float]) -> float:
+    def _calculate_sse(self, predicted: np.ndarray, experiment: Dict) -> float:
         """
         Calculate sum of squared errors for measured nodes
         
@@ -329,20 +368,77 @@ class SimulationEvaluator:
         -----------
         predicted : np.ndarray
             Predicted steady state probabilities
-        measurements : dict
-            Measured values for nodes
+        experiment : dict
+            Experiment dictionary containing either node measurements or a measured formula
             
         Returns:
         --------
         float
             Sum of squared errors
         """
+        # Formula-based single measurement
+        if experiment.get('measured_formula'):
+            measured_value = float(experiment.get('measured_value')) if experiment.get('measured_value') is not None else 0.0
+            
+            # Compute predicted formula value
+            var_values = {name: predicted[idx] for name, idx in self.pbn.nodeDict.items()}
+            predicted_value = self._safe_eval_formula(experiment['measured_formula'], var_values)
+            # print(f"  Predicted formula value: {predicted_value}, Measured value: {measured_value}")
+            
+            return float(predicted_value - measured_value) ** 2
+        
+        # Standard per-node SSE
         sse = 0.0
-        for node, measured_value in measurements.items():
+        for node, measured_value in experiment['measurements'].items():
             node_idx = self.pbn.nodeDict[node]
             predicted_value = predicted[node_idx]
             sse += (predicted_value - measured_value) ** 2
         return sse
+
+    @staticmethod
+    def _extract_variables_from_formula(formula: str):
+        import re
+        tokens = re.findall(r"\b[A-Za-z_]\w*\b", str(formula))
+        return list(dict.fromkeys(tokens))
+
+    @staticmethod
+    def _safe_eval_formula(formula: str, variables: Dict[str, float]) -> float:
+        import ast
+        import operator as op
+
+        allowed_operators = {
+            ast.Add: op.add,
+            ast.Sub: op.sub,
+            ast.Mult: op.mul,
+            ast.Div: op.truediv,
+            ast.USub: op.neg,
+            ast.UAdd: op.pos,
+            ast.Pow: op.pow,
+        }
+
+        def _eval(node):
+            if isinstance(node, ast.Num):  # type: ignore[attr-defined]
+                return node.n
+            if isinstance(node, ast.Constant):
+                if isinstance(node.value, (int, float)):
+                    return node.value
+                raise ValueError("Invalid constant in formula")
+            if isinstance(node, ast.Name):
+                if node.id in variables:
+                    return variables[node.id]
+                raise ValueError(f"Unknown variable '{node.id}' in formula")
+            if isinstance(node, ast.BinOp):
+                if type(node.op) not in allowed_operators:
+                    raise ValueError("Operator not allowed in formula")
+                return allowed_operators[type(node.op)](_eval(node.left), _eval(node.right))
+            if isinstance(node, ast.UnaryOp):
+                if type(node.op) not in allowed_operators:
+                    raise ValueError("Unary operator not allowed in formula")
+                return allowed_operators[type(node.op)](_eval(node.operand))
+            raise ValueError("Unsupported expression in formula")
+
+        tree = ast.parse(str(formula), mode='eval')
+        return float(_eval(tree.body))
     
     def get_parameter_bounds(self) -> List[tuple]:
         """

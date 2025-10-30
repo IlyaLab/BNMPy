@@ -1,0 +1,4 @@
+Experiments,Stimuli,Inhibitors,Measured_nodes,Measured_values
+1,,,N1 + N2 + N3,1.14
+2,"N1,N2",,N1 + N2 + N3,2.14
+3,N1,N2,N1 + N2 + N3,1.95

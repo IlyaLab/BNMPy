@@ -31,7 +31,7 @@ class ParameterOptimizer:
     Parameter optimization for Probabilistic Boolean Networks using experimental data.
     """
     
-    def __init__(self, pbn, experiments, config=None, nodes_to_optimize=None, discrete=False, verbose=False):
+    def __init__(self, pbn, experiments, config=None, nodes_to_optimize=None, discrete=False, verbose=False, Measured_formula: Optional[str] = None):
         """
         Initialize the parameter optimizer.
         
@@ -49,6 +49,8 @@ class ParameterOptimizer:
             Whether to perform discrete optimization
         verbose : bool, default=False
             Whether to print detailed optimization progress
+        Measured_formula : str, optional
+            Formula to use for calculating the objective function. Overrides CSV `Measured_nodes` for scoring.
         """
         self.pbn = pbn
         self.verbose = verbose
@@ -59,6 +61,20 @@ class ParameterOptimizer:
             self.experiments = ExperimentData.load_from_csv(experiments)
         else:
             self.experiments = experiments
+        
+        # Use a measured formula across all experiments
+        if Measured_formula:
+            override_formula = str(Measured_formula)
+            for exp in self.experiments:
+                exp['measured_formula'] = override_formula
+                # Determine measured_value: prefer existing formula value, else first raw value
+                if exp.get('measured_value') is None:
+                    raw_vals = exp.get('measured_values_raw') or []
+                    if len(raw_vals) != 1:
+                        raise ValueError("Measured_formula requires each experiment to have exactly one Measured_values entry in the CSV")
+                    exp['measured_value'] = raw_vals[0]
+                # Clear per-node measurements when using a formula target
+                exp['measurements'] = {}
         
         # Validate experiments
         ExperimentData.validate_experiments(self.experiments, pbn.nodeDict)

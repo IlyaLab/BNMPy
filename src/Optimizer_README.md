@@ -41,8 +41,8 @@ Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nod
 - `Stimuli_efficacy`: Efficacy of stimuli (0-1, comma-separated, optional)
 - `Inhibitors`: Nodes fixed to 0 (comma-separated)
 - `Inhibitors_efficacy`: Efficacy of inhibitors (0-1, comma-separated, optional)
-- `Measured_nodes`: Nodes with experimental measurements
-- `Measured_values`: Corresponding values (0-1, normalized)
+- `Measured_nodes`: Nodes with experimental measurements OR a formula expression
+- `Measured_values`: Corresponding values (0-1, normalized). For formulas, a single value per row is required
 
 See [Examples/files/experiments_example.csv](../Examples/files/experiments_example.csv) for an example file.
 
@@ -58,6 +58,34 @@ See [Examples/files/experiments_example.csv](../Examples/files/experiments_examp
 #### PBN Data
 
 A ProbabilisticBN object, see [PBN_simulation.ipynb](../Examples/PBN_simulation.ipynb).
+
+#### Formula-based Measurements (Phenotype score)
+
+We can target an aggregate score instead of individual nodes using a formula based on node names and arithmetic operators. Two ways to use formulas:
+
+- Place the formula directly in `Measured_nodes` and provide a single target value in `Measured_values`:
+
+```csv
+Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values
+1,,,,,"nodeA + nodeB - nodeC",0.75
+```
+
+- Or supply a global formula via the optimizer argument `Measured_formula` (overrides CSV `Measured_nodes` ), with each CSV row having a single `Measured_values` entry:
+
+```python
+optimizer = ParameterOptimizer(
+    pbn,
+    "experiments.csv",
+    nodes_to_optimize=['nodeX'],
+    verbose=False,
+    Measured_formula="nodeA + nodeB - nodeC"
+)
+```
+
+- Supported operators: `+`, `-`, `*`, `/`, parentheses and unary `+/-`
+- Variables must correspond to nodes in the network (`pbn.nodeDict`)
+- Measured values should be in the same range as the theoretical formula range
+  - Formula range examples: `N1+N2+N3` → [0,3], `N1+N2-N3` → [-1,2], `N1-N2` → [-1,1]
 
 ### Configurations
 
