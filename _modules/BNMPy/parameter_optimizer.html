@@ -290,7 +290,7 @@
     
 <div class="viewcode-block" id="ParameterOptimizer.__init__">
 <a class="viewcode-back" href="../../parameter_optimizer.html#BNMPy.parameter_optimizer.ParameterOptimizer.__init__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pbn</span><span class="p">,</span> <span class="n">experiments</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodes_to_optimize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">discrete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pbn</span><span class="p">,</span> <span class="n">experiments</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodes_to_optimize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">discrete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">Measured_formula</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the parameter optimizer.</span>
 <span class="sd">        </span>
@@ -308,6 +308,8 @@
 <span class="sd">            Whether to perform discrete optimization</span>
 <span class="sd">        verbose : bool, default=False</span>
 <span class="sd">            Whether to print detailed optimization progress</span>
+<span class="sd">        Measured_formula : str, optional</span>
+<span class="sd">            Formula to use for calculating the objective function. Overrides CSV `Measured_nodes` for scoring.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span> <span class="o">=</span> <span class="n">pbn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
@@ -318,6 +320,20 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span> <span class="o">=</span> <span class="n">ExperimentData</span><span class="o">.</span><span class="n">load_from_csv</span><span class="p">(</span><span class="n">experiments</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span> <span class="o">=</span> <span class="n">experiments</span>
+        
+        <span class="c1"># Use a measured formula across all experiments</span>
+        <span class="k">if</span> <span class="n">Measured_formula</span><span class="p">:</span>
+            <span class="n">override_formula</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Measured_formula</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">exp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">:</span>
+                <span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">override_formula</span>
+                <span class="c1"># Determine measured_value: prefer existing formula value, else first raw value</span>
+                <span class="k">if</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_value&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">raw_vals</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_values_raw&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_vals</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Measured_formula requires each experiment to have exactly one Measured_values entry in the CSV&quot;</span><span class="p">)</span>
+                    <span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measured_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="c1"># Clear per-node measurements when using a formula target</span>
+                <span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         
         <span class="c1"># Validate experiments</span>
         <span class="n">ExperimentData</span><span class="o">.</span><span class="n">validate_experiments</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">,</span> <span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">)</span>

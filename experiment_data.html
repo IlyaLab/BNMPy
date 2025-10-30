@@ -268,7 +268,7 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.experiment_data.ExperimentData.get_experiment_summary" title="BNMPy.experiment_data.ExperimentData.get_experiment_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_experiment_summary</span></code></a>(experiments)</p></td>
 <td><p>Get summary of experiments for debugging/inspection</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.experiment_data.ExperimentData.load_from_csv" title="BNMPy.experiment_data.ExperimentData.load_from_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_from_csv</span></code></a>(csv_file)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#BNMPy.experiment_data.ExperimentData.load_from_csv" title="BNMPy.experiment_data.ExperimentData.load_from_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_from_csv</span></code></a>(csv_file[, use_formula])</p></td>
 <td><p>Load experiments from CSV file</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#BNMPy.experiment_data.ExperimentData.validate_experiments" title="BNMPy.experiment_data.ExperimentData.validate_experiments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_experiments</span></code></a>(experiments, node_dict)</p></td>
@@ -279,9 +279,10 @@
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="BNMPy.experiment_data.ExperimentData.load_from_csv">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/experiment_data.html#ExperimentData.load_from_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.experiment_data.ExperimentData.load_from_csv" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_formula</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/experiment_data.html#ExperimentData.load_from_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.experiment_data.ExperimentData.load_from_csv" title="Link to this definition">¶</a></dt>
 <dd><p>Load experiments from CSV file</p>
-<p>Only required columns are used. Extra columns in the CSV are ignored.</p>
+<p>Only required columns are used. Extra columns in the CSV are ignored.
+If use_formula is True, the Measured_nodes column should contain the formula string, and Measured_values must have a single value per row.</p>
 <p>CSV Format:
 Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values
 1,TGFa,1,TNFa,1,”NFkB,ERK,C8,Akt”,”0.7,0.88,0,1”
@@ -312,7 +313,7 @@ Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nod
 
 <dl class="py function">
 <dt class="sig sig-object py" id="BNMPy.experiment_data.extract_experiment_nodes">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.experiment_data.</span></span><span class="sig-name descname"><span class="pre">extract_experiment_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/experiment_data.html#extract_experiment_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.experiment_data.extract_experiment_nodes" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">BNMPy.experiment_data.</span></span><span class="sig-name descname"><span class="pre">extract_experiment_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_formula</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/experiment_data.html#extract_experiment_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.experiment_data.extract_experiment_nodes" title="Link to this definition">¶</a></dt>
 <dd><p>Extract measured and perturbed nodes from experimental CSV file.</p>
 </dd></dl>
 
@@ -342,8 +343,8 @@ PBN parameters and generates predicted values for the measured nodes.</p>
 <li><p><strong>Stimuli_efficacy</strong>: Efficacy values 0-1 (optional, defaults to 1.0)</p></li>
 <li><p><strong>Inhibitors</strong>: Nodes fixed to 0 (comma-separated)</p></li>
 <li><p><strong>Inhibitors_efficacy</strong>: Efficacy values 0-1 (optional, defaults to 1.0)</p></li>
-<li><p><strong>Measured_nodes</strong>: Nodes with experimental measurements</p></li>
-<li><p><strong>Measured_values</strong>: Corresponding values 0-1 (normalized)</p></li>
+<li><p><strong>Measured_nodes</strong>: Nodes with experimental measurements OR a formula expression (when use_formula=True)</p></li>
+<li><p><strong>Measured_values</strong>: Corresponding values 0-1 (normalized). For formulas, provide a single value per row in the formula’s natural range</p></li>
 </ul>
 </section>
 <section id="efficacy-values">
@@ -358,6 +359,23 @@ PBN parameters and generates predicted values for the measured nodes.</p>
 </li>
 <li><p><strong>Example</strong>: <code class="docutils literal notranslate"><span class="pre">PI3K,0.7</span></code> means PI3K inhibition has 70% probability of setting PI3K=0, 30% of PI3K=1</p></li>
 </ul>
+</section>
+<section id="formula-based-measurements">
+<h3>Formula-based Measurements<a class="headerlink" href="#formula-based-measurements" title="Link to this heading">¶</a></h3>
+<p>When using formulas (<code class="docutils literal notranslate"><span class="pre">use_formula=True</span></code>):</p>
+<ul class="simple">
+<li><p><strong>Measured_nodes</strong>: Contains a formula expression (e.g., <code class="docutils literal notranslate"><span class="pre">N1</span> <span class="pre">+</span> <span class="pre">N2</span> <span class="pre">-</span> <span class="pre">N3</span></code>)</p></li>
+<li><p><strong>Measured_values</strong>: Single value per row in the formula’s natural range</p></li>
+<li><p>Supported operators: <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">/</span></code>, parentheses</p></li>
+<li><p>Variables must be node names from the network</p></li>
+</ul>
+<p><strong>Important</strong>: Ensure measured values are scaled to match the theoretical formula range:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">N1</span> <span class="pre">+</span> <span class="pre">N2</span> <span class="pre">+</span> <span class="pre">N3</span></code>: range [0, 3]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">N1</span> <span class="pre">+</span> <span class="pre">N2</span> <span class="pre">-</span> <span class="pre">N3</span></code>: range [-1, 2]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">N1</span> <span class="pre">-</span> <span class="pre">N2</span></code>: range [-1, 1]</p></li>
+</ul>
+<p>The optimizer will warn if measured values fall outside the expected range.</p>
 </section>
 </section>
 </section>
@@ -429,6 +447,7 @@ PBN parameters and generates predicted values for the measured nodes.</p>
 <li><a class="reference internal" href="#data-format">Data Format</a><ul>
 <li><a class="reference internal" href="#column-descriptions">Column Descriptions</a></li>
 <li><a class="reference internal" href="#efficacy-values">Efficacy Values</a></li>
+<li><a class="reference internal" href="#formula-based-measurements">Formula-based Measurements</a></li>
 </ul>
 </li>
 </ul>

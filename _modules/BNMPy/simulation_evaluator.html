@@ -248,6 +248,7 @@
         <article role="main" id="furo-main-content">
           <h1>Source code for BNMPy.simulation_evaluator</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">BNMPy.steady_state</span><span class="w"> </span><span class="kn">import</span> <span class="n">SteadyStateCalculator</span>
 
@@ -296,7 +297,39 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_experiments</span><span class="p">()</span>
         
         <span class="c1"># Store original parameters for non-optimized nodes</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_store_original_parameters</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_store_original_parameters</span><span class="p">()</span>
+
+        <span class="c1"># Check formula-based measurements and warn if measured values are outside theoretical range</span>
+        <span class="n">formula_experiments</span> <span class="o">=</span> <span class="p">[</span><span class="n">exp</span> <span class="k">for</span> <span class="n">exp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span> <span class="k">if</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">formula_experiments</span><span class="p">:</span>
+            <span class="n">formula</span> <span class="o">=</span> <span class="n">formula_experiments</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">]</span>
+            <span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_variables_from_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">)</span>
+            
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Calculate theoretical range by evaluating formula at all corners</span>
+                <span class="n">n_vars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+                <span class="n">formula_values</span> <span class="o">=</span> <span class="p">[]</span>
+                
+                <span class="k">for</span> <span class="n">combo</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="n">repeat</span><span class="o">=</span><span class="n">n_vars</span><span class="p">):</span>
+                    <span class="n">var_values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">combo</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">var_values</span><span class="p">:</span>
+                            <span class="n">var_values</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_eval_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">,</span> <span class="n">var_values</span><span class="p">)</span>
+                    <span class="n">formula_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                
+                <span class="n">theoretical_min</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">formula_values</span><span class="p">))</span>
+                <span class="n">theoretical_max</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">formula_values</span><span class="p">))</span>
+                
+                <span class="c1"># Check if any measured values are outside theoretical range</span>
+                <span class="k">for</span> <span class="n">exp</span> <span class="ow">in</span> <span class="n">formula_experiments</span><span class="p">:</span>
+                    <span class="n">mv</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_value&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">mv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">mv</span> <span class="o">&lt;</span> <span class="n">theoretical_min</span> <span class="ow">or</span> <span class="n">mv</span> <span class="o">&gt;</span> <span class="n">theoretical_max</span><span class="p">):</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WARNING: Experiment </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> measured value </span><span class="si">{</span><span class="n">mv</span><span class="si">}</span><span class="s2"> is outside theoretical range [</span><span class="si">{</span><span class="n">theoretical_min</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">theoretical_max</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;         Formula: </span><span class="si">{</span><span class="n">formula</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;         Consider rescaling your measured values to match the formula&#39;s range.&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Could not validate formula range: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
         
     <span class="k">def</span><span class="w"> </span><span class="nf">_store_original_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -339,10 +372,17 @@
                 <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_dict</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Inhibitor node </span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2"> not found in network&quot;</span><span class="p">)</span>
             
-            <span class="c1"># Check measured nodes from the measurements dictionary keys</span>
-            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_dict</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Measured node </span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2"> not found in network&quot;</span><span class="p">)</span>
+            <span class="c1"># Check measured nodes or formula</span>
+            <span class="k">if</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">):</span>
+                <span class="c1"># Validate that variables in formula exist in node dict</span>
+                <span class="n">vars_in_formula</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_variables_from_formula</span><span class="p">(</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">vars_in_formula</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_dict</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variable </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2"> in measured formula not found in network&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_dict</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Measured node </span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2"> not found in network&quot;</span><span class="p">)</span>
     
 <div class="viewcode-block" id="SimulationEvaluator.objective_function">
 <a class="viewcode-back" href="../../simulation_evaluator.html#BNMPy.simulation_evaluator.SimulationEvaluator.objective_function">[docs]</a>
@@ -396,12 +436,11 @@
             <span class="k">for</span> <span class="n">retry</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_retries</span><span class="p">):</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">predicted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulate_experiment</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
-                    <span class="c1"># print(f&quot;  Predicted steady state: {predicted}&quot;)</span>
 
                     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">predicted</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">predicted</span><span class="p">)):</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid simulation results (NaN or Inf)&quot;</span><span class="p">)</span>
                     
-                    <span class="n">sse</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_sse</span><span class="p">(</span><span class="n">predicted</span><span class="p">,</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">])</span>
+                    <span class="n">sse</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_sse</span><span class="p">(</span><span class="n">predicted</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span>
                     <span class="c1"># print(f&quot;  SSE for experiment {i+1}: {sse}&quot;)</span>
 
                     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">sse</span><span class="p">):</span>
@@ -578,7 +617,7 @@
         
         <span class="k">return</span> <span class="n">steady_state</span>
     
-    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_sse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicted</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">measurements</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_sse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicted</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">experiment</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate sum of squared errors for measured nodes</span>
 <span class="sd">        </span>
@@ -586,20 +625,77 @@
 <span class="sd">        -----------</span>
 <span class="sd">        predicted : np.ndarray</span>
 <span class="sd">            Predicted steady state probabilities</span>
-<span class="sd">        measurements : dict</span>
-<span class="sd">            Measured values for nodes</span>
+<span class="sd">        experiment : dict</span>
+<span class="sd">            Experiment dictionary containing either node measurements or a measured formula</span>
 <span class="sd">            </span>
 <span class="sd">        Returns:</span>
 <span class="sd">        --------</span>
 <span class="sd">        float</span>
 <span class="sd">            Sum of squared errors</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Formula-based single measurement</span>
+        <span class="k">if</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">):</span>
+            <span class="n">measured_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_value&#39;</span><span class="p">))</span> <span class="k">if</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_value&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.0</span>
+            
+            <span class="c1"># Compute predicted formula value</span>
+            <span class="n">var_values</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">predicted</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="n">predicted_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_eval_formula</span><span class="p">(</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">],</span> <span class="n">var_values</span><span class="p">)</span>
+            <span class="c1"># print(f&quot;  Predicted formula value: {predicted_value}, Measured value: {measured_value}&quot;)</span>
+            
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">predicted_value</span> <span class="o">-</span> <span class="n">measured_value</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        
+        <span class="c1"># Standard per-node SSE</span>
         <span class="n">sse</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">measured_value</span> <span class="ow">in</span> <span class="n">measurements</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">measured_value</span> <span class="ow">in</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">node_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
             <span class="n">predicted_value</span> <span class="o">=</span> <span class="n">predicted</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span>
             <span class="n">sse</span> <span class="o">+=</span> <span class="p">(</span><span class="n">predicted_value</span> <span class="o">-</span> <span class="n">measured_value</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="n">sse</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extract_variables_from_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\b[A-Za-z_]\w*\b&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">formula</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">tokens</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_safe_eval_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">operator</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">op</span>
+
+        <span class="n">allowed_operators</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Add</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">add</span><span class="p">,</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Sub</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">sub</span><span class="p">,</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Mult</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Div</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">truediv</span><span class="p">,</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">USub</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">neg</span><span class="p">,</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">UAdd</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Pow</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">pow</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_eval</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Num</span><span class="p">):</span>  <span class="c1"># type: ignore[attr-defined]</span>
+                <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">n</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Constant</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                    <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid constant in formula&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">variables</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown variable &#39;</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&#39; in formula&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BinOp</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_operators</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Operator not allowed in formula&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">allowed_operators</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)](</span><span class="n">_eval</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">),</span> <span class="n">_eval</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">UnaryOp</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_operators</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unary operator not allowed in formula&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">allowed_operators</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)](</span><span class="n">_eval</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">operand</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported expression in formula&quot;</span><span class="p">)</span>
+
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">formula</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">_eval</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">body</span><span class="p">))</span>
     
 <div class="viewcode-block" id="SimulationEvaluator.get_parameter_bounds">
 <a class="viewcode-back" href="../../simulation_evaluator.html#BNMPy.simulation_evaluator.SimulationEvaluator.get_parameter_bounds">[docs]</a>

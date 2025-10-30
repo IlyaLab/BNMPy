@@ -260,11 +260,12 @@
 <div class="viewcode-block" id="ExperimentData.load_from_csv">
 <a class="viewcode-back" href="../../experiment_data.html#BNMPy.experiment_data.ExperimentData.load_from_csv">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">load_from_csv</span><span class="p">(</span><span class="n">csv_file</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_from_csv</span><span class="p">(</span><span class="n">csv_file</span><span class="p">,</span> <span class="n">use_formula</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load experiments from CSV file</span>
 
 <span class="sd">        Only required columns are used. Extra columns in the CSV are ignored.</span>
+<span class="sd">        If use_formula is True, the Measured_nodes column should contain the formula string, and Measured_values must have a single value per row.</span>
 
 <span class="sd">        CSV Format:</span>
 <span class="sd">        Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values</span>
@@ -313,19 +314,9 @@
 
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
             <span class="c1"># Use .get to avoid KeyError if column is missing</span>
-            <span class="n">measured_nodes</span> <span class="o">=</span> <span class="n">ExperimentData</span><span class="o">.</span><span class="n">_parse_node_list</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Measured_nodes&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+            <span class="n">measured_nodes_field</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Measured_nodes&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">measured_nodes</span> <span class="o">=</span> <span class="n">ExperimentData</span><span class="o">.</span><span class="n">_parse_node_list</span><span class="p">(</span><span class="n">measured_nodes_field</span><span class="p">)</span>
             <span class="n">measured_values</span> <span class="o">=</span> <span class="n">ExperimentData</span><span class="o">.</span><span class="n">_parse_value_list</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Measured_values&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
-
-            <span class="c1"># Validate that we have the same number of nodes and values</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">measured_nodes</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">measured_values</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Experiment </span><span class="si">{</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Experiments&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">: Number of measured nodes &quot;</span>
-                                 <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">measured_nodes</span><span class="p">)</span><span class="si">}</span><span class="s2">) does not match &quot;</span>
-                                 <span class="sa">f</span><span class="s2">&quot;number of measured values (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">measured_values</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-
-            <span class="c1"># Normalize values if necessary</span>
-            <span class="k">if</span> <span class="n">measured_values</span> <span class="ow">and</span> <span class="nb">max</span><span class="p">(</span><span class="n">measured_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">max_val</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">measured_values</span><span class="p">)</span>
-                <span class="n">measured_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="o">/</span> <span class="n">max_val</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">measured_values</span><span class="p">]</span>
 
             <span class="c1"># Parse stimuli and their efficacies</span>
             <span class="n">stimuli</span> <span class="o">=</span> <span class="n">ExperimentData</span><span class="o">.</span><span class="n">_parse_node_list</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Stimuli&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
@@ -343,13 +334,34 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">inhibitors_efficacy</span> <span class="ow">and</span> <span class="n">inhibitors</span><span class="p">:</span>
                 <span class="n">inhibitors_efficacy</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">inhibitors</span><span class="p">)</span>
 
+            <span class="c1"># Determine if Measured_nodes should be treated as a formula</span>
+            <span class="n">measured_formula</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">measured_value</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">use_formula</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">measured_nodes_field</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">measured_nodes_field</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                <span class="n">measured_formula</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">measured_nodes_field</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;&quot;</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="c1"># For formula-based measurements, expect a single measured value</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">measured_values</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Experiment </span><span class="si">{</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Experiments&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">: Formula provided in Measured_nodes requires exactly one Measured_values entry&quot;</span><span class="p">)</span>
+                <span class="n">measured_value</span> <span class="o">=</span> <span class="n">measured_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="c1"># Clear node list/values since we&#39;re using a formula</span>
+                <span class="n">measured_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">measured_values</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Normalize values if necessary (only for non-formula measurements)</span>
+                <span class="k">if</span> <span class="n">measured_values</span> <span class="ow">and</span> <span class="nb">max</span><span class="p">(</span><span class="n">measured_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">max_val</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">measured_values</span><span class="p">)</span>
+                    <span class="n">measured_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="o">/</span> <span class="n">max_val</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">measured_values</span><span class="p">]</span>
+
             <span class="n">experiment</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Experiments&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
                 <span class="s1">&#39;stimuli&#39;</span><span class="p">:</span> <span class="n">stimuli</span><span class="p">,</span>
                 <span class="s1">&#39;stimuli_efficacy&#39;</span><span class="p">:</span> <span class="n">stimuli_efficacy</span><span class="p">,</span>
                 <span class="s1">&#39;inhibitors&#39;</span><span class="p">:</span> <span class="n">inhibitors</span><span class="p">,</span>
                 <span class="s1">&#39;inhibitors_efficacy&#39;</span><span class="p">:</span> <span class="n">inhibitors_efficacy</span><span class="p">,</span>
-                <span class="s1">&#39;measurements&#39;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">measured_nodes</span><span class="p">,</span> <span class="n">measured_values</span><span class="p">))</span>
+                <span class="s1">&#39;measurements&#39;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">measured_nodes</span><span class="p">,</span> <span class="n">measured_values</span><span class="p">)),</span>
+                <span class="s1">&#39;measured_formula&#39;</span><span class="p">:</span> <span class="n">measured_formula</span><span class="p">,</span>
+                <span class="s1">&#39;measured_value&#39;</span><span class="p">:</span> <span class="n">measured_value</span><span class="p">,</span>
+                <span class="s1">&#39;measured_values_raw&#39;</span><span class="p">:</span> <span class="n">ExperimentData</span><span class="o">.</span><span class="n">_parse_value_list</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Measured_values&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
             <span class="p">}</span>
 
             <span class="n">experiments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
@@ -408,6 +420,53 @@
         <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">value_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">val</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
         <span class="k">return</span> <span class="n">values</span>
     
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extract_variables_from_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+        <span class="c1"># Variables: tokens that look like identifiers; filter out numeric literals</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\b[A-Za-z_]\w*\b&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">formula</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">tokens</span><span class="p">))</span>
+    
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_safe_eval_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">operator</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">op</span>
+
+        <span class="c1"># Supported operators</span>
+        <span class="n">allowed_operators</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Add</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">add</span><span class="p">,</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Sub</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">sub</span><span class="p">,</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Mult</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Div</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">truediv</span><span class="p">,</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">USub</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">neg</span><span class="p">,</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">UAdd</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Pow</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">pow</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_eval</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Num</span><span class="p">):</span>  <span class="c1"># type: ignore[attr-defined]</span>
+                <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">n</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Constant</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                    <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid constant in formula&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">variables</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown variable &#39;</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&#39; in formula&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BinOp</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_operators</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Operator not allowed in formula&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">allowed_operators</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)](</span><span class="n">_eval</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">),</span> <span class="n">_eval</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">UnaryOp</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_operators</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unary operator not allowed in formula&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">allowed_operators</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)](</span><span class="n">_eval</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">operand</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported expression in formula&quot;</span><span class="p">)</span>
+
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">formula</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">_eval</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">body</span><span class="p">))</span>
+    
 <div class="viewcode-block" id="ExperimentData.validate_experiments">
 <a class="viewcode-back" href="../../experiment_data.html#BNMPy.experiment_data.ExperimentData.validate_experiments">[docs]</a>
     <span class="nd">@staticmethod</span>
@@ -447,17 +506,33 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Experiment </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: Inhibitor nodes </span><span class="si">{</span><span class="n">invalid_inhibitors</span><span class="si">}</span><span class="s2"> &quot;</span>
                                <span class="sa">f</span><span class="s2">&quot;not found in the network&quot;</span><span class="p">)</span>
             
-            <span class="c1"># Check measured nodes</span>
-            <span class="n">invalid_measured</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">-</span> <span class="n">nodes</span>
-            <span class="k">if</span> <span class="n">invalid_measured</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Experiment </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: Measured nodes </span><span class="si">{</span><span class="n">invalid_measured</span><span class="si">}</span><span class="s2"> &quot;</span>
-                               <span class="sa">f</span><span class="s2">&quot;not found in the network&quot;</span><span class="p">)</span>
-            
-            <span class="c1"># Check value ranges for measurements</span>
-            <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Experiment </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: Measured value </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> for node &quot;</span>
-                                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2"> must be between 0 and 1&quot;</span><span class="p">)</span>
+            <span class="c1"># If formula-based measurement, validate variables; allow any measured_value (will normalize later)</span>
+            <span class="k">if</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">):</span>
+                <span class="n">vars_in_formula</span> <span class="o">=</span> <span class="n">ExperimentData</span><span class="o">.</span><span class="n">_extract_variables_from_formula</span><span class="p">(</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">])</span>
+                <span class="n">invalid_vars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">vars_in_formula</span><span class="p">)</span> <span class="o">-</span> <span class="n">nodes</span>
+                <span class="k">if</span> <span class="n">invalid_vars</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Experiment </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: Variables </span><span class="si">{</span><span class="n">invalid_vars</span><span class="si">}</span><span class="s2"> in measured formula not found in the network&quot;</span><span class="p">)</span>
+                <span class="n">mv</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_value&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">mv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Fallback: if raw list exists and has exactly one value</span>
+                    <span class="n">raw_vals</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_values_raw&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_vals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">mv</span> <span class="o">=</span> <span class="n">raw_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measured_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mv</span>
+                <span class="k">if</span> <span class="n">mv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Experiment </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: Measured formula value must be provided (single number)&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Check measured nodes</span>
+                <span class="n">invalid_measured</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">-</span> <span class="n">nodes</span>
+                <span class="k">if</span> <span class="n">invalid_measured</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Experiment </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: Measured nodes </span><span class="si">{</span><span class="n">invalid_measured</span><span class="si">}</span><span class="s2"> &quot;</span>
+                                   <span class="sa">f</span><span class="s2">&quot;not found in the network&quot;</span><span class="p">)</span>
+                
+                <span class="c1"># Check value ranges for measurements</span>
+                <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Experiment </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: Measured value </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> for node &quot;</span>
+                                       <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2"> must be between 0 and 1&quot;</span><span class="p">)</span>
             
             <span class="c1"># Check stimuli efficacy values</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;stimuli_efficacy&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;stimuli&#39;</span><span class="p">]):</span>
@@ -556,7 +631,7 @@
 
 <div class="viewcode-block" id="extract_experiment_nodes">
 <a class="viewcode-back" href="../../experiment_data.html#BNMPy.experiment_data.extract_experiment_nodes">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">extract_experiment_nodes</span><span class="p">(</span><span class="n">csv_file</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_experiment_nodes</span><span class="p">(</span><span class="n">csv_file</span><span class="p">,</span> <span class="n">use_formula</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Extract measured and perturbed nodes from experimental CSV file.</span>
 <span class="sd">    </span>
@@ -578,8 +653,12 @@
     <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
         <span class="c1"># Extract measured nodes</span>
         <span class="k">if</span> <span class="s1">&#39;Measured_nodes&#39;</span> <span class="ow">in</span> <span class="n">row</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;Measured_nodes&#39;</span><span class="p">]):</span>
-            <span class="n">nodes</span> <span class="o">=</span> <span class="n">ExperimentData</span><span class="o">.</span><span class="n">_parse_node_list</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;Measured_nodes&#39;</span><span class="p">])</span>
-            <span class="n">measured_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">use_formula</span><span class="p">:</span>
+                <span class="n">vars_in_formula</span> <span class="o">=</span> <span class="n">ExperimentData</span><span class="o">.</span><span class="n">_extract_variables_from_formula</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;Measured_nodes&#39;</span><span class="p">])</span>
+                <span class="n">measured_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">vars_in_formula</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="n">ExperimentData</span><span class="o">.</span><span class="n">_parse_node_list</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;Measured_nodes&#39;</span><span class="p">])</span>
+                <span class="n">measured_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
         
         <span class="c1"># Extract stimuli (perturbed nodes)</span>
         <span class="k">if</span> <span class="s1">&#39;Stimuli&#39;</span> <span class="ow">in</span> <span class="n">row</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;Stimuli&#39;</span><span class="p">]):</span>
@@ -664,11 +743,17 @@
         <span class="c1"># Reset experimental conditions</span>
         <span class="n">steady_state_calc</span><span class="o">.</span><span class="n">reset_network_conditions</span><span class="p">()</span>
         
-        <span class="c1"># Extract predicted values for measured nodes</span>
+        <span class="c1"># Extract predicted values for measured nodes or formula</span>
         <span class="n">predicted_values</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">node_idx</span> <span class="o">=</span> <span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
-            <span class="n">predicted_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">steady_state</span><span class="p">[</span><span class="n">node_idx</span><span class="p">],</span> <span class="n">round_to</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">):</span>
+            <span class="c1"># Evaluate formula using current steady state values</span>
+            <span class="n">var_values</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">steady_state</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="n">predicted</span> <span class="o">=</span> <span class="n">ExperimentData</span><span class="o">.</span><span class="n">_safe_eval_formula</span><span class="p">(</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">],</span> <span class="n">var_values</span><span class="p">)</span>
+            <span class="n">predicted_values</span> <span class="o">=</span> <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">predicted</span><span class="p">),</span> <span class="n">round_to</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">node_idx</span> <span class="o">=</span> <span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+                <span class="n">predicted_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">steady_state</span><span class="p">[</span><span class="n">node_idx</span><span class="p">],</span> <span class="n">round_to</span><span class="p">))</span>
         
         <span class="c1"># Create result row</span>
         <span class="n">result_row</span> <span class="o">=</span> <span class="p">{</span>
@@ -677,8 +762,8 @@
             <span class="s1">&#39;Stimuli_efficacy&#39;</span><span class="p">:</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;stimuli_efficacy&#39;</span><span class="p">]))</span> <span class="k">if</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;stimuli_efficacy&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
             <span class="s1">&#39;Inhibitors&#39;</span><span class="p">:</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;inhibitors&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;inhibitors&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
             <span class="s1">&#39;Inhibitors_efficacy&#39;</span><span class="p">:</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;inhibitors_efficacy&#39;</span><span class="p">]))</span> <span class="k">if</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;inhibitors_efficacy&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;Measured_nodes&#39;</span><span class="p">:</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
-            <span class="s1">&#39;Measured_values&#39;</span><span class="p">:</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())),</span>
+            <span class="s1">&#39;Measured_nodes&#39;</span><span class="p">:</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+            <span class="s1">&#39;Measured_values&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_value&#39;</span><span class="p">))</span> <span class="k">if</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())),</span>
             <span class="s1">&#39;Predicted_values&#39;</span><span class="p">:</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">predicted_values</span><span class="p">))</span>
         <span class="p">}</span>
         
@@ -694,6 +779,53 @@
     
     <span class="k">return</span> <span class="n">df</span></div>
 
+
+<span class="nd">@staticmethod</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_extract_variables_from_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+    <span class="c1"># Variables: tokens that look like identifiers; filter out numeric literals</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\b[A-Za-z_]\w*\b&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">formula</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">tokens</span><span class="p">))</span>
+
+<span class="nd">@staticmethod</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_safe_eval_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">operator</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">op</span>
+
+    <span class="c1"># Supported operators</span>
+    <span class="n">allowed_operators</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">ast</span><span class="o">.</span><span class="n">Add</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">add</span><span class="p">,</span>
+        <span class="n">ast</span><span class="o">.</span><span class="n">Sub</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">sub</span><span class="p">,</span>
+        <span class="n">ast</span><span class="o">.</span><span class="n">Mult</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span>
+        <span class="n">ast</span><span class="o">.</span><span class="n">Div</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">truediv</span><span class="p">,</span>
+        <span class="n">ast</span><span class="o">.</span><span class="n">USub</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">neg</span><span class="p">,</span>
+        <span class="n">ast</span><span class="o">.</span><span class="n">UAdd</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span>
+        <span class="n">ast</span><span class="o">.</span><span class="n">Pow</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">pow</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_eval</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Num</span><span class="p">):</span>  <span class="c1"># type: ignore[attr-defined]</span>
+            <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">n</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Constant</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid constant in formula&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">variables</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown variable &#39;</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&#39; in formula&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BinOp</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_operators</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Operator not allowed in formula&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">allowed_operators</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)](</span><span class="n">_eval</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">),</span> <span class="n">_eval</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">UnaryOp</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_operators</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unary operator not allowed in formula&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">allowed_operators</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">)](</span><span class="n">_eval</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">operand</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported expression in formula&quot;</span><span class="p">)</span>
+
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">formula</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">_eval</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">body</span><span class="p">))</span>
 </pre></div>
         </article>
       </div>
