@@ -255,6 +255,70 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.simulation_evaluator</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationEvaluator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.experiment_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExperimentData</span>
 
+
+<div class="viewcode-block" id="pbn_to_string">
+<a class="viewcode-back" href="../../result_evaluation.html#BNMPy.result_evaluation.pbn_to_string">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pbn_to_string</span><span class="p">(</span><span class="n">pbn</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a ProbabilisticBN object to a readable string format.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    pbn : ProbabilisticBN</span>
+<span class="sd">        The PBN object to convert</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    str</span>
+<span class="sd">        String representation of the PBN rules</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rules_string</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">rules_string</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# PBN with </span><span class="si">{</span><span class="n">pbn</span><span class="o">.</span><span class="n">N</span><span class="si">}</span><span class="s2"> nodes&quot;</span><span class="p">)</span>
+    <span class="n">rules_string</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# Total functions: </span><span class="si">{</span><span class="n">pbn</span><span class="o">.</span><span class="n">Nf</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">rules_string</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Create inverse nodeDict for index to name mapping</span>
+    <span class="n">idx_to_name</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    
+    <span class="k">for</span> <span class="n">node_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pbn</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">node_name</span> <span class="o">=</span> <span class="n">idx_to_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node_idx</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Node_</span><span class="si">{</span><span class="n">node_idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">num_functions</span> <span class="o">=</span> <span class="n">pbn</span><span class="o">.</span><span class="n">nf</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">num_functions</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">rules_string</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">num_functions</span><span class="si">}</span><span class="s2"> function(s)&quot;</span><span class="p">)</span>
+            
+            <span class="c1"># Get probabilities for this node</span>
+            <span class="n">probs</span> <span class="o">=</span> <span class="n">pbn</span><span class="o">.</span><span class="n">cij</span><span class="p">[</span><span class="n">node_idx</span><span class="p">,</span> <span class="p">:</span><span class="n">num_functions</span><span class="p">]</span>
+            
+            <span class="k">for</span> <span class="n">func_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_functions</span><span class="p">):</span>
+                <span class="n">prob</span> <span class="o">=</span> <span class="n">probs</span><span class="p">[</span><span class="n">func_idx</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">prob</span> <span class="o">&gt;</span> <span class="mf">1e-6</span><span class="p">:</span>
+                    <span class="c1"># Get function index in global function array</span>
+                    <span class="n">global_func_idx</span> <span class="o">=</span> <span class="n">pbn</span><span class="o">.</span><span class="n">cumsum</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">func_idx</span>
+                    
+                    <span class="c1"># Get inputs for this function from varF (linkages)</span>
+                    <span class="n">inputs</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pbn</span><span class="o">.</span><span class="n">varF</span><span class="p">[</span><span class="n">global_func_idx</span><span class="p">])):</span>
+                        <span class="n">input_idx</span> <span class="o">=</span> <span class="n">pbn</span><span class="o">.</span><span class="n">varF</span><span class="p">[</span><span class="n">global_func_idx</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">input_idx</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>  <span class="c1"># -1 indicates end of inputs</span>
+                            <span class="k">break</span>
+                        <span class="n">input_name</span> <span class="o">=</span> <span class="n">idx_to_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">input_idx</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Node_</span><span class="si">{</span><span class="n">input_idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">input_name</span><span class="p">)</span>
+                    
+                    <span class="k">if</span> <span class="n">inputs</span><span class="p">:</span>
+                        <span class="c1"># Function with inputs - show generic function notation</span>
+                        <span class="n">rules_string</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2"> = f</span><span class="si">{</span><span class="n">func_idx</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span><span class="si">}</span><span class="s2">), </span><span class="si">{</span><span class="n">prob</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Constant function - show the constant value</span>
+                        <span class="n">const_val</span> <span class="o">=</span> <span class="n">pbn</span><span class="o">.</span><span class="n">F</span><span class="p">[</span><span class="n">global_func_idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                        <span class="n">rules_string</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">const_val</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">prob</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+            <span class="n">rules_string</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rules_string</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="ResultEvaluator">
 <a class="viewcode-back" href="../../result_evaluation.html#BNMPy.result_evaluation.ResultEvaluator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ResultEvaluator</span><span class="p">:</span>
@@ -333,25 +397,47 @@
                 <span class="n">exp_predictions</span> <span class="o">=</span> <span class="p">{}</span>
                 <span class="n">exp_measurements</span> <span class="o">=</span> <span class="p">{}</span>
                 
-                <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">measured_value</span> <span class="ow">in</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">:</span>
-                        <span class="n">node_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
-                        <span class="n">predicted_value</span> <span class="o">=</span> <span class="n">predicted_steady_state</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span>
-                        
-                        <span class="n">exp_predictions</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_value</span>
-                        <span class="n">exp_measurements</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">measured_value</span>
-                        
-                        <span class="c1"># Store for correlation analysis</span>
-                        <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;predicted_values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predicted_value</span><span class="p">)</span>
-                        <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measured_values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">measured_value</span><span class="p">)</span>
-                        <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measured_nodes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
-                        <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;experiment_ids&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+                <span class="c1"># Handle formula-based measurements</span>
+                <span class="k">if</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">):</span>
+                    <span class="n">formula</span> <span class="o">=</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">]</span>
+                    <span class="n">measured_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_value&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+                    
+                    <span class="c1"># Compute predicted formula value</span>
+                    <span class="n">var_values</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">predicted_steady_state</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                    <span class="n">predicted_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="o">.</span><span class="n">_safe_eval_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">,</span> <span class="n">var_values</span><span class="p">)</span>
+                    
+                    <span class="c1"># Store as if it&#39;s a special &quot;Formula&quot; node</span>
+                    <span class="n">exp_predictions</span><span class="p">[</span><span class="s1">&#39;Formula&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_value</span>
+                    <span class="n">exp_measurements</span><span class="p">[</span><span class="s1">&#39;Formula&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">measured_value</span>
+                    
+                    <span class="c1"># Store for correlation analysis</span>
+                    <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;predicted_values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predicted_value</span><span class="p">)</span>
+                    <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measured_values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">measured_value</span><span class="p">)</span>
+                    <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measured_nodes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Formula&#39;</span><span class="p">)</span>
+                    <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;experiment_ids&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+                    
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Experiment </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: Formula measurement (predicted=</span><span class="si">{</span><span class="n">predicted_value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, measured=</span><span class="si">{</span><span class="n">measured_value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Handle regular node-based measurements</span>
+                    <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">measured_value</span> <span class="ow">in</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">:</span>
+                            <span class="n">node_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
+                            <span class="n">predicted_value</span> <span class="o">=</span> <span class="n">predicted_steady_state</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span>
+                            
+                            <span class="n">exp_predictions</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_value</span>
+                            <span class="n">exp_measurements</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">measured_value</span>
+                            
+                            <span class="c1"># Store for correlation analysis</span>
+                            <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;predicted_values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predicted_value</span><span class="p">)</span>
+                            <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measured_values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">measured_value</span><span class="p">)</span>
+                            <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measured_nodes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
+                            <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;experiment_ids&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+                    
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Experiment </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">exp_predictions</span><span class="p">)</span><span class="si">}</span><span class="s2"> nodes simulated&quot;</span><span class="p">)</span>
                 
                 <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;experiments&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
                 <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;predictions&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exp_predictions</span><span class="p">)</span>
                 <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exp_measurements</span><span class="p">)</span>
-                
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Experiment </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">exp_predictions</span><span class="p">)</span><span class="si">}</span><span class="s2"> nodes simulated&quot;</span><span class="p">)</span>
                 
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Warning: Failed to simulate experiment </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -471,6 +557,11 @@
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluation_metrics</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">calculate_evaluation_metrics</span><span class="p">()</span>
+        
+        <span class="c1"># Check if metrics are empty</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluation_metrics</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No data available for plotting&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
         
         <span class="n">predicted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;predicted_values&#39;</span><span class="p">])</span>
         <span class="n">measured</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measured_values&#39;</span><span class="p">])</span>
@@ -633,7 +724,7 @@
     
 <div class="viewcode-block" id="ResultEvaluator.generate_evaluation_report">
 <a class="viewcode-back" href="../../result_evaluation.html#BNMPy.result_evaluation.ResultEvaluator.generate_evaluation_report">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_evaluation_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_evaluation_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include_config</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a comprehensive evaluation report.</span>
 <span class="sd">        </span>
@@ -641,6 +732,8 @@
 <span class="sd">        -----------</span>
 <span class="sd">        save_path : str, optional</span>
 <span class="sd">            Path to save the report as a text file</span>
+<span class="sd">        include_config : bool, default=True</span>
+<span class="sd">            Whether to include optimization configuration in the report</span>
 <span class="sd">            </span>
 <span class="sd">        Returns:</span>
 <span class="sd">        --------</span>
@@ -649,6 +742,15 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluation_metrics</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">calculate_evaluation_metrics</span><span class="p">()</span>
+        
+        <span class="c1"># Check if metrics are empty (no data available)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluation_metrics</span><span class="p">:</span>
+            <span class="n">report_text</span> <span class="o">=</span> <span class="s2">&quot;No evaluation metrics available. Check if experiments have valid measurements.&quot;</span>
+            <span class="k">if</span> <span class="n">save_path</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">report_text</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Evaluation report saved to </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">report_text</span>
         
         <span class="n">report</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">60</span><span class="p">)</span>
@@ -678,6 +780,14 @@
         <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Iterations: </span><span class="si">{</span><span class="n">opt</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Function evaluations: </span><span class="si">{</span><span class="n">opt</span><span class="p">[</span><span class="s1">&#39;function_evaluations&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Add optimization configuration</span>
+        <span class="k">if</span> <span class="n">include_config</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="s1">&#39;config&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;CONFIGURATION:&quot;</span><span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
         
         <span class="c1"># Per-node metrics</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluation_metrics</span><span class="p">[</span><span class="s1">&#39;per_node&#39;</span><span class="p">]:</span>
@@ -744,6 +854,13 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convenience function to perform a complete evaluation of optimization results.</span>
 <span class="sd">    </span>
+<span class="sd">    This function generates and saves the following files in output_dir:</span>
+<span class="sd">    - prediction_vs_experimental.png: Scatter plot of predicted vs experimental values</span>
+<span class="sd">    - residual_analysis.png: Residual plots (if plot_residuals=True)</span>
+<span class="sd">    - evaluation_report.txt: Text report with metrics and optimization config</span>
+<span class="sd">    - detailed_results.csv: CSV file with all data points</span>
+<span class="sd">    - pbn.txt: Optimized PBN model in text format</span>
+<span class="sd">    </span>
 <span class="sd">    Parameters:</span>
 <span class="sd">    -----------</span>
 <span class="sd">    optimizer_result : OptimizeResult</span>
@@ -795,6 +912,14 @@
         <span class="c1"># Export CSV</span>
         <span class="n">csv_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;detailed_results.csv&quot;</span><span class="p">)</span>
         <span class="n">evaluator</span><span class="o">.</span><span class="n">export_results_to_csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">)</span>
+
+        <span class="c1"># Export PBN</span>
+        <span class="n">pbn_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;pbn.txt&quot;</span><span class="p">)</span>
+        <span class="n">pbn_string</span> <span class="o">=</span> <span class="n">pbn_to_string</span><span class="p">(</span><span class="n">evaluator</span><span class="o">.</span><span class="n">pbn</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pbn_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pbn_string</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimized PBN saved to </span><span class="si">{</span><span class="n">pbn_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Display plots without saving</span>
         <span class="n">evaluator</span><span class="o">.</span><span class="n">plot_prediction_vs_experimental</span><span class="p">(</span><span class="n">show_experiment_ids</span><span class="o">=</span><span class="n">detailed</span><span class="p">)</span>
@@ -811,9 +936,16 @@
 
 <div class="viewcode-block" id="evaluate_pbn">
 <a class="viewcode-back" href="../../result_evaluation.html#BNMPy.result_evaluation.evaluate_pbn">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">evaluate_pbn</span><span class="p">(</span><span class="n">pbn</span><span class="p">,</span> <span class="n">experiments</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">generate_plots</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">generate_report</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluate_pbn</span><span class="p">(</span><span class="n">pbn</span><span class="p">,</span> <span class="n">experiments</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">generate_plots</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">generate_report</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">Measured_formula</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Evaluate a PBN directly against experiment data (list or CSV).</span>
+<span class="sd">    </span>
+<span class="sd">    This function generates and saves the following files in output_dir:</span>
+<span class="sd">    - prediction_vs_experimental.png: Scatter plot of predicted vs experimental values (if generate_plots=True)</span>
+<span class="sd">    - residual_analysis.png: Residual plots (if generate_plots=True)</span>
+<span class="sd">    - evaluation_report.txt: Text report with metrics (if generate_report=True)</span>
+<span class="sd">    - detailed_results.csv: CSV file with all data points</span>
+<span class="sd">    - pbn.txt: PBN model in text format</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">    -----------</span>
@@ -829,6 +961,8 @@
 <span class="sd">        Whether to generate evaluation report</span>
 <span class="sd">    config : dict, optional</span>
 <span class="sd">        Simulation configuration</span>
+<span class="sd">    Measured_formula : str, optional</span>
+<span class="sd">        Formula to use for calculating the objective function. Overrides CSV `Measured_nodes` for scoring.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">    --------</span>
@@ -847,6 +981,21 @@
     <span class="c1"># Load experiments if needed</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">experiments</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">experiments</span> <span class="o">=</span> <span class="n">ExperimentData</span><span class="o">.</span><span class="n">load_from_csv</span><span class="p">(</span><span class="n">experiments</span><span class="p">)</span>
+    
+    <span class="c1"># Use a measured formula across all experiments if provided</span>
+    <span class="k">if</span> <span class="n">Measured_formula</span><span class="p">:</span>
+        <span class="n">override_formula</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Measured_formula</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">exp</span> <span class="ow">in</span> <span class="n">experiments</span><span class="p">:</span>
+            <span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">override_formula</span>
+            <span class="c1"># Determine measured_value: prefer existing formula value, else first raw value</span>
+            <span class="k">if</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_value&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">raw_vals</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_values_raw&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_vals</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Measured_formula requires each experiment to have exactly one Measured_values entry in the CSV&quot;</span><span class="p">)</span>
+                <span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measured_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># Clear per-node measurements when using a formula target</span>
+            <span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    
     <span class="c1"># Validate experiments</span>
     <span class="n">ExperimentData</span><span class="o">.</span><span class="n">validate_experiments</span><span class="p">(</span><span class="n">experiments</span><span class="p">,</span> <span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">)</span>
 
@@ -868,16 +1017,36 @@
             <span class="n">predicted_steady_state</span> <span class="o">=</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">_simulate_experiment</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
             <span class="n">exp_predictions</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="n">exp_measurements</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">measured_value</span> <span class="ow">in</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">:</span>
-                    <span class="n">node_idx</span> <span class="o">=</span> <span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
-                    <span class="n">predicted_value</span> <span class="o">=</span> <span class="n">predicted_steady_state</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span>
-                    <span class="n">exp_predictions</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_value</span>
-                    <span class="n">exp_measurements</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">measured_value</span>
-                    <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;predicted_values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predicted_value</span><span class="p">)</span>
-                    <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measured_values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">measured_value</span><span class="p">)</span>
-                    <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measured_nodes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
-                    <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;experiment_ids&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+            
+            <span class="c1"># Handle formula-based measurements</span>
+            <span class="k">if</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">):</span>
+                <span class="n">formula</span> <span class="o">=</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">]</span>
+                <span class="n">measured_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_value&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+                
+                <span class="c1"># Compute predicted formula value</span>
+                <span class="n">var_values</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">predicted_steady_state</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                <span class="n">predicted_value</span> <span class="o">=</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">_safe_eval_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">,</span> <span class="n">var_values</span><span class="p">)</span>
+                
+                <span class="c1"># Store as if it&#39;s a special &quot;Formula&quot; node</span>
+                <span class="n">exp_predictions</span><span class="p">[</span><span class="s1">&#39;Formula&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_value</span>
+                <span class="n">exp_measurements</span><span class="p">[</span><span class="s1">&#39;Formula&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">measured_value</span>
+                <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;predicted_values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predicted_value</span><span class="p">)</span>
+                <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measured_values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">measured_value</span><span class="p">)</span>
+                <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measured_nodes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Formula&#39;</span><span class="p">)</span>
+                <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;experiment_ids&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Handle regular node-based measurements</span>
+                <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">measured_value</span> <span class="ow">in</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">:</span>
+                        <span class="n">node_idx</span> <span class="o">=</span> <span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
+                        <span class="n">predicted_value</span> <span class="o">=</span> <span class="n">predicted_steady_state</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span>
+                        <span class="n">exp_predictions</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">predicted_value</span>
+                        <span class="n">exp_measurements</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">measured_value</span>
+                        <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;predicted_values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predicted_value</span><span class="p">)</span>
+                        <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measured_values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">measured_value</span><span class="p">)</span>
+                        <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measured_nodes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
+                        <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;experiment_ids&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+            
             <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;experiments&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
             <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;predictions&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exp_predictions</span><span class="p">)</span>
             <span class="n">simulation_results</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exp_measurements</span><span class="p">)</span>
@@ -1017,6 +1186,13 @@
         <span class="n">report_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean Absolute Error: </span><span class="si">{</span><span class="n">overall</span><span class="p">[</span><span class="s1">&#39;mae&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">report_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of data points: </span><span class="si">{</span><span class="n">overall</span><span class="p">[</span><span class="s1">&#39;n_points&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">report_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="c1"># Add simulation configuration if provided</span>
+        <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">report_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;CONFIGURATION:&quot;</span><span class="p">)</span>
+            <span class="n">report_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">report_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">report_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;per_node&#39;</span><span class="p">]:</span>
             <span class="n">report_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;PER-NODE PERFORMANCE:&quot;</span><span class="p">)</span>
             <span class="n">report_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
@@ -1047,11 +1223,19 @@
     <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Results exported to </span><span class="si">{</span><span class="n">csv_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
+    <span class="c1"># Export PBN</span>
+    <span class="n">pbn_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;pbn.txt&quot;</span><span class="p">)</span>
+    <span class="n">pbn_string</span> <span class="o">=</span> <span class="n">pbn_to_string</span><span class="p">(</span><span class="n">pbn</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pbn_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pbn_string</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PBN saved to </span><span class="si">{</span><span class="n">pbn_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="p">{</span>
         <span class="s1">&#39;metrics&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">,</span>
         <span class="s1">&#39;plot_paths&#39;</span><span class="p">:</span> <span class="n">plot_paths</span><span class="p">,</span>
         <span class="s1">&#39;report_path&#39;</span><span class="p">:</span> <span class="n">report_path</span><span class="p">,</span>
         <span class="s1">&#39;csv_path&#39;</span><span class="p">:</span> <span class="n">csv_path</span><span class="p">,</span>
+        <span class="s1">&#39;pbn_path&#39;</span><span class="p">:</span> <span class="n">pbn_path</span><span class="p">,</span>
         <span class="s1">&#39;simulation_results&#39;</span><span class="p">:</span> <span class="n">simulation_results</span>
     <span class="p">}</span></div>
 
