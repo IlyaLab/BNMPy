@@ -6,6 +6,67 @@ import pandas as pd
 from .simulation_evaluator import SimulationEvaluator
 from .experiment_data import ExperimentData
 
+
+def pbn_to_string(pbn) -> str:
+    """
+    Convert a ProbabilisticBN object to a readable string format.
+    
+    Parameters:
+    -----------
+    pbn : ProbabilisticBN
+        The PBN object to convert
+        
+    Returns:
+    --------
+    str
+        String representation of the PBN rules
+    """
+    rules_string = []
+    rules_string.append(f"# PBN with {pbn.N} nodes")
+    rules_string.append(f"# Total functions: {pbn.Nf}")
+    rules_string.append("")
+    
+    # Create inverse nodeDict for index to name mapping
+    idx_to_name = {v: k for k, v in pbn.nodeDict.items()}
+    
+    for node_idx in range(pbn.N):
+        node_name = idx_to_name.get(node_idx, f"Node_{node_idx}")
+        num_functions = pbn.nf[node_idx]
+        
+        if num_functions > 0:
+            rules_string.append(f"# {node_name}: {num_functions} function(s)")
+            
+            # Get probabilities for this node
+            probs = pbn.cij[node_idx, :num_functions]
+            
+            for func_idx in range(num_functions):
+                prob = probs[func_idx]
+                if prob > 1e-6:
+                    # Get function index in global function array
+                    global_func_idx = pbn.cumsum[node_idx] + func_idx
+                    
+                    # Get inputs for this function from varF (linkages)
+                    inputs = []
+                    for i in range(len(pbn.varF[global_func_idx])):
+                        input_idx = pbn.varF[global_func_idx, i]
+                        if input_idx == -1:  # -1 indicates end of inputs
+                            break
+                        input_name = idx_to_name.get(input_idx, f"Node_{input_idx}")
+                        inputs.append(input_name)
+                    
+                    if inputs:
+                        # Function with inputs - show generic function notation
+                        rules_string.append(f"{node_name} = f{func_idx}({', '.join(inputs)}), {prob:.4f}")
+                    else:
+                        # Constant function - show the constant value
+                        const_val = pbn.F[global_func_idx, 0]
+                        rules_string.append(f"{node_name} = {const_val}, {prob:.4f}")
+            
+            rules_string.append("")
+        
+        return "\n".join(rules_string)
+
+
 class ResultEvaluator:
     """
     Evaluate optimization results by comparing simulation output with experimental data.
@@ -77,25 +138,47 @@ class ResultEvaluator:
                 exp_predictions = {}
                 exp_measurements = {}
                 
-                for node_name, measured_value in experiment['measurements'].items():
-                    if node_name in self.pbn.nodeDict:
-                        node_idx = self.pbn.nodeDict[node_name]
-                        predicted_value = predicted_steady_state[node_idx]
-                        
-                        exp_predictions[node_name] = predicted_value
-                        exp_measurements[node_name] = measured_value
-                        
-                        # Store for correlation analysis
-                        simulation_results['predicted_values'].append(predicted_value)
-                        simulation_results['measured_values'].append(measured_value)
-                        simulation_results['measured_nodes'].append(node_name)
-                        simulation_results['experiment_ids'].append(experiment.get('id', i+1))
+                # Handle formula-based measurements
+                if experiment.get('measured_formula'):
+                    formula = experiment['measured_formula']
+                    measured_value = float(experiment.get('measured_value', 0.0))
+                    
+                    # Compute predicted formula value
+                    var_values = {name: predicted_steady_state[idx] for name, idx in self.pbn.nodeDict.items()}
+                    predicted_value = self.evaluator._safe_eval_formula(formula, var_values)
+                    
+                    # Store as if it's a special "Formula" node
+                    exp_predictions['Formula'] = predicted_value
+                    exp_measurements['Formula'] = measured_value
+                    
+                    # Store for correlation analysis
+                    simulation_results['predicted_values'].append(predicted_value)
+                    simulation_results['measured_values'].append(measured_value)
+                    simulation_results['measured_nodes'].append('Formula')
+                    simulation_results['experiment_ids'].append(experiment.get('id', i+1))
+                    
+                    print(f"  Experiment {i+1}: Formula measurement (predicted={predicted_value:.4f}, measured={measured_value:.4f})")
+                else:
+                    # Handle regular node-based measurements
+                    for node_name, measured_value in experiment['measurements'].items():
+                        if node_name in self.pbn.nodeDict:
+                            node_idx = self.pbn.nodeDict[node_name]
+                            predicted_value = predicted_steady_state[node_idx]
+                            
+                            exp_predictions[node_name] = predicted_value
+                            exp_measurements[node_name] = measured_value
+                            
+                            # Store for correlation analysis
+                            simulation_results['predicted_values'].append(predicted_value)
+                            simulation_results['measured_values'].append(measured_value)
+                            simulation_results['measured_nodes'].append(node_name)
+                            simulation_results['experiment_ids'].append(experiment.get('id', i+1))
+                    
+                    print(f"  Experiment {i+1}: {len(exp_predictions)} nodes simulated")
                 
                 simulation_results['experiments'].append(experiment)
                 simulation_results['predictions'].append(exp_predictions)
                 simulation_results['measurements'].append(exp_measurements)
-                
-                print(f"  Experiment {i+1}: {len(exp_predictions)} nodes simulated")
                 
             except Exception as e:
                 print(f"  Warning: Failed to simulate experiment {i+1}: {str(e)}")
@@ -209,6 +292,11 @@ class ResultEvaluator:
         
         if self.evaluation_metrics is None:
             self.calculate_evaluation_metrics()
+        
+        # Check if metrics are empty
+        if not self.evaluation_metrics:
+            print("No data available for plotting")
+            return None
         
         predicted = np.array(self.simulation_results['predicted_values'])
         measured = np.array(self.simulation_results['measured_values'])
@@ -365,7 +453,7 @@ class ResultEvaluator:
         
         return fig
     
-    def generate_evaluation_report(self, save_path: Optional[str] = None) -> str:
+    def generate_evaluation_report(self, save_path: Optional[str] = None, include_config: bool = True) -> str:
         """
         Generate a comprehensive evaluation report.
         
@@ -373,6 +461,8 @@ class ResultEvaluator:
         -----------
         save_path : str, optional
             Path to save the report as a text file
+        include_config : bool, default=True
+            Whether to include optimization configuration in the report
             
         Returns:
         --------
@@ -381,6 +471,15 @@ class ResultEvaluator:
         """
         if self.evaluation_metrics is None:
             self.calculate_evaluation_metrics()
+        
+        # Check if metrics are empty (no data available)
+        if not self.evaluation_metrics:
+            report_text = "No evaluation metrics available. Check if experiments have valid measurements."
+            if save_path:
+                with open(save_path, 'w') as f:
+                    f.write(report_text)
+                print(f"Evaluation report saved to {save_path}")
+            return report_text
         
         report = []
         report.append("="*60)
@@ -410,6 +509,14 @@ class ResultEvaluator:
         report.append(f"Iterations: {opt['iterations']}")
         report.append(f"Function evaluations: {opt['function_evaluations']}")
         report.append("")
+        
+        # Add optimization configuration
+        if include_config and hasattr(self.optimizer, 'config') and self.optimizer.config:
+            report.append("CONFIGURATION:")
+            report.append("-" * 20)
+            for key, value in self.optimizer.config.items():
+                report.append(f"{key}: {value}")
+            report.append("")
         
         # Per-node metrics
         if self.evaluation_metrics['per_node']:
@@ -469,6 +576,13 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
     """
     Convenience function to perform a complete evaluation of optimization results.
     
+    This function generates and saves the following files in output_dir:
+    - prediction_vs_experimental.png: Scatter plot of predicted vs experimental values
+    - residual_analysis.png: Residual plots (if plot_residuals=True)
+    - evaluation_report.txt: Text report with metrics and optimization config
+    - detailed_results.csv: CSV file with all data points
+    - pbn.txt: Optimized PBN model in text format
+    
     Parameters:
     -----------
     optimizer_result : OptimizeResult
@@ -520,6 +634,14 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
         # Export CSV
         csv_path = os.path.join(output_dir, "detailed_results.csv")
         evaluator.export_results_to_csv(csv_path)
+
+        # Export PBN
+        pbn_path = os.path.join(output_dir, "pbn.txt")
+        pbn_string = pbn_to_string(evaluator.pbn)
+        with open(pbn_path, 'w') as f:
+            f.write(pbn_string)
+        print(f"Optimized PBN saved to {pbn_path}")
+    
     else:
         # Display plots without saving
         evaluator.plot_prediction_vs_experimental(show_experiment_ids=detailed)
@@ -533,9 +655,16 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
     return evaluator
 
 
-def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool = True, generate_report: bool = True, config: dict = None):
+def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool = True, generate_report: bool = True, config: dict = None, Measured_formula: Optional[str] = None):
     """
     Evaluate a PBN directly against experiment data (list or CSV).
+    
+    This function generates and saves the following files in output_dir:
+    - prediction_vs_experimental.png: Scatter plot of predicted vs experimental values (if generate_plots=True)
+    - residual_analysis.png: Residual plots (if generate_plots=True)
+    - evaluation_report.txt: Text report with metrics (if generate_report=True)
+    - detailed_results.csv: CSV file with all data points
+    - pbn.txt: PBN model in text format
 
     Parameters:
     -----------
@@ -551,6 +680,8 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
         Whether to generate evaluation report
     config : dict, optional
         Simulation configuration
+    Measured_formula : str, optional
+        Formula to use for calculating the objective function. Overrides CSV `Measured_nodes` for scoring.
 
     Returns:
     --------
@@ -569,6 +700,21 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
     # Load experiments if needed
     if isinstance(experiments, str):
         experiments = ExperimentData.load_from_csv(experiments)
+    
+    # Use a measured formula across all experiments if provided
+    if Measured_formula:
+        override_formula = str(Measured_formula)
+        for exp in experiments:
+            exp['measured_formula'] = override_formula
+            # Determine measured_value: prefer existing formula value, else first raw value
+            if exp.get('measured_value') is None:
+                raw_vals = exp.get('measured_values_raw') or []
+                if len(raw_vals) != 1:
+                    raise ValueError("Measured_formula requires each experiment to have exactly one Measured_values entry in the CSV")
+                exp['measured_value'] = raw_vals[0]
+            # Clear per-node measurements when using a formula target
+            exp['measurements'] = {}
+    
     # Validate experiments
     ExperimentData.validate_experiments(experiments, pbn.nodeDict)
 
@@ -590,16 +736,36 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
             predicted_steady_state = evaluator._simulate_experiment(experiment)
             exp_predictions = {}
             exp_measurements = {}
-            for node_name, measured_value in experiment['measurements'].items():
-                if node_name in pbn.nodeDict:
-                    node_idx = pbn.nodeDict[node_name]
-                    predicted_value = predicted_steady_state[node_idx]
-                    exp_predictions[node_name] = predicted_value
-                    exp_measurements[node_name] = measured_value
-                    simulation_results['predicted_values'].append(predicted_value)
-                    simulation_results['measured_values'].append(measured_value)
-                    simulation_results['measured_nodes'].append(node_name)
-                    simulation_results['experiment_ids'].append(experiment.get('id', i+1))
+            
+            # Handle formula-based measurements
+            if experiment.get('measured_formula'):
+                formula = experiment['measured_formula']
+                measured_value = float(experiment.get('measured_value', 0.0))
+                
+                # Compute predicted formula value
+                var_values = {name: predicted_steady_state[idx] for name, idx in pbn.nodeDict.items()}
+                predicted_value = evaluator._safe_eval_formula(formula, var_values)
+                
+                # Store as if it's a special "Formula" node
+                exp_predictions['Formula'] = predicted_value
+                exp_measurements['Formula'] = measured_value
+                simulation_results['predicted_values'].append(predicted_value)
+                simulation_results['measured_values'].append(measured_value)
+                simulation_results['measured_nodes'].append('Formula')
+                simulation_results['experiment_ids'].append(experiment.get('id', i+1))
+            else:
+                # Handle regular node-based measurements
+                for node_name, measured_value in experiment['measurements'].items():
+                    if node_name in pbn.nodeDict:
+                        node_idx = pbn.nodeDict[node_name]
+                        predicted_value = predicted_steady_state[node_idx]
+                        exp_predictions[node_name] = predicted_value
+                        exp_measurements[node_name] = measured_value
+                        simulation_results['predicted_values'].append(predicted_value)
+                        simulation_results['measured_values'].append(measured_value)
+                        simulation_results['measured_nodes'].append(node_name)
+                        simulation_results['experiment_ids'].append(experiment.get('id', i+1))
+            
             simulation_results['experiments'].append(experiment)
             simulation_results['predictions'].append(exp_predictions)
             simulation_results['measurements'].append(exp_measurements)
@@ -739,6 +905,13 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
         report_lines.append(f"Mean Absolute Error: {overall['mae']:.6f}")
         report_lines.append(f"Number of data points: {overall['n_points']}")
         report_lines.append("")
+        # Add simulation configuration if provided
+        if config:
+            report_lines.append("CONFIGURATION:")
+            report_lines.append("-" * 20)
+            for key, value in config.items():
+                report_lines.append(f"{key}: {value}")
+            report_lines.append("")
         if metrics['per_node']:
             report_lines.append("PER-NODE PERFORMANCE:")
             report_lines.append("-" * 20)
@@ -769,10 +942,18 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
     df.to_csv(csv_path, index=False)
     print(f"Results exported to {csv_path}")
 
+    # Export PBN
+    pbn_path = os.path.join(output_dir, "pbn.txt")
+    pbn_string = pbn_to_string(pbn)
+    with open(pbn_path, 'w') as f:
+        f.write(pbn_string)
+    print(f"PBN saved to {pbn_path}")
+
     return {
         'metrics': metrics,
         'plot_paths': plot_paths,
         'report_path': report_path,
         'csv_path': csv_path,
+        'pbn_path': pbn_path,
         'simulation_results': simulation_results
     }

@@ -12,3 +12,4 @@ lib/
 
 # ignore simulation results in any subfolder
 pancreatic_cancer_simulation/**
+AML_simulation/**
