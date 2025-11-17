@@ -7,64 +7,40 @@ from .simulation_evaluator import SimulationEvaluator
 from .experiment_data import ExperimentData
 
 
-def pbn_to_string(pbn) -> str:
+def get_pbn_rules_string(pbn) -> str:
     """
-    Convert a ProbabilisticBN object to a readable string format.
-    
-    Parameters:
-    -----------
-    pbn : ProbabilisticBN
-        The PBN object to convert
-        
-    Returns:
-    --------
-    str
-        String representation of the PBN rules
+    Format the final PBN into a readable string.
     """
+    if not hasattr(pbn, 'gene_functions'):
+        return "Could not format PBN rules: function strings not found in PBN object."
+
     rules_string = []
-    rules_string.append(f"# PBN with {pbn.N} nodes")
-    rules_string.append(f"# Total functions: {pbn.Nf}")
-    rules_string.append("")
+    node_names = sorted(pbn.nodeDict.keys(), key=lambda k: pbn.nodeDict[k])
     
-    # Create inverse nodeDict for index to name mapping
-    idx_to_name = {v: k for k, v in pbn.nodeDict.items()}
-    
-    for node_idx in range(pbn.N):
-        node_name = idx_to_name.get(node_idx, f"Node_{node_idx}")
-        num_functions = pbn.nf[node_idx]
-        
-        if num_functions > 0:
-            rules_string.append(f"# {node_name}: {num_functions} function(s)")
+    for node_name in node_names:
+        node_idx = pbn.nodeDict[node_name]
+        if node_name in pbn.gene_functions:
+            functions = pbn.gene_functions[node_name]
+            probabilities = pbn.cij[node_idx, :len(functions)].copy()
             
-            # Get probabilities for this node
-            probs = pbn.cij[node_idx, :num_functions]
+            # Round probabilities to 4 decimal places
+            probabilities = np.round(probabilities, 4)
             
-            for func_idx in range(num_functions):
-                prob = probs[func_idx]
-                if prob > 1e-6:
-                    # Get function index in global function array
-                    global_func_idx = pbn.cumsum[node_idx] + func_idx
+            # Ensure they sum to 1.0 by adjusting the largest probability
+            prob_sum = np.sum(probabilities)
+            if not np.isclose(prob_sum, 1.0):
+                # Find the largest probability and adjust it
+                max_idx = np.argmax(probabilities)
+                probabilities[max_idx] += (1.0 - prob_sum)
+                # Round again to avoid floating point errors
+                probabilities[max_idx] = np.round(probabilities[max_idx], 4)
+            
+            for i, func in enumerate(functions):
+                prob = probabilities[i]
+                if prob > 1e-6 or (len(functions) == 1 and np.isclose(prob, 1.0)):
+                    rules_string.append(f"{node_name} = {func}, {prob:.4f}")
                     
-                    # Get inputs for this function from varF (linkages)
-                    inputs = []
-                    for i in range(len(pbn.varF[global_func_idx])):
-                        input_idx = pbn.varF[global_func_idx, i]
-                        if input_idx == -1:  # -1 indicates end of inputs
-                            break
-                        input_name = idx_to_name.get(input_idx, f"Node_{input_idx}")
-                        inputs.append(input_name)
-                    
-                    if inputs:
-                        # Function with inputs - show generic function notation
-                        rules_string.append(f"{node_name} = f{func_idx}({', '.join(inputs)}), {prob:.4f}")
-                    else:
-                        # Constant function - show the constant value
-                        const_val = pbn.F[global_func_idx, 0]
-                        rules_string.append(f"{node_name} = {const_val}, {prob:.4f}")
-            
-            rules_string.append("")
-        
-        return "\n".join(rules_string)
+    return "\n".join(rules_string)
 
 
 class ResultEvaluator:
@@ -637,7 +613,7 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
 
         # Export PBN
         pbn_path = os.path.join(output_dir, "pbn.txt")
-        pbn_string = pbn_to_string(evaluator.pbn)
+        pbn_string = get_pbn_rules_string(evaluator.pbn)
         with open(pbn_path, 'w') as f:
             f.write(pbn_string)
         print(f"Optimized PBN saved to {pbn_path}")
@@ -655,14 +631,17 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
     return evaluator
 
 
-def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool = True, generate_report: bool = True, config: dict = None, Measured_formula: Optional[str] = None):
+def evaluate_pbn(pbn, experiments, output_dir: str = '.', plot_residuals: bool = True, 
+                save: bool = True, detailed: bool = True, config: dict = None, 
+                Measured_formula: Optional[str] = None, normalize: bool = False,
+                figsize: Tuple[int, int] = (8, 6), show_confidence_interval: bool = False):
     """
     Evaluate a PBN directly against experiment data (list or CSV).
     
     This function generates and saves the following files in output_dir:
-    - prediction_vs_experimental.png: Scatter plot of predicted vs experimental values (if generate_plots=True)
-    - residual_analysis.png: Residual plots (if generate_plots=True)
-    - evaluation_report.txt: Text report with metrics (if generate_report=True)
+    - prediction_vs_experimental.png: Scatter plot of predicted vs experimental values
+    - residual_analysis.png: Residual plots (if plot_residuals=True)
+    - evaluation_report.txt: Text report with metrics
     - detailed_results.csv: CSV file with all data points
     - pbn.txt: PBN model in text format
 
@@ -674,14 +653,22 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
         List of experiment dicts or path to CSV file
     output_dir : str, default='.'
         Directory to save output files
-    generate_plots : bool, default=True
-        Whether to generate plots
-    generate_report : bool, default=True
-        Whether to generate evaluation report
+    plot_residuals : bool, default=True
+        Whether to plot residuals
+    save : bool, default=True
+        Whether to save plots and reports to files. If False, displays plots.
+    detailed : bool, default=True
+        Whether to label dots in plots with experiment IDs
     config : dict, optional
         Simulation configuration
     Measured_formula : str, optional
         Formula to use for calculating the objective function. Overrides CSV `Measured_nodes` for scoring.
+    normalize : bool, default=False
+        Whether to normalize measured values to [0, 1] range
+    figsize : Tuple[int, int], default=(8, 6)
+        Figure size in inches for the prediction vs experimental plot
+    show_confidence_interval : bool, default=False
+        Whether to show confidence interval bands
 
     Returns:
     --------
@@ -689,7 +676,8 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
         Dictionary with evaluation metrics and file paths
     """
     import os
-    os.makedirs(output_dir, exist_ok=True)
+    if save:
+        os.makedirs(output_dir, exist_ok=True)
     from .experiment_data import ExperimentData
     from .simulation_evaluator import SimulationEvaluator
     import numpy as np
@@ -714,6 +702,30 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
                 exp['measured_value'] = raw_vals[0]
             # Clear per-node measurements when using a formula target
             exp['measurements'] = {}
+    
+    # Handle normalization of measured values
+    if normalize:
+        # Collect all measured values for normalization
+        all_measured = []
+        for exp in experiments:
+            if exp.get('measured_formula'):
+                all_measured.append(exp.get('measured_value', 0.0))
+            else:
+                all_measured.extend(exp['measurements'].values())
+        
+        if all_measured:
+            min_val = min(all_measured)
+            max_val = max(all_measured)
+            if max_val > min_val:
+                # Normalize to [0, 1]
+                for exp in experiments:
+                    if exp.get('measured_formula'):
+                        exp['measured_value'] = (exp['measured_value'] - min_val) / (max_val - min_val)
+                    else:
+                        normalized_measurements = {}
+                        for node, val in exp['measurements'].items():
+                            normalized_measurements[node] = (val - min_val) / (max_val - min_val)
+                        exp['measurements'] = normalized_measurements
     
     # Validate experiments
     ExperimentData.validate_experiments(experiments, pbn.nodeDict)
@@ -819,76 +831,96 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
 
     # Plotting
     plot_paths = {}
-    if generate_plots and len(predicted) > 0:
+    if len(predicted) > 0:
         # Scatter plot
-        fig, ax = plt.subplots(figsize=(8, 6))
-        unique_nodes = list(set(simulation_results['measured_nodes']))
-        colors = plt.cm.Set3(np.linspace(0, 1, len(unique_nodes)))
-        node_color_map = dict(zip(unique_nodes, colors))
-        for node in unique_nodes:
-            node_indices = [i for i, n in enumerate(simulation_results['measured_nodes']) if n == node]
-            node_pred = predicted[node_indices]
-            node_meas = measured[node_indices]
-            ax.scatter(node_meas, node_pred, c=[node_color_map[node]], label=node, alpha=0.7, s=60)
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.scatter(measured, predicted, alpha=0.7, s=60, c='lightgreen')
+        
+        # Add experiment ID labels if detailed mode
+        if detailed:
+            for i, (meas, pred, exp_id) in enumerate(zip(measured, predicted, simulation_results['experiment_ids'])):
+                ax.annotate(f'E{exp_id}', (meas, pred), xytext=(5, 5), 
+                           textcoords='offset points', fontsize=8, alpha=0.7)
+        
         min_val = min(np.min(predicted), np.min(measured))
         max_val = max(np.max(predicted), np.max(measured))
+        
+        # Calculate regression line
         from scipy import stats
-        slope, intercept, r_value, p_value, std_err = stats.linregress(measured, predicted)
+        slope, intercept, r_value, p_value_reg, std_err = stats.linregress(measured, predicted)
         x_reg = np.linspace(min_val, max_val, 100)
         y_reg = slope * x_reg + intercept
         ax.plot(x_reg, y_reg, 'g-', linewidth=2, alpha=0.8, label='Regression line')
-        residuals = predicted - (slope * measured + intercept)
-        mse_residuals = np.mean(residuals**2)
-        # confidence_interval = 1.96 * np.sqrt(mse_residuals)
-        # ax.fill_between(x_reg, y_reg - confidence_interval, y_reg + confidence_interval, alpha=0.2, color='green', label='95% Confidence interval')
-        for i, (meas, pred, exp_id) in enumerate(zip(measured, predicted, simulation_results['experiment_ids'])):
-            ax.annotate(f'E{exp_id}', (meas, pred), xytext=(5, 5), 
-                        textcoords='offset points', fontsize=8, alpha=0.7)
+        
+        # Add confidence interval bands if requested
+        if show_confidence_interval:
+            residuals = predicted - (slope * measured + intercept)
+            mse_residuals = np.mean(residuals**2)
+            confidence_interval = 1.96 * np.sqrt(mse_residuals)  # 95% CI
+            ax.fill_between(x_reg, y_reg - confidence_interval, y_reg + confidence_interval, 
+                           alpha=0.2, color='green', label='95% Confidence interval')
+        
         ax.set_xlabel('Experimental Values', fontsize=12)
         ax.set_ylabel('Predicted Values', fontsize=12)
-        # title = f'Predicted vs Experimental (r={metrics["overall"]["correlation"]:.3f}, p={metrics["overall"]["p_value"]:.3e}, MSE={metrics["overall"]["mse"]:.6f})'
         title = f'Predicted vs Experimental (r={metrics["overall"]["correlation"]:.3f}, p={metrics["overall"]["p_value"]:.3e})'
         ax.set_title(title, fontsize=12, fontweight='bold')
         ax.grid(True, alpha=0.3)
-        if len(unique_nodes) <= 10:
-            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-        else:
-            ax.legend()
-        # ax.set_aspect('equal', adjustable='box')
+        ax.legend()
         ax.set_xlim(np.min(measured) - 0.05, np.max(measured) + 0.05)
         ax.set_ylim(np.min(predicted) - 0.05, np.max(predicted) + 0.05)
         plt.tight_layout()
-        plot_path = os.path.join(output_dir, "prediction_vs_experimental.png")
-        plt.savefig(plot_path, dpi=300, bbox_inches='tight')
-        plot_paths['prediction_vs_experimental'] = plot_path
-        plt.close(fig)
+        
+        if save:
+            plot_path = os.path.join(output_dir, "prediction_vs_experimental.png")
+            plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+            plot_paths['prediction_vs_experimental'] = plot_path
+            print(f"Plot saved to {plot_path}")
+            plt.close(fig)
+        else:
+            plt.show()
+        
         # Residual plot
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-        residuals = predicted - measured
-        ax1.scatter(predicted, residuals, alpha=0.7, s=60)
-        ax1.axhline(y=0, color='r', linestyle='--', linewidth=2)
-        ax1.set_xlabel('Predicted Values')
-        ax1.set_ylabel('Residuals (Predicted - Measured)')
-        ax1.set_title('Residuals vs Predicted Values')
-        ax1.grid(True, alpha=0.3)
-        ax2.hist(residuals, bins=min(20, len(residuals)//3), alpha=0.7, edgecolor='black')
-        ax2.axvline(x=0, color='r', linestyle='--', linewidth=2)
-        ax2.set_xlabel('Residuals')
-        ax2.set_ylabel('Frequency')
-        ax2.set_title('Distribution of Residuals')
-        ax2.grid(True, alpha=0.3)
-        mean_residual = np.mean(residuals)
-        std_residual = np.std(residuals)
-        ax2.text(0.02, 0.98, f'Mean: {mean_residual:.4f}\nStd: {std_residual:.4f}', transform=ax2.transAxes, verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
-        plt.tight_layout()
-        residual_path = os.path.join(output_dir, "residual_analysis.png")
-        plt.savefig(residual_path, dpi=300, bbox_inches='tight')
-        plot_paths['residual_analysis'] = residual_path
-        plt.close(fig)
+        if plot_residuals:
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4))
+            residuals = predicted - measured
+            ax1.scatter(predicted, residuals, alpha=0.7, s=60)
+            ax1.axhline(y=0, color='r', linestyle='--', linewidth=2)
+            ax1.set_xlabel('Predicted Values')
+            ax1.set_ylabel('Residuals (Predicted - Measured)')
+            ax1.set_title('Residuals vs Predicted Values')
+            ax1.grid(True, alpha=0.3)
+            
+            # Add experiment ID labels if detailed mode
+            if detailed:
+                for pred, res, exp_id in zip(predicted, residuals, simulation_results['experiment_ids']):
+                    ax1.annotate(f'E{exp_id}', (pred, res), xytext=(5, 5), 
+                               textcoords='offset points', fontsize=8, alpha=0.7)
+            
+            ax2.hist(residuals, bins=min(20, len(residuals)//3), alpha=0.7, edgecolor='black')
+            ax2.axvline(x=0, color='r', linestyle='--', linewidth=2)
+            ax2.set_xlabel('Residuals')
+            ax2.set_ylabel('Frequency')
+            ax2.set_title('Distribution of Residuals')
+            ax2.grid(True, alpha=0.3)
+            mean_residual = np.mean(residuals)
+            std_residual = np.std(residuals)
+            ax2.text(0.02, 0.98, f'Mean: {mean_residual:.4f}\nStd: {std_residual:.4f}', 
+                    transform=ax2.transAxes, verticalalignment='top', 
+                    bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+            plt.tight_layout()
+            
+            if save:
+                residual_path = os.path.join(output_dir, "residual_analysis.png")
+                plt.savefig(residual_path, dpi=300, bbox_inches='tight')
+                plot_paths['residual_analysis'] = residual_path
+                print(f"Residual plot saved to {residual_path}")
+                plt.close(fig)
+            else:
+                plt.show()
 
     # Report
     report_path = None
-    if generate_report and metrics:
+    if metrics:
         report_lines = []
         report_lines.append("="*60)
         report_lines.append("PBN EVALUATION REPORT")
@@ -923,31 +955,39 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
                 report_lines.append(f"  Data points: {m['n_points']}")
                 report_lines.append("")
         report_text = "\n".join(report_lines)
-        report_path = os.path.join(output_dir, "evaluation_report.txt")
-        with open(report_path, 'w') as f:
-            f.write(report_text)
-        print(f"Evaluation report saved to {report_path}")
+        
+        if save:
+            report_path = os.path.join(output_dir, "evaluation_report.txt")
+            with open(report_path, 'w') as f:
+                f.write(report_text)
+            print(f"Evaluation report saved to {report_path}")
+        else:
+            print(report_text)
 
     # Export CSV
-    csv_path = os.path.join(output_dir, "detailed_results.csv")
-    data = {
-        'Experiment_ID': simulation_results['experiment_ids'],
-        'Node': simulation_results['measured_nodes'],
-        'Predicted_Value': simulation_results['predicted_values'],
-        'Measured_Value': simulation_results['measured_values'],
-        'Residual': np.array(simulation_results['predicted_values']) - np.array(simulation_results['measured_values']),
-        'Absolute_Error': np.abs(np.array(simulation_results['predicted_values']) - np.array(simulation_results['measured_values']))
-    }
-    df = pd.DataFrame(data)
-    df.to_csv(csv_path, index=False)
-    print(f"Results exported to {csv_path}")
+    csv_path = None
+    if save:
+        csv_path = os.path.join(output_dir, "detailed_results.csv")
+        data = {
+            'Experiment_ID': simulation_results['experiment_ids'],
+            'Node': simulation_results['measured_nodes'],
+            'Predicted_Value': simulation_results['predicted_values'],
+            'Measured_Value': simulation_results['measured_values'],
+            'Residual': np.array(simulation_results['predicted_values']) - np.array(simulation_results['measured_values']),
+            'Absolute_Error': np.abs(np.array(simulation_results['predicted_values']) - np.array(simulation_results['measured_values']))
+        }
+        df = pd.DataFrame(data)
+        df.to_csv(csv_path, index=False)
+        print(f"Results exported to {csv_path}")
 
     # Export PBN
-    pbn_path = os.path.join(output_dir, "pbn.txt")
-    pbn_string = pbn_to_string(pbn)
-    with open(pbn_path, 'w') as f:
-        f.write(pbn_string)
-    print(f"PBN saved to {pbn_path}")
+    pbn_path = None
+    if save:
+        pbn_path = os.path.join(output_dir, "pbn.txt")
+        pbn_string = get_pbn_rules_string(pbn)
+        with open(pbn_path, 'w') as f:
+            f.write(pbn_string)
+        print(f"PBN saved to {pbn_path}")
 
     return {
         'metrics': metrics,

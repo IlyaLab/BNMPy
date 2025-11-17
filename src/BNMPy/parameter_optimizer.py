@@ -31,7 +31,7 @@ class ParameterOptimizer:
     Parameter optimization for Probabilistic Boolean Networks using experimental data.
     """
     
-    def __init__(self, pbn, experiments, config=None, nodes_to_optimize=None, discrete=False, verbose=False, Measured_formula: Optional[str] = None):
+    def __init__(self, pbn, experiments, config=None, nodes_to_optimize=None, discrete=False, verbose=False, Measured_formula: Optional[str] = None, normalize: bool = False):
         """
         Initialize the parameter optimizer.
         
@@ -51,10 +51,14 @@ class ParameterOptimizer:
             Whether to print detailed optimization progress
         Measured_formula : str, optional
             Formula to use for calculating the objective function. Overrides CSV `Measured_nodes` for scoring.
+        normalize : bool, default=False
+            Whether to normalize formula-based measurements using min-max scaling across experiments.
+            When True, both predicted and measured formula values are scaled to [0,1] range.
         """
         self.pbn = pbn
         self.verbose = verbose
         self.discrete = discrete
+        self.normalize = normalize
         
         # Load experiments if string (CSV file path)
         if isinstance(experiments, str):
@@ -80,7 +84,7 @@ class ParameterOptimizer:
         ExperimentData.validate_experiments(self.experiments, pbn.nodeDict)
         
         # Initialize evaluator
-        self.evaluator = SimulationEvaluator(pbn, self.experiments, config, nodes_to_optimize)
+        self.evaluator = SimulationEvaluator(pbn, self.experiments, config, nodes_to_optimize, normalize=normalize)
         
         # Set configuration
         self.config = config or self._default_config()

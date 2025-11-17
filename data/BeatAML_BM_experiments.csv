@@ -1,0 +1,13 @@
+Experiments,Stimuli,Inhibitors,Measured_nodes,Measured_values
+1,,CEBPA,%.Blasts.in.BM,51.5
+2,,"CEBPA,DNMT3A",%.Blasts.in.BM,40.0
+3,,DNMT3A,%.Blasts.in.BM,45.6642
+4,FLT3,DNMT3A,%.Blasts.in.BM,69.6274
+5,"FLT3,MYC",DNMT3A,%.Blasts.in.BM,52.4167
+6,FLT3,"DNMT3A,NPM1",%.Blasts.in.BM,81.0
+7,,"DNMT3A,TP53",%.Blasts.in.BM,50.875
+8,FLT3,ETV6,%.Blasts.in.BM,60.1
+9,FLT3,,%.Blasts.in.BM,73.4425
+10,FLT3,TP53,%.Blasts.in.BM,42.0
+11,MYC,,%.Blasts.in.BM,54.0
+12,,TP53,%.Blasts.in.BM,46.0824
