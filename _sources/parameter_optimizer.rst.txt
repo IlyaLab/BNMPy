@@ -23,7 +23,8 @@ Basic Usage
        pbn, 
        "experiments.csv", 
        nodes_to_optimize=['Cas3'],
-       verbose=True
+       verbose=True,
+       normalize=False  # Set to True for automatic value normalization
    )
 
    # Run optimization
@@ -32,6 +33,33 @@ Basic Usage
    # Get optimized PBN
    if result.success:
        optimized_pbn = optimizer.get_optimized_pbn(result)
+
+Value Normalization
+-------------------
+
+When experimental measurements span different scales, enable automatic min-max normalization:
+
+.. code-block:: python
+
+   optimizer = BNMPy.ParameterOptimizer(
+       pbn,
+       "experiments.csv",
+       nodes_to_optimize=['Cas3'],
+       normalize=True  # Enable automatic normalization
+   )
+
+**How normalization works:**
+
+1. **Measured values** (from CSV): All measured values across all experiments are collected and scaled to [0, 1] using min-max normalization:
+   
+   - Formula: ``normalized = (value - min) / (max - min)``
+   - Example: Values ``[0.5, 2.0, 2.5, 3.0]`` → ``[0.0, 0.6, 0.8, 1.0]``
+
+2. **Predicted values** (from simulation): At each optimization iteration, all predicted values (node states or formula results) across all experiments are collected and scaled to [0, 1]
+   
+   - Example: Predicted ``[0.1, 0.2, 0.3]`` → ``[0.0, 0.5, 1.0]``
+
+3. **SSE calculation**: Mean squared error is computed using normalized values
 
 Configuration
 -------------

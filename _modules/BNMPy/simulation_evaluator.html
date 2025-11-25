@@ -262,7 +262,7 @@
     
 <div class="viewcode-block" id="SimulationEvaluator.__init__">
 <a class="viewcode-back" href="../../simulation_evaluator.html#BNMPy.simulation_evaluator.SimulationEvaluator.__init__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pbn</span><span class="p">,</span> <span class="n">experiments</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodes_to_optimize</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pbn</span><span class="p">,</span> <span class="n">experiments</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodes_to_optimize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize evaluator with PBN and experiments</span>
 <span class="sd">        </span>
@@ -276,11 +276,14 @@
 <span class="sd">            Configuration parameters for simulation</span>
 <span class="sd">        nodes_to_optimize : list, optional</span>
 <span class="sd">            List of node names to optimize. If None, optimize all nodes.</span>
+<span class="sd">        normalize : bool, default=False</span>
+<span class="sd">            Whether to normalize formula-based measurements using min-max scaling across experiments</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span> <span class="o">=</span> <span class="n">pbn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span> <span class="o">=</span> <span class="n">experiments</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">steady_state_calc</span> <span class="o">=</span> <span class="n">SteadyStateCalculator</span><span class="p">(</span><span class="n">pbn</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_config</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span> <span class="o">=</span> <span class="n">normalize</span>
         
         <span class="c1"># Set up nodes to optimize</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nodes_to_optimize</span> <span class="o">=</span> <span class="n">nodes_to_optimize</span>
@@ -298,40 +301,99 @@
         
         <span class="c1"># Store original parameters for non-optimized nodes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_store_original_parameters</span><span class="p">()</span>
+        
+        <span class="c1"># Pre-compute normalized measured values for formula-based experiments if normalize=True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalized_measured_values</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_measured_values</span><span class="p">()</span>
 
         <span class="c1"># Check formula-based measurements and warn if measured values are outside theoretical range</span>
-        <span class="n">formula_experiments</span> <span class="o">=</span> <span class="p">[</span><span class="n">exp</span> <span class="k">for</span> <span class="n">exp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span> <span class="k">if</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">)]</span>
-        <span class="k">if</span> <span class="n">formula_experiments</span><span class="p">:</span>
-            <span class="n">formula</span> <span class="o">=</span> <span class="n">formula_experiments</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">]</span>
-            <span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_variables_from_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">)</span>
-            
-            <span class="k">try</span><span class="p">:</span>
-                <span class="c1"># Calculate theoretical range by evaluating formula at all corners</span>
-                <span class="n">n_vars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
-                <span class="n">formula_values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Skip warning if normalize=True since values will be normalized anyway</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">:</span>
+            <span class="n">formula_experiments</span> <span class="o">=</span> <span class="p">[</span><span class="n">exp</span> <span class="k">for</span> <span class="n">exp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span> <span class="k">if</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">formula_experiments</span><span class="p">:</span>
+                <span class="n">formula</span> <span class="o">=</span> <span class="n">formula_experiments</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">]</span>
+                <span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_variables_from_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">)</span>
                 
-                <span class="k">for</span> <span class="n">combo</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="n">repeat</span><span class="o">=</span><span class="n">n_vars</span><span class="p">):</span>
-                    <span class="n">var_values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">combo</span><span class="p">))</span>
-                    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                        <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">var_values</span><span class="p">:</span>
-                            <span class="n">var_values</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
-                    <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_eval_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">,</span> <span class="n">var_values</span><span class="p">)</span>
-                    <span class="n">formula_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-                
-                <span class="n">theoretical_min</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">formula_values</span><span class="p">))</span>
-                <span class="n">theoretical_max</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">formula_values</span><span class="p">))</span>
-                
-                <span class="c1"># Check if any measured values are outside theoretical range</span>
-                <span class="k">for</span> <span class="n">exp</span> <span class="ow">in</span> <span class="n">formula_experiments</span><span class="p">:</span>
-                    <span class="n">mv</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_value&#39;</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">mv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">mv</span> <span class="o">&lt;</span> <span class="n">theoretical_min</span> <span class="ow">or</span> <span class="n">mv</span> <span class="o">&gt;</span> <span class="n">theoretical_max</span><span class="p">):</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WARNING: Experiment </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> measured value </span><span class="si">{</span><span class="n">mv</span><span class="si">}</span><span class="s2"> is outside theoretical range [</span><span class="si">{</span><span class="n">theoretical_min</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">theoretical_max</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;         Formula: </span><span class="si">{</span><span class="n">formula</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;         Consider rescaling your measured values to match the formula&#39;s range.&quot;</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Could not validate formula range: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="c1"># Calculate theoretical range by evaluating formula at all corners</span>
+                    <span class="n">n_vars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+                    <span class="n">formula_values</span> <span class="o">=</span> <span class="p">[]</span>
+                    
+                    <span class="k">for</span> <span class="n">combo</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="n">repeat</span><span class="o">=</span><span class="n">n_vars</span><span class="p">):</span>
+                        <span class="n">var_values</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">combo</span><span class="p">))</span>
+                        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                            <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">var_values</span><span class="p">:</span>
+                                <span class="n">var_values</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_eval_formula</span><span class="p">(</span><span class="n">formula</span><span class="p">,</span> <span class="n">var_values</span><span class="p">)</span>
+                        <span class="n">formula_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    
+                    <span class="n">theoretical_min</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">formula_values</span><span class="p">))</span>
+                    <span class="n">theoretical_max</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">formula_values</span><span class="p">))</span>
+                    
+                    <span class="c1"># Check if any measured values are outside theoretical range</span>
+                    <span class="k">for</span> <span class="n">exp</span> <span class="ow">in</span> <span class="n">formula_experiments</span><span class="p">:</span>
+                        <span class="n">mv</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_value&#39;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">mv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">mv</span> <span class="o">&lt;</span> <span class="n">theoretical_min</span> <span class="ow">or</span> <span class="n">mv</span> <span class="o">&gt;</span> <span class="n">theoretical_max</span><span class="p">):</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WARNING: Experiment </span><span class="si">{</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> measured value </span><span class="si">{</span><span class="n">mv</span><span class="si">}</span><span class="s2"> is outside theoretical range [</span><span class="si">{</span><span class="n">theoretical_min</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">theoretical_max</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;         Formula: </span><span class="si">{</span><span class="n">formula</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;         Consider rescaling your measured values to match the formula&#39;s range.&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Could not validate formula range: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
         
+    <span class="k">def</span><span class="w"> </span><span class="nf">_normalize_measured_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pre-compute min-max normalized measured values for all experiments.</span>
+<span class="sd">        Stores mapping from (experiment id, node name) to normalized measured value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Collect all measured values across all experiments</span>
+        <span class="n">all_measured_values</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># For formula-based experiments</span>
+        <span class="k">for</span> <span class="n">exp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">):</span>
+                <span class="n">mv</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_value&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">mv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">all_measured_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">mv</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># For node-based measurements</span>
+                <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">measured_value</span> <span class="ow">in</span> <span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">all_measured_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">measured_value</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_measured_values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+        
+        <span class="c1"># Calculate min and max across ALL measured values</span>
+        <span class="n">min_val</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">all_measured_values</span><span class="p">)</span>
+        <span class="n">max_val</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">all_measured_values</span><span class="p">)</span>
+        
+        <span class="c1"># Store the range for later use</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">measured_value_range</span> <span class="o">=</span> <span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">)</span>
+        
+        <span class="c1"># Normalize each experiment&#39;s measured values</span>
+        <span class="k">for</span> <span class="n">exp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">):</span>
+                <span class="c1"># Formula-based measurement</span>
+                <span class="n">mv</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_value&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">mv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">max_val</span> <span class="o">-</span> <span class="n">min_val</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>  <span class="c1"># Avoid division by zero</span>
+                        <span class="n">normalized</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">mv</span><span class="p">)</span> <span class="o">-</span> <span class="n">min_val</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">max_val</span> <span class="o">-</span> <span class="n">min_val</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">normalized</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># If all values are the same, use 0.5</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">normalized_measured_values</span><span class="p">[</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">normalized</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Node-based measurements</span>
+                <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">measured_value</span> <span class="ow">in</span> <span class="n">exp</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">max_val</span> <span class="o">-</span> <span class="n">min_val</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+                        <span class="n">normalized</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">measured_value</span><span class="p">)</span> <span class="o">-</span> <span class="n">min_val</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">max_val</span> <span class="o">-</span> <span class="n">min_val</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">normalized</span> <span class="o">=</span> <span class="mf">0.5</span>
+                    <span class="c1"># Use tuple (exp_id, node_name) as key for node-based measurements</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">normalized_measured_values</span><span class="p">[(</span><span class="n">exp</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">node_name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">normalized</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Normalization enabled: Measured values range [</span><span class="si">{</span><span class="n">min_val</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">max_val</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">] scaled to [0, 1]&quot;</span><span class="p">)</span>
+    
     <span class="k">def</span><span class="w"> </span><span class="nf">_store_original_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Store original parameters for non-optimized nodes&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">original_cij</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">cij</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -427,37 +489,71 @@
             <span class="k">return</span> <span class="mf">1e10</span>
         
         <span class="c1"># 4. Calculate SSE across all experiments</span>
-        <span class="n">total_sse</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># If normalize=True, collect all predicted values first for normalization</span>
         <span class="n">max_retries</span> <span class="o">=</span> <span class="mi">3</span>
         
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">experiment</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">):</span>
-            <span class="c1"># print(f&quot;\n- Simulating experiment {i+1} -&quot;)</span>
-            <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">for</span> <span class="n">retry</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_retries</span><span class="p">):</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">predicted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulate_experiment</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
-
-                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">predicted</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">predicted</span><span class="p">)):</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid simulation results (NaN or Inf)&quot;</span><span class="p">)</span>
-                    
-                    <span class="n">sse</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_sse</span><span class="p">(</span><span class="n">predicted</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span>
-                    <span class="c1"># print(f&quot;  SSE for experiment {i+1}: {sse}&quot;)</span>
-
-                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">sse</span><span class="p">):</span>
-                        <span class="n">total_sse</span> <span class="o">+=</span> <span class="n">sse</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">:</span>
+            <span class="c1"># Collect all predicted values across experiments first</span>
+            <span class="n">experiment_predictions</span> <span class="o">=</span> <span class="p">[]</span>
+            
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">experiment</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">):</span>
+                <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">retry</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_retries</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">predicted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulate_experiment</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
+                        
+                        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">predicted</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">predicted</span><span class="p">)):</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid simulation results (NaN or Inf)&quot;</span><span class="p">)</span>
+                        
+                        <span class="c1"># Store the predicted steady state for later use</span>
+                        <span class="n">experiment_predictions</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                            <span class="s1">&#39;experiment&#39;</span><span class="p">:</span> <span class="n">experiment</span><span class="p">,</span>
+                            <span class="s1">&#39;predicted&#39;</span><span class="p">:</span> <span class="n">predicted</span>
+                        <span class="p">})</span>
                         <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="k">break</span>
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Warning: Simulation retry </span><span class="si">{</span><span class="n">retry</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s2"> failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">retry</span> <span class="o">==</span> <span class="n">max_retries</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Objective function penalty: Experiment simulation failed after </span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s2"> retries.&quot;</span><span class="p">)</span>
-                        <span class="k">return</span> <span class="mf">1e10</span>
-                    <span class="c1"># Reset network state and try again</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">resetNetwork</span><span class="p">()</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Warning: Simulation retry </span><span class="si">{</span><span class="n">retry</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s2"> failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">retry</span> <span class="o">==</span> <span class="n">max_retries</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Objective function penalty: Experiment simulation failed after </span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s2"> retries.&quot;</span><span class="p">)</span>
+                            <span class="k">return</span> <span class="mf">1e10</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">resetNetwork</span><span class="p">()</span>
+                
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Objective function penalty: Experiment simulation did not succeed.&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="mf">1e10</span>
             
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Objective function penalty: Experiment simulation did not succeed.&quot;</span><span class="p">)</span>
-                <span class="k">return</span> <span class="mf">1e10</span>
+            <span class="c1"># Calculate normalized SSE</span>
+            <span class="n">total_sse</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_normalized_sse</span><span class="p">(</span><span class="n">experiment_predictions</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Standard SSE calculation without normalization</span>
+            <span class="n">total_sse</span> <span class="o">=</span> <span class="mi">0</span>
+            
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">experiment</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">):</span>
+                <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">retry</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_retries</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">predicted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulate_experiment</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
+                        
+                        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">predicted</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">predicted</span><span class="p">)):</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid simulation results (NaN or Inf)&quot;</span><span class="p">)</span>
+                        
+                        <span class="n">sse</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_sse</span><span class="p">(</span><span class="n">predicted</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span>
+                        
+                        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">sse</span><span class="p">):</span>
+                            <span class="n">total_sse</span> <span class="o">+=</span> <span class="n">sse</span>
+                            <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="k">break</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Warning: Simulation retry </span><span class="si">{</span><span class="n">retry</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s2"> failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">retry</span> <span class="o">==</span> <span class="n">max_retries</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Objective function penalty: Experiment simulation failed after </span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s2"> retries.&quot;</span><span class="p">)</span>
+                            <span class="k">return</span> <span class="mf">1e10</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">resetNetwork</span><span class="p">()</span>
+                
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Objective function penalty: Experiment simulation did not succeed.&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="mf">1e10</span>
         
         <span class="c1"># 5. Calculate MSE by dividing by number of experiments</span>
         <span class="n">mse</span> <span class="o">=</span> <span class="n">total_sse</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiments</span><span class="p">)</span>
@@ -616,6 +712,88 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">steady_state_calc</span><span class="o">.</span><span class="n">reset_network_conditions</span><span class="p">()</span>
         
         <span class="k">return</span> <span class="n">steady_state</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_normalized_sse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment_predictions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate SSE with min-max normalization of predicted values across all experiments.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        experiment_predictions : List[Dict]</span>
+<span class="sd">            List of dicts containing &#39;experiment&#39; and &#39;predicted&#39; keys for each experiment</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        float</span>
+<span class="sd">            Sum of squared errors with normalized values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Collect all predicted values (both formula and node-based)</span>
+        <span class="n">all_predicted_values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">predicted_info</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Store (type, value, experiment, predicted_array)</span>
+        
+        <span class="k">for</span> <span class="n">pred_info</span> <span class="ow">in</span> <span class="n">experiment_predictions</span><span class="p">:</span>
+            <span class="n">experiment</span> <span class="o">=</span> <span class="n">pred_info</span><span class="p">[</span><span class="s1">&#39;experiment&#39;</span><span class="p">]</span>
+            <span class="n">predicted</span> <span class="o">=</span> <span class="n">pred_info</span><span class="p">[</span><span class="s1">&#39;predicted&#39;</span><span class="p">]</span>
+            
+            <span class="k">if</span> <span class="n">experiment</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">):</span>
+                <span class="c1"># Formula-based measurement</span>
+                <span class="n">var_values</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">predicted</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                <span class="n">predicted_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_eval_formula</span><span class="p">(</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measured_formula&#39;</span><span class="p">],</span> <span class="n">var_values</span><span class="p">)</span>
+                <span class="n">all_predicted_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predicted_value</span><span class="p">)</span>
+                <span class="n">predicted_info</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;formula&#39;</span><span class="p">,</span> <span class="n">predicted_value</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">predicted</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Node-based measurements</span>
+                <span class="k">for</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">measured_value</span> <span class="ow">in</span> <span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;measurements&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">node_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span>
+                    <span class="n">predicted_value</span> <span class="o">=</span> <span class="n">predicted</span><span class="p">[</span><span class="n">node_idx</span><span class="p">]</span>
+                    <span class="n">all_predicted_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predicted_value</span><span class="p">)</span>
+                    <span class="n">predicted_info</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;node&#39;</span><span class="p">,</span> <span class="n">predicted_value</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">predicted</span><span class="p">,</span> <span class="n">node_name</span><span class="p">))</span>
+        
+        <span class="c1"># Calculate min-max range for all predicted values</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_predicted_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">pred_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">all_predicted_values</span><span class="p">)</span>
+            <span class="n">pred_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">all_predicted_values</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pred_min</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">pred_max</span> <span class="o">=</span> <span class="mf">1.0</span>
+        
+        <span class="c1"># Calculate SSE with normalized values</span>
+        <span class="n">total_sse</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">predicted_info</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;formula&#39;</span><span class="p">:</span>
+                <span class="c1"># Formula-based measurement</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">predicted_value</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">info</span>
+                
+                <span class="c1"># Normalize predicted value</span>
+                <span class="k">if</span> <span class="n">pred_max</span> <span class="o">-</span> <span class="n">pred_min</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+                    <span class="n">normalized_predicted</span> <span class="o">=</span> <span class="p">(</span><span class="n">predicted_value</span> <span class="o">-</span> <span class="n">pred_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">pred_max</span> <span class="o">-</span> <span class="n">pred_min</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">normalized_predicted</span> <span class="o">=</span> <span class="mf">0.5</span>
+                
+                <span class="c1"># Get normalized measured value</span>
+                <span class="n">normalized_measured</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized_measured_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="mf">0.5</span><span class="p">)</span>
+                
+                <span class="c1"># Calculate squared error</span>
+                <span class="n">sse</span> <span class="o">=</span> <span class="p">(</span><span class="n">normalized_predicted</span> <span class="o">-</span> <span class="n">normalized_measured</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+                <span class="n">total_sse</span> <span class="o">+=</span> <span class="n">sse</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Node-based measurement</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">predicted_value</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">node_name</span> <span class="o">=</span> <span class="n">info</span>
+                
+                <span class="c1"># Normalize predicted value</span>
+                <span class="k">if</span> <span class="n">pred_max</span> <span class="o">-</span> <span class="n">pred_min</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+                    <span class="n">normalized_predicted</span> <span class="o">=</span> <span class="p">(</span><span class="n">predicted_value</span> <span class="o">-</span> <span class="n">pred_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">pred_max</span> <span class="o">-</span> <span class="n">pred_min</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">normalized_predicted</span> <span class="o">=</span> <span class="mf">0.5</span>
+                
+                <span class="c1"># Get normalized measured value</span>
+                <span class="n">normalized_measured</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized_measured_values</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">experiment</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">node_name</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">)</span>
+                
+                <span class="c1"># Calculate squared error</span>
+                <span class="n">sse</span> <span class="o">=</span> <span class="p">(</span><span class="n">normalized_predicted</span> <span class="o">-</span> <span class="n">normalized_measured</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+                <span class="n">total_sse</span> <span class="o">+=</span> <span class="n">sse</span>
+        
+        <span class="k">return</span> <span class="n">total_sse</span>
     
     <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_sse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicted</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">experiment</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

@@ -295,7 +295,11 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">Inhibitors</span></code>: Nodes fixed to 0 (comma-separated)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Inhibitors_efficacy</span></code>: Efficacy of inhibitors (0-1, comma-separated, optional)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Measured_nodes</span></code>: Nodes with experimental measurements OR a formula expression</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Measured_values</span></code>: Corresponding values (0-1, normalized). For formulas, a single value per row is required</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Measured_values</span></code>: Corresponding values. For formulas, a single value per row is required</p>
+<ul>
+<li><p>Values can be in any range; use the <code class="docutils literal notranslate"><span class="pre">normalize</span></code> parameter for automatic scaling</p></li>
+</ul>
+</li>
 </ul>
 <p>See <a class="reference internal" href="#../Examples/files/experiments_example.csv"><span class="xref myst">Examples/files/experiments_example.csv</span></a> for an example file.</p>
 <p><strong>Efficacy Values:</strong></p>
@@ -310,10 +314,6 @@
 <li><p><strong>Example</strong>: <code class="docutils literal notranslate"><span class="pre">PI3K,0.7</span></code> means PI3K inhibition has 70% probability of setting PI3K=0, 30% of PI3K=1</p></li>
 <li><p>If efficacy columns are empty, defaults to 1.0 for all perturbations</p></li>
 </ul>
-</section>
-<section id="pbn-data">
-<h4>PBN Data<a class="headerlink" href="#pbn-data" title="Link to this heading">¶</a></h4>
-<p>A ProbabilisticBN object, see <a class="reference internal" href="#../Examples/PBN_simulation.ipynb"><span class="xref myst">PBN_simulation.ipynb</span></a>.</p>
 </section>
 <section id="formula-based-measurements-phenotype-score">
 <h4>Formula-based Measurements (Phenotype score)<a class="headerlink" href="#formula-based-measurements-phenotype-score" title="Link to this heading">¶</a></h4>
@@ -346,6 +346,32 @@
 </ul>
 </li>
 </ul>
+</section>
+<section id="value-normalization">
+<h4>Value Normalization<a class="headerlink" href="#value-normalization" title="Link to this heading">¶</a></h4>
+<p>When experimental measurements span different scales, enable automatic min-max normalization:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">ParameterOptimizer</span><span class="p">(</span>
+    <span class="n">pbn</span><span class="p">,</span>
+    <span class="s2">&quot;experiments.csv&quot;</span><span class="p">,</span>
+    <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># Enable automatic normalization</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>How normalization works:</strong></p>
+<ol class="arabic simple">
+<li><p><strong>Measured values</strong> (from CSV): All measured values across all experiments are collected and scaled to [0, 1] using min-max normalization:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">normalized</span> <span class="pre">=</span> <span class="pre">(value</span> <span class="pre">-</span> <span class="pre">min)</span> <span class="pre">/</span> <span class="pre">(max</span> <span class="pre">-</span> <span class="pre">min)</span></code></p></li>
+<li><p>Example: Values <code class="docutils literal notranslate"><span class="pre">[0.5,</span> <span class="pre">2.0,</span> <span class="pre">2.5,</span> <span class="pre">3.0]</span></code> → <code class="docutils literal notranslate"><span class="pre">[0.0,</span> <span class="pre">0.6,</span> <span class="pre">0.8,</span> <span class="pre">1.0]</span></code></p></li>
+</ul>
+</li>
+<li><p><strong>Predicted values</strong> (from simulation): At each optimization iteration, all predicted values (node states or phenotype scores) across all experiments are collected and scaled to [0, 1]:</p>
+<ul class="simple">
+<li><p>Example: Predicted <code class="docutils literal notranslate"><span class="pre">[2,</span> <span class="pre">3,</span> <span class="pre">4]</span></code> → <code class="docutils literal notranslate"><span class="pre">[0.0,</span> <span class="pre">0.5,</span> <span class="pre">1.0]</span></code></p></li>
+</ul>
+</li>
+<li><p><strong>SSE calculation</strong>: Mean squared error is computed using normalized values</p></li>
+</ol>
 </section>
 </section>
 <section id="configurations">
@@ -564,8 +590,8 @@
 <li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
 <li><a class="reference internal" href="#input-data-format">Input Data Format</a><ul>
 <li><a class="reference internal" href="#experimental-data">Experimental Data</a></li>
-<li><a class="reference internal" href="#pbn-data">PBN Data</a></li>
 <li><a class="reference internal" href="#formula-based-measurements-phenotype-score">Formula-based Measurements (Phenotype score)</a></li>
+<li><a class="reference internal" href="#value-normalization">Value Normalization</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#configurations">Configurations</a><ul>
