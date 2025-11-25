@@ -92,7 +92,6 @@ When experimental measurements span different scales, enable automatic min-max n
 optimizer = ParameterOptimizer(
     pbn,
     "experiments.csv",
-    nodes_to_optimize=['Cas3'],
     normalize=True  # Enable automatic normalization
 )
 ```
@@ -103,9 +102,9 @@ optimizer = ParameterOptimizer(
 
    - `normalized = (value - min) / (max - min)`
    - Example: Values `[0.5, 2.0, 2.5, 3.0]` → `[0.0, 0.6, 0.8, 1.0]`
-2. **Predicted values** (from simulation): At each optimization iteration, all predicted values (node states or formula results) across all experiments are collected and scaled to [0, 1]:
+2. **Predicted values** (from simulation): At each optimization iteration, all predicted values (node states or phenotype scores) across all experiments are collected and scaled to [0, 1]:
 
-   - Example: Predicted `[0.1, 0.2, 0.3]` → `[0.0, 0.5, 1.0]`
+   - Example: Predicted `[2, 3, 4]` → `[0.0, 0.5, 1.0]`
 3. **SSE calculation**: Mean squared error is computed using normalized values
 
 ### Configurations

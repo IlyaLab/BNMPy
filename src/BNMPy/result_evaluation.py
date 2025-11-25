@@ -97,13 +97,17 @@ class ResultEvaluator:
             'experiment_ids': [],
             'measured_nodes': [],
             'predicted_values': [],
-            'measured_values': []
+            'measured_values': [],
+            'original_measured_values': []  # For plotting with original scale
         }
         
         # Ensure the PBN has the optimized parameters
         if hasattr(self.result, 'x') and self.result.x is not None:
             cij_matrix = self.evaluator._vector_to_cij_matrix(self.result.x)
             self.evaluator._update_pbn_parameters(cij_matrix)
+        
+        # Check if normalization was used
+        is_normalized = hasattr(self.evaluator, 'normalize') and self.evaluator.normalize
         
         for i, experiment in enumerate(self.experiments):
             try:
@@ -119,6 +123,14 @@ class ResultEvaluator:
                     formula = experiment['measured_formula']
                     measured_value = float(experiment.get('measured_value', 0.0))
                     
+                    # Get original measured value if normalization was used
+                    if is_normalized and hasattr(self.evaluator, 'measured_value_range'):
+                        # Denormalize to get original value
+                        min_val, max_val = self.evaluator.measured_value_range
+                        original_value = measured_value * (max_val - min_val) + min_val
+                    else:
+                        original_value = measured_value
+                    
                     # Compute predicted formula value
                     var_values = {name: predicted_steady_state[idx] for name, idx in self.pbn.nodeDict.items()}
                     predicted_value = self.evaluator._safe_eval_formula(formula, var_values)
@@ -130,6 +142,7 @@ class ResultEvaluator:
                     # Store for correlation analysis
                     simulation_results['predicted_values'].append(predicted_value)
                     simulation_results['measured_values'].append(measured_value)
+                    simulation_results['original_measured_values'].append(original_value)
                     simulation_results['measured_nodes'].append('Formula')
                     simulation_results['experiment_ids'].append(experiment.get('id', i+1))
                     
@@ -141,12 +154,20 @@ class ResultEvaluator:
                             node_idx = self.pbn.nodeDict[node_name]
                             predicted_value = predicted_steady_state[node_idx]
                             
+                            # Get original measured value if normalization was used
+                            if is_normalized and hasattr(self.evaluator, 'measured_value_range'):
+                                min_val, max_val = self.evaluator.measured_value_range
+                                original_value = measured_value * (max_val - min_val) + min_val
+                            else:
+                                original_value = measured_value
+                            
                             exp_predictions[node_name] = predicted_value
                             exp_measurements[node_name] = measured_value
                             
                             # Store for correlation analysis
                             simulation_results['predicted_values'].append(predicted_value)
                             simulation_results['measured_values'].append(measured_value)
+                            simulation_results['original_measured_values'].append(original_value)
                             simulation_results['measured_nodes'].append(node_name)
                             simulation_results['experiment_ids'].append(experiment.get('id', i+1))
                     
@@ -276,6 +297,7 @@ class ResultEvaluator:
         
         predicted = np.array(self.simulation_results['predicted_values'])
         measured = np.array(self.simulation_results['measured_values'])
+        original_measured = np.array(self.simulation_results['original_measured_values'])
         nodes = self.simulation_results['measured_nodes']
         experiment_ids = self.simulation_results['experiment_ids']
         
@@ -285,23 +307,23 @@ class ResultEvaluator:
         
         # Create figure
         fig, ax = plt.subplots(figsize=figsize)
-        ax.scatter(measured, predicted, alpha=0.7, s=60, c='lightgreen')
+        ax.scatter(original_measured, predicted, alpha=0.7, s=60, c='lightgreen')
         
         # Add experiment ID labels
         if show_experiment_ids:
-            for i, (meas, pred, exp_id) in enumerate(zip(measured, predicted, experiment_ids)):
-                ax.annotate(f'E{exp_id}', (meas, pred), xytext=(5, 5), 
+            for i, (orig_meas, pred, exp_id) in enumerate(zip(original_measured, predicted, experiment_ids)):
+                ax.annotate(f'E{exp_id}', (orig_meas, pred), xytext=(5, 5), 
                            textcoords='offset points', fontsize=8, alpha=0.7)
         
         # Perfect prediction line
-        min_val = min(np.min(predicted), np.min(measured))
-        max_val = max(np.max(predicted), np.max(measured))
+        min_val = min(np.min(predicted), np.min(original_measured))
+        max_val = max(np.max(predicted), np.max(original_measured))
         # ax.plot([min_val, max_val], [min_val, max_val], 'r--', 
         #         linewidth=2, label='Perfect prediction')
         
-        # Calculate regression line
+        # Calculate regression line using original measured values
         from scipy import stats
-        slope, intercept, r_value, p_value, std_err = stats.linregress(measured, predicted)
+        slope, intercept, r_value, p_value_reg, std_err = stats.linregress(original_measured, predicted)
         
         # Create regression line
         x_reg = np.linspace(min_val, max_val, 100)
@@ -311,7 +333,7 @@ class ResultEvaluator:
         # Add confidence interval bands
         if show_confidence_interval:
             # Add confidence bands (approximate)
-            residuals = predicted - (slope * measured + intercept)
+            residuals = predicted - (slope * original_measured + intercept)
             mse_residuals = np.mean(residuals**2)
             confidence_interval = 1.96 * np.sqrt(mse_residuals)  # 95% CI
             
@@ -339,7 +361,7 @@ class ResultEvaluator:
         
         # Equal aspect ratio
         # ax.set_aspect('equal', adjustable='box')
-        ax.set_xlim(np.min(measured) - 0.05, np.max(measured) + 0.05)
+        ax.set_xlim(np.min(original_measured) - 0.05, np.max(original_measured) + 0.05)
         ax.set_ylim(np.min(predicted) - 0.05, np.max(predicted) + 0.05)
         
         # Tight layout
@@ -537,6 +559,10 @@ class ResultEvaluator:
             'Absolute_Error': np.abs(np.array(self.simulation_results['predicted_values']) - np.array(self.simulation_results['measured_values']))
         }
         
+        # Add original measured values if available (i.e., if normalization was used)
+        if hasattr(self.evaluator, 'normalize') and self.evaluator.normalize:
+            data['Original_Measured_Value'] = self.simulation_results['original_measured_values']
+        
         df = pd.DataFrame(data)
         df.to_csv(save_path, index=False)
         print(f"Results exported to {save_path}")
@@ -704,10 +730,12 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', plot_residuals: bool =
             exp['measurements'] = {}
     
     # Handle normalization of measured values
+    # Store original values for plotting before normalization
+    original_measured_values = {}
     if normalize:
         # Collect all measured values for normalization
         all_measured = []
-        for exp in experiments:
+        for i, exp in enumerate(experiments):
             if exp.get('measured_formula'):
                 all_measured.append(exp.get('measured_value', 0.0))
             else:
@@ -717,6 +745,13 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', plot_residuals: bool =
             min_val = min(all_measured)
             max_val = max(all_measured)
             if max_val > min_val:
+                # Store original values before normalization
+                for i, exp in enumerate(experiments):
+                    if exp.get('measured_formula'):
+                        original_measured_values[i] = exp['measured_value']
+                    else:
+                        original_measured_values[i] = exp['measurements'].copy()
+                
                 # Normalize to [0, 1]
                 for exp in experiments:
                     if exp.get('measured_formula'):
@@ -741,7 +776,8 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', plot_residuals: bool =
         'experiment_ids': [],
         'measured_nodes': [],
         'predicted_values': [],
-        'measured_values': []
+        'measured_values': [],
+        'original_measured_values': []  # For plotting with original scale
     }
     for i, experiment in enumerate(experiments):
         try:
@@ -754,6 +790,9 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', plot_residuals: bool =
                 formula = experiment['measured_formula']
                 measured_value = float(experiment.get('measured_value', 0.0))
                 
+                # Get original value if normalization was applied
+                original_value = original_measured_values.get(i, measured_value) if normalize else measured_value
+                
                 # Compute predicted formula value
                 var_values = {name: predicted_steady_state[idx] for name, idx in pbn.nodeDict.items()}
                 predicted_value = evaluator._safe_eval_formula(formula, var_values)
@@ -763,6 +802,7 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', plot_residuals: bool =
                 exp_measurements['Formula'] = measured_value
                 simulation_results['predicted_values'].append(predicted_value)
                 simulation_results['measured_values'].append(measured_value)
+                simulation_results['original_measured_values'].append(original_value)
                 simulation_results['measured_nodes'].append('Formula')
                 simulation_results['experiment_ids'].append(experiment.get('id', i+1))
             else:
@@ -771,10 +811,18 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', plot_residuals: bool =
                     if node_name in pbn.nodeDict:
                         node_idx = pbn.nodeDict[node_name]
                         predicted_value = predicted_steady_state[node_idx]
+                        
+                        # Get original value if normalization was applied
+                        if normalize and i in original_measured_values:
+                            original_value = original_measured_values[i].get(node_name, measured_value)
+                        else:
+                            original_value = measured_value
+                        
                         exp_predictions[node_name] = predicted_value
                         exp_measurements[node_name] = measured_value
                         simulation_results['predicted_values'].append(predicted_value)
                         simulation_results['measured_values'].append(measured_value)
+                        simulation_results['original_measured_values'].append(original_value)
                         simulation_results['measured_nodes'].append(node_name)
                         simulation_results['experiment_ids'].append(experiment.get('id', i+1))
             
@@ -832,29 +880,32 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', plot_residuals: bool =
     # Plotting
     plot_paths = {}
     if len(predicted) > 0:
+        # Use original measured values for plotting if normalization was applied
+        original_measured = np.array(simulation_results['original_measured_values'])
+        
         # Scatter plot
         fig, ax = plt.subplots(figsize=figsize)
-        ax.scatter(measured, predicted, alpha=0.7, s=60, c='lightgreen')
+        ax.scatter(original_measured, predicted, alpha=0.7, s=60, c='lightgreen')
         
         # Add experiment ID labels if detailed mode
         if detailed:
-            for i, (meas, pred, exp_id) in enumerate(zip(measured, predicted, simulation_results['experiment_ids'])):
-                ax.annotate(f'E{exp_id}', (meas, pred), xytext=(5, 5), 
+            for i, (orig_meas, pred, exp_id) in enumerate(zip(original_measured, predicted, simulation_results['experiment_ids'])):
+                ax.annotate(f'E{exp_id}', (orig_meas, pred), xytext=(5, 5), 
                            textcoords='offset points', fontsize=8, alpha=0.7)
         
-        min_val = min(np.min(predicted), np.min(measured))
-        max_val = max(np.max(predicted), np.max(measured))
+        min_val = min(np.min(predicted), np.min(original_measured))
+        max_val = max(np.max(predicted), np.max(original_measured))
         
         # Calculate regression line
         from scipy import stats
-        slope, intercept, r_value, p_value_reg, std_err = stats.linregress(measured, predicted)
+        slope, intercept, r_value, p_value_reg, std_err = stats.linregress(original_measured, predicted)
         x_reg = np.linspace(min_val, max_val, 100)
         y_reg = slope * x_reg + intercept
         ax.plot(x_reg, y_reg, 'g-', linewidth=2, alpha=0.8, label='Regression line')
         
         # Add confidence interval bands if requested
         if show_confidence_interval:
-            residuals = predicted - (slope * measured + intercept)
+            residuals = predicted - (slope * original_measured + intercept)
             mse_residuals = np.mean(residuals**2)
             confidence_interval = 1.96 * np.sqrt(mse_residuals)  # 95% CI
             ax.fill_between(x_reg, y_reg - confidence_interval, y_reg + confidence_interval, 
@@ -866,7 +917,7 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', plot_residuals: bool =
         ax.set_title(title, fontsize=12, fontweight='bold')
         ax.grid(True, alpha=0.3)
         ax.legend()
-        ax.set_xlim(np.min(measured) - 0.05, np.max(measured) + 0.05)
+        ax.set_xlim(np.min(original_measured) - 0.05, np.max(original_measured) + 0.05)
         ax.set_ylim(np.min(predicted) - 0.05, np.max(predicted) + 0.05)
         plt.tight_layout()
         
@@ -976,6 +1027,9 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', plot_residuals: bool =
             'Residual': np.array(simulation_results['predicted_values']) - np.array(simulation_results['measured_values']),
             'Absolute_Error': np.abs(np.array(simulation_results['predicted_values']) - np.array(simulation_results['measured_values']))
         }
+        # Add original measured values if normalization was applied
+        if normalize:
+            data['Original_Measured_Value'] = simulation_results['original_measured_values']
         df = pd.DataFrame(data)
         df.to_csv(csv_path, index=False)
         print(f"Results exported to {csv_path}")
