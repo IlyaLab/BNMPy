@@ -121,15 +121,7 @@ class ResultEvaluator:
                 # Handle formula-based measurements
                 if experiment.get('measured_formula'):
                     formula = experiment['measured_formula']
-                    measured_value = float(experiment.get('measured_value', 0.0))
-                    
-                    # Get original measured value if normalization was used
-                    if is_normalized and hasattr(self.evaluator, 'measured_value_range'):
-                        # Denormalize to get original value
-                        min_val, max_val = self.evaluator.measured_value_range
-                        original_value = measured_value * (max_val - min_val) + min_val
-                    else:
-                        original_value = measured_value
+                    original_measured_value = float(experiment.get('measured_value', 0.0))
                     
                     # Compute predicted formula value
                     var_values = {name: predicted_steady_state[idx] for name, idx in self.pbn.nodeDict.items()}
@@ -137,16 +129,16 @@ class ResultEvaluator:
                     
                     # Store as if it's a special "Formula" node
                     exp_predictions['Formula'] = predicted_value
-                    exp_measurements['Formula'] = measured_value
+                    exp_measurements['Formula'] = original_measured_value
                     
-                    # Store for correlation analysis
+                    # Store for correlation analysis ( use original values for plotting)
                     simulation_results['predicted_values'].append(predicted_value)
-                    simulation_results['measured_values'].append(measured_value)
-                    simulation_results['original_measured_values'].append(original_value)
+                    simulation_results['measured_values'].append(original_measured_value)
+                    simulation_results['original_measured_values'].append(original_measured_value)
                     simulation_results['measured_nodes'].append('Formula')
                     simulation_results['experiment_ids'].append(experiment.get('id', i+1))
                     
-                    print(f"  Experiment {i+1}: Formula measurement (predicted={predicted_value:.4f}, measured={measured_value:.4f})")
+                    print(f"  Experiment {i+1}: Formula measurement (predicted={predicted_value:.4f}, measured={original_measured_value:.4f})")
                 else:
                     # Handle regular node-based measurements
                     for node_name, measured_value in experiment['measurements'].items():
@@ -154,20 +146,15 @@ class ResultEvaluator:
                             node_idx = self.pbn.nodeDict[node_name]
                             predicted_value = predicted_steady_state[node_idx]
                             
-                            # Get original measured value if normalization was used
-                            if is_normalized and hasattr(self.evaluator, 'measured_value_range'):
-                                min_val, max_val = self.evaluator.measured_value_range
-                                original_value = measured_value * (max_val - min_val) + min_val
-                            else:
-                                original_value = measured_value
+                            original_measured_value = measured_value
                             
                             exp_predictions[node_name] = predicted_value
-                            exp_measurements[node_name] = measured_value
+                            exp_measurements[node_name] = original_measured_value
                             
-                            # Store for correlation analysis
+                            # Store for correlation analysis ( use original values for plotting)
                             simulation_results['predicted_values'].append(predicted_value)
-                            simulation_results['measured_values'].append(measured_value)
-                            simulation_results['original_measured_values'].append(original_value)
+                            simulation_results['measured_values'].append(original_measured_value)
+                            simulation_results['original_measured_values'].append(original_measured_value)
                             simulation_results['measured_nodes'].append(node_name)
                             simulation_results['experiment_ids'].append(experiment.get('id', i+1))
                     
