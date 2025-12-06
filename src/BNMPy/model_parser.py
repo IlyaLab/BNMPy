@@ -141,13 +141,11 @@ def merge_networks(BNs, method="OR", prob=0.9, descriptive=False):
         for net in network_dicts:
             for g in net:
                 gene_occ[g] += 1
-        if len(BNs) > 1:
-            prob_other = (1 - prob) / (len(BNs) - 1)
-        else:
-            prob_other = 0.0
 
         # For each gene, store rule->prob in dict to allow probability summation
         merged_network = defaultdict(dict)
+        # Track which genes we've already seen (to identify first occurrence)
+        first_occurrence = set()
     else:
         merged_network = {}
 
@@ -160,8 +158,19 @@ def merge_networks(BNs, method="OR", prob=0.9, descriptive=False):
                 if gene_occ[gene] > 1:
                     overlap_genes.add(gene)
 
-                # probability assignment
-                rule_prob = 1.0 if gene_occ[gene] == 1 else (prob if idx == 1 else prob_other)
+                # Determine if this is the first time we're seeing this gene
+                is_first = gene not in first_occurrence
+                if is_first:
+                    first_occurrence.add(gene)
+
+                # probability assignment based on how many networks actually contain this gene
+                if gene_occ[gene] == 1:
+                    rule_prob = 1.0
+                elif is_first:
+                    rule_prob = prob
+                else:
+                    # Split (1 - prob) among the remaining (gene_occ[gene] - 1) networks
+                    rule_prob = (1 - prob) / (gene_occ[gene] - 1)
                 rule_prob = round(rule_prob, 3)
 
                 if expression in merged_network[gene]:
