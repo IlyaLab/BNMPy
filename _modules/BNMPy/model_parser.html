@@ -410,13 +410,11 @@
         <span class="k">for</span> <span class="n">net</span> <span class="ow">in</span> <span class="n">network_dicts</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">net</span><span class="p">:</span>
                 <span class="n">gene_occ</span><span class="p">[</span><span class="n">g</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">BNs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">prob_other</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">prob</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">BNs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">prob_other</span> <span class="o">=</span> <span class="mf">0.0</span>
 
         <span class="c1"># For each gene, store rule-&gt;prob in dict to allow probability summation</span>
         <span class="n">merged_network</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+        <span class="c1"># Track which genes we&#39;ve already seen (to identify first occurrence)</span>
+        <span class="n">first_occurrence</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">merged_network</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -429,8 +427,19 @@
                 <span class="k">if</span> <span class="n">gene_occ</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="n">overlap_genes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gene</span><span class="p">)</span>
 
-                <span class="c1"># probability assignment</span>
-                <span class="n">rule_prob</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">gene_occ</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">(</span><span class="n">prob</span> <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">prob_other</span><span class="p">)</span>
+                <span class="c1"># Determine if this is the first time we&#39;re seeing this gene</span>
+                <span class="n">is_first</span> <span class="o">=</span> <span class="n">gene</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">first_occurrence</span>
+                <span class="k">if</span> <span class="n">is_first</span><span class="p">:</span>
+                    <span class="n">first_occurrence</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gene</span><span class="p">)</span>
+
+                <span class="c1"># probability assignment based on how many networks actually contain this gene</span>
+                <span class="k">if</span> <span class="n">gene_occ</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">rule_prob</span> <span class="o">=</span> <span class="mf">1.0</span>
+                <span class="k">elif</span> <span class="n">is_first</span><span class="p">:</span>
+                    <span class="n">rule_prob</span> <span class="o">=</span> <span class="n">prob</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Split (1 - prob) among the remaining (gene_occ[gene] - 1) networks</span>
+                    <span class="n">rule_prob</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">prob</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">gene_occ</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
                 <span class="n">rule_prob</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">rule_prob</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">expression</span> <span class="ow">in</span> <span class="n">merged_network</span><span class="p">[</span><span class="n">gene</span><span class="p">]:</span>
