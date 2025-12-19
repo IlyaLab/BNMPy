@@ -4,10 +4,10 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html">
 
-    <!-- Generated with Sphinx 8.1.3 and Furo 2025.09.25 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2025.12.19 -->
         <title>BNMPy.phenotype_score - BNMPy 0.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=580074bf" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     
     
@@ -420,7 +420,7 @@
 <div class="viewcode-block" id="phenotype_scores">
 <a class="viewcode-back" href="../../phenotype_score.html#BNMPy.phenotype_score.phenotype_scores">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">phenotype_scores</span><span class="p">(</span><span class="n">phenotypes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;APOPTOSIS&#39;</span><span class="p">,</span> <span class="s1">&#39;DIFFERENTIATION&#39;</span><span class="p">,</span> <span class="s1">&#39;PROLIFERATION&#39;</span><span class="p">],</span> 
-                    <span class="n">file_path</span> <span class="o">=</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">genes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">simulation_results</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">network</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                    <span class="n">file_path</span> <span class="o">=</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">genes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">simulation_results</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">network</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">reversed</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculate phenotype scores for given genes and phenotypes using ProxPath.</span>
 <span class="sd">    If simulation_results is not provided, it will return the formula to calculate the score.</span>
@@ -441,7 +441,8 @@
 <span class="sd">        - dict: steady state results from BN with &#39;fixed_points&#39; and &#39;cyclic_attractors&#39;</span>
 <span class="sd">    network : optional</span>
 <span class="sd">        Network object; only used to infer gene order if &#39;genes&#39; is not provided.</span>
-
+<span class="sd">    reversed : bool, default=False</span>
+<span class="sd">        If True, the phenotype scores will be reversed, i.e., multiply by -1.</span>
 <span class="sd">    Returns:</span>
 <span class="sd">    --------</span>
 <span class="sd">    pd.DataFrame or dict</span>
@@ -498,6 +499,12 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">formulas_dict</span> <span class="o">=</span> <span class="p">{}</span>
     
+    <span class="c1"># if reversed is True, multiply the effect by -1</span>
+    <span class="k">if</span> <span class="nb">reversed</span><span class="p">:</span>
+        <span class="n">effect_sign</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">effect_sign</span> <span class="o">=</span> <span class="mi">1</span>
+
     <span class="c1"># Loop through each phenotype</span>
     <span class="k">for</span> <span class="n">phenotype</span> <span class="ow">in</span> <span class="n">phenotypes</span><span class="p">:</span>
         
@@ -515,16 +522,16 @@
                 <span class="k">if</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">sim_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                     <span class="c1"># Calculate score for each state</span>
                     <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">sim_df</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
-                        <span class="n">results</span><span class="p">[</span><span class="n">state</span><span class="p">][</span><span class="n">phenotype</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sim_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">state</span><span class="p">,</span> <span class="n">gene</span><span class="p">]</span> <span class="o">*</span> <span class="n">effect</span>
+                        <span class="n">results</span><span class="p">[</span><span class="n">state</span><span class="p">][</span><span class="n">phenotype</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sim_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">state</span><span class="p">,</span> <span class="n">gene</span><span class="p">]</span> <span class="o">*</span> <span class="n">effect</span> <span class="o">*</span> <span class="n">effect_sign</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Build terms for the formula string, using appropriate sign placement</span>
-                <span class="k">if</span> <span class="n">effect</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">effect</span> <span class="o">*</span> <span class="n">effect_sign</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="n">terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">gene</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="n">effect</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">elif</span> <span class="n">effect</span> <span class="o">*</span> <span class="n">effect_sign</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
                     <span class="n">terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- </span><span class="si">{</span><span class="n">gene</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">simulation_results</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">formula</span> <span class="o">=</span> <span class="s1">&#39; + &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;+ -&#39;</span><span class="p">,</span> <span class="s1">&#39;- &#39;</span><span class="p">)</span>
+            <span class="n">formula</span> <span class="o">=</span> <span class="s1">&#39; + &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;+ -&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
             <span class="n">formulas_dict</span><span class="p">[</span><span class="n">phenotype</span><span class="p">]</span> <span class="o">=</span> <span class="n">formula</span>
 
     <span class="c1"># Return as DataFrame if simulation_results was provided</span>
