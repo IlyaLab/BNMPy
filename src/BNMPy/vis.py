@@ -9,6 +9,43 @@ from pyvis.network import Network
 import matplotlib.pyplot as plt
 import networkx as nx
 
+def is_entire_rule_negated(rule):
+    """
+    Check if the entire rule is a single negated expression like !(A | B).
+    
+    Returns True for rules like:
+        - !(A | B)
+        - !(A & B & C)
+        - ! (A | B)
+    
+    Returns False for rules like:
+        - !(A) | B  (negation is only partial)
+        - A & !B    (negation is on individual variable)
+        - !A        (no parentheses)
+    """
+    rule = rule.strip()
+    
+    # Check for !( or ! (
+    if rule.startswith("!("):
+        start_idx = 1
+    elif rule.startswith("! ("):
+        start_idx = 2
+    else:
+        return False
+    
+    # Check if opening paren's matching close paren is at the end
+    depth = 0
+    for i in range(start_idx, len(rule)):
+        if rule[i] == '(':
+            depth += 1
+        elif rule[i] == ')':
+            depth -= 1
+            if depth == 0:
+                # Found the matching closing paren
+                return i == len(rule) - 1
+    return False
+
+
 def read_logic_rules(source):
     """
     Reads logic rules from a file path or from a string containing rules.
@@ -155,9 +192,12 @@ def build_igraph(logic_rules):
 
 
 def create_matplotlib_visualization(logic_rules, removed_nodes=None, removed_edges=None, 
-                                  measured_nodes=None, perturbed_nodes=None):
+                                  measured_nodes=None, perturbed_nodes=None, color_node=None):
     """
     Create a matplotlib-based visualization for Jupyter notebooks.
+    
+    Args:
+        color_node (str): If provided, all nodes will use this color (overrides default coloring)
     """
     removed_nodes = removed_nodes or set()
     removed_edges = removed_edges or set()
@@ -252,24 +292,34 @@ def create_matplotlib_visualization(logic_rules, removed_nodes=None, removed_edg
             intermediate_nodes.append(node)
     
     # Draw different node types with proper color scheme
-    if input_nodes:
-        nx.draw_networkx_nodes(G, pos, nodelist=input_nodes, node_color='lightgreen', 
-                             node_size=500, alpha=0.8, label='Input', edgecolors='black')
-    if output_nodes:
-        nx.draw_networkx_nodes(G, pos, nodelist=output_nodes, node_color='yellow', 
-                             node_size=500, alpha=0.8, label='Output', edgecolors='black')
-    if intermediate_nodes:
-        nx.draw_networkx_nodes(G, pos, nodelist=intermediate_nodes, node_color='lightblue', 
-                             node_size=500, alpha=0.8, label='Intermediate', edgecolors='black')
-    if removed_node_list:
-        nx.draw_networkx_nodes(G, pos, nodelist=removed_node_list, node_color='lightgrey', 
-                             node_size=500, alpha=0.6, label='Removed', edgecolors='black')
-    if perturbed_node_list:
-        nx.draw_networkx_nodes(G, pos, nodelist=perturbed_node_list, node_color='red', 
-                             node_size=500, alpha=0.8, label='Perturbed', edgecolors='black')
-    if measured_node_list:
-        nx.draw_networkx_nodes(G, pos, nodelist=measured_node_list, node_color='orange', 
-                             node_size=500, alpha=0.8, label='Measured', edgecolors='black')
+    # If a uniform color is provided, use it for all nodes
+    if color_node:
+        all_normal_nodes = input_nodes + output_nodes + intermediate_nodes + perturbed_node_list + measured_node_list
+        if all_normal_nodes:
+            nx.draw_networkx_nodes(G, pos, nodelist=all_normal_nodes, node_color=color_node, 
+                                 node_size=500, alpha=0.8, edgecolors='black')
+        if removed_node_list:
+            nx.draw_networkx_nodes(G, pos, nodelist=removed_node_list, node_color='lightgrey', 
+                                 node_size=500, alpha=0.6, label='Removed', edgecolors='black')
+    else:
+        if input_nodes:
+            nx.draw_networkx_nodes(G, pos, nodelist=input_nodes, node_color='lightgreen', 
+                                 node_size=500, alpha=0.8, label='Input', edgecolors='black')
+        if output_nodes:
+            nx.draw_networkx_nodes(G, pos, nodelist=output_nodes, node_color='yellow', 
+                                 node_size=500, alpha=0.8, label='Output', edgecolors='black')
+        if intermediate_nodes:
+            nx.draw_networkx_nodes(G, pos, nodelist=intermediate_nodes, node_color='lightblue', 
+                                 node_size=500, alpha=0.8, label='Intermediate', edgecolors='black')
+        if removed_node_list:
+            nx.draw_networkx_nodes(G, pos, nodelist=removed_node_list, node_color='lightgrey', 
+                                 node_size=500, alpha=0.6, label='Removed', edgecolors='black')
+        if perturbed_node_list:
+            nx.draw_networkx_nodes(G, pos, nodelist=perturbed_node_list, node_color='red', 
+                                 node_size=500, alpha=0.8, label='Perturbed', edgecolors='black')
+        if measured_node_list:
+            nx.draw_networkx_nodes(G, pos, nodelist=measured_node_list, node_color='orange', 
+                                 node_size=500, alpha=0.8, label='Measured', edgecolors='black')
     # Draw edges
     normal_edges = [(u, v) for u, v in G.edges() if (u, v) not in removed_edges]
     removed_edge_list = [(u, v) for u, v in G.edges() if (u, v) in removed_edges]
@@ -288,8 +338,8 @@ def create_matplotlib_visualization(logic_rules, removed_nodes=None, removed_edg
     plt.axis('off')
     plt.tight_layout()
     
-    # Add legend if there are different node types
-    if perturbed_node_list or measured_node_list or input_nodes or intermediate_nodes or output_nodes or removed_node_list:
+    # Add legend if there are different node types (not when uniform color is used)
+    if not color_node and (perturbed_node_list or measured_node_list or input_nodes or intermediate_nodes or output_nodes or removed_node_list):
         plt.legend(loc='upper right', bbox_to_anchor=(1, 1))
     
     plt.show()
@@ -297,7 +347,8 @@ def create_matplotlib_visualization(logic_rules, removed_nodes=None, removed_edg
 
 
 def vis_network(source, output_html="network_graph.html", interactive=False, 
-                   removed_nodes=None, removed_edges=None, measured_nodes=None, perturbed_nodes=None):
+                   removed_nodes=None, removed_edges=None, measured_nodes=None, perturbed_nodes=None,
+                   color_node=None, color_edge=None, physics=True):
     """
     Visualize the logic graph using PyVis and igraph.
 
@@ -310,6 +361,10 @@ def vis_network(source, output_html="network_graph.html", interactive=False,
         removed_edges (set): Set of edge tuples that were removed (shown in grey)
         measured_nodes (set): Set of node names that are measured (shown in orange)
         perturbed_nodes (set): Set of node names that are perturbed (shown in red)
+        color_node (str): If provided, all nodes will use this color (e.g., 'lightblue', '#FF5733')
+        color_edge (str): If provided, all edges will use this color. If None, edges are colored
+                         by regulation type (blue for inhibition, red for activation)
+        physics (bool): If True, enable physics simulation
     """
     # Handle different input types
     if hasattr(source, 'nodeDict'):  # BooleanNetwork or ProbabilisticBN
@@ -335,7 +390,7 @@ def vis_network(source, output_html="network_graph.html", interactive=False,
     # For non-interactive mode, use matplotlib visualization
     if not interactive:
         return create_matplotlib_visualization(logic_rules, removed_nodes, removed_edges, 
-                                                  measured_nodes, perturbed_nodes)
+                                                  measured_nodes, perturbed_nodes, color_node=color_node)
 
     # For interactive mode, use pyvis
     # Check if this is PBN (multiple rules per node)
@@ -357,38 +412,64 @@ def vis_network(source, output_html="network_graph.html", interactive=False,
         directed=True
     )
     
-    # Set network options to match the working example
-    net.set_options("""
-    var options = {
-        "configure": {
-            "enabled": false
-        },
-        "edges": {
-            "color": {
-                "inherit": true
+    # Set network options
+    if physics:
+        net.set_options("""
+        var options = {
+            "configure": {
+                "enabled": false
             },
-            "smooth": {
+            "edges": {
+                "color": {
+                    "inherit": true
+                },
+                "smooth": {
+                    "enabled": true,
+                    "type": "dynamic"
+                }
+            },
+            "interaction": {
+                "dragNodes": true,
+                "hideEdgesOnDrag": false,
+                "hideNodesOnDrag": false
+            },
+            "physics": {
                 "enabled": true,
-                "type": "dynamic"
-            }
-        },
-        "interaction": {
-            "dragNodes": true,
-            "hideEdgesOnDrag": false,
-            "hideNodesOnDrag": false
-        },
-        "physics": {
-            "enabled": true,
-            "stabilization": {
-                "enabled": true,
-                "fit": true,
-                "iterations": 1000,
-                "onlyDynamicEdges": false,
-                "updateInterval": 50
+                "stabilization": {
+                    "enabled": true,
+                    "fit": true,
+                    "iterations": 1000,
+                    "onlyDynamicEdges": false,
+                    "updateInterval": 50
+                }
             }
         }
-    }
-    """)
+        """)
+    else:
+        net.set_options("""
+        var options = {
+            "configure": {
+                "enabled": false
+            },
+            "edges": {
+                "color": {
+                    "inherit": true
+                },
+                "smooth": {
+                    "enabled": true,
+                    "type": "dynamic"
+                }
+            },
+            "interaction": {
+                "dragNodes": true,
+                "hideEdgesOnDrag": false,
+                "hideNodesOnDrag": false
+            },
+            "physics": {
+                "enabled": false
+            }
+        }
+        """)
 
     # Add nodes to the PyVis network
     nodes_added = []
@@ -397,17 +478,22 @@ def vis_network(source, output_html="network_graph.html", interactive=False,
         upstream_count = len([pred for pred in g.predecessors(v.index) if pred != v.index])
         downstream_count = len([succ for succ in g.successors(v.index) if succ != v.index])
         
+        # If uniform color is provided, use it for all non-removed nodes
+        if color_node and node_name not in removed_nodes:
+            node_color = color_node
+            font_color = "black"
+            nodes_added.append(f"{node_name}")
         # Set color based on removal status and node type
-        if node_name in removed_nodes:
-            color = "lightgrey"
+        elif node_name in removed_nodes:
+            node_color = "lightgrey"
             font_color = "grey"
             nodes_added.append(f"{node_name} (removed)")
         elif node_name in perturbed_nodes:
-            color = "red"
+            node_color = "red"
             font_color = "white"
             nodes_added.append(f"{node_name} (perturbed)")
         elif node_name in measured_nodes:
-            color = "orange"
+            node_color = "orange"
             font_color = "black"
             nodes_added.append(f"{node_name} (measured)")
         else:
@@ -437,15 +523,15 @@ def vis_network(source, output_html="network_graph.html", interactive=False,
             
             # Set colors based on node type
             if is_input:
-                color = "lightgreen"  # Light green for inputs
+                node_color = "lightgreen"  # Light green for inputs
                 font_color = "black"
                 nodes_added.append(f"{node_name} (input)")
             elif is_output:
-                color = "yellow"  # Yellow for outputs
+                node_color = "yellow"  # Yellow for outputs
                 font_color = "black"
                 nodes_added.append(f"{node_name} (output)")
             else:
-                color = "lightblue"  # Light blue for intermediate nodes
+                node_color = "lightblue"  # Light blue for intermediate nodes
                 font_color = "black"
                 nodes_added.append(f"{node_name} (intermediate)")
 
@@ -453,9 +539,10 @@ def vis_network(source, output_html="network_graph.html", interactive=False,
             v.index, 
             label=node_name, 
             title=node_name, 
-            color=color, 
+            color=node_color, 
             size=40,
-            font={'size': 20, 'color': font_color}
+            font={'size': 20, 'color': font_color},
+            shape='dot'
         )
 
     # Add edges to the PyVis network
@@ -485,7 +572,26 @@ def vis_network(source, output_html="network_graph.html", interactive=False,
             edge_width = 1
             edge_alpha = 0.3
             edges_added.append(f"{src_name}->{tgt_name} (removed)")
+        elif color_edge:
+            # Use uniform edge color if provided
+            edge_color = color_edge
+            edge_width = 2
+            edge_alpha = edge_prob if is_pbn else 1.0
+            edges_added.append(f"{src_name}->{tgt_name}")
+        elif is_entire_rule_negated(rule_label) and src_name in rule_label:
+            # Entire rule is negated like !(A | B), all sources are direct inhibitors
+            edge_color = "blue"
+            edge_width = 2
+            edge_alpha = edge_prob if is_pbn else 1.0
+            edges_added.append(f"{src_name}->{tgt_name} (direct inhibitory)")
+        elif f"!{src_name}" in rule_label or f"! {src_name}" in rule_label:
+            # Direct negation of specific variable like !A or ! A
+            edge_color = "blue"
+            edge_width = 2
+            edge_alpha = edge_prob if is_pbn else 1.0
+            edges_added.append(f"{src_name}->{tgt_name} (direct inhibitory)")
         elif rule_label.startswith("!(") and src_name in rule_label:
+            # Partial negation like !(A) | B, source is inside negated part
             edge_color = "grey"
             edge_width = 2
             edge_alpha = edge_prob if is_pbn else 1.0
@@ -500,11 +606,6 @@ def vis_network(source, output_html="network_graph.html", interactive=False,
             edge_width = 2
             edge_alpha = edge_prob if is_pbn else 1.0
             edges_added.append(f"{src_name}->{tgt_name} (inhibitory)")
-        elif f"!{src_name}" in rule_label or f"! {src_name}" in rule_label:
-            edge_color = "blue"
-            edge_width = 2
-            edge_alpha = edge_prob if is_pbn else 1.0
-            edges_added.append(f"{src_name}->{tgt_name} (direct inhibitory)")
         else:
             edge_color = "red"
             edge_width = 2
@@ -531,32 +632,34 @@ def vis_network(source, output_html="network_graph.html", interactive=False,
             width=edge_width
         )
 
-    # Add legend for interactive mode
-    legend_x = -1500  # Position legend to the left
-    legend_y_start = -800
-    legend_spacing = 120
-    
-    legend_items = [
-        ("Input", "lightgreen", "black"),
-        ("Output", "yellow", "black"), 
-        ("Intermediate", "lightblue", "black"),
-        ("Measured", "orange", "black"),
-        ("Perturbed", "red", "white"),
-        ("Removed", "lightgrey", "grey")
-    ]
-    
-    for i, (label, color, font_color) in enumerate(legend_items):
-        net.add_node(
-            f"legend_{i}",
-            label=label,
-            title=f"{label} nodes",
-            color=color,
-            size=30,
-            x=legend_x,
-            y=legend_y_start + i * legend_spacing,
-            physics=False,  # Keep legend nodes fixed
-            font={'size': 14, 'color': font_color}
-        )
+    # Add legend for interactive mode (skip if uniform color is used)
+    if not color_node:
+        legend_x = -1500  # Position legend to the left
+        legend_y_start = -800
+        legend_spacing = 120
+        
+        legend_items = [
+            ("Input", "lightgreen", "black"),
+            ("Output", "yellow", "black"), 
+            ("Intermediate", "lightblue", "black"),
+            ("Measured", "orange", "black"),
+            ("Perturbed", "red", "white"),
+            ("Removed", "lightgrey", "grey")
+        ]
+        
+        for i, (label, legend_color, legend_font_color) in enumerate(legend_items):
+            net.add_node(
+                f"legend_{i}",
+                label=label,
+                title=f"{label} nodes",
+                color=legend_color,
+                size=30,
+                shape='dot',
+                x=legend_x,
+                y=legend_y_start + i * legend_spacing,
+                physics=False,  # Keep legend nodes fixed
+                font={'size': 14, 'color': legend_font_color}
+            )
 
     # Save the network
     net.save_graph(output_html)
@@ -610,15 +713,25 @@ def vis_compression(original_network, compressed_network,
     )
 
 
-def vis_extension(original_network, extended_network, output_html="extension_comparison.html", interactive=False):
+def vis_extension(original_network, extended_network, output_html="network+KG.html", interactive=True,
+                  color_node='lightblue', color_edge=None, extension_color_node='#E1F2D0', 
+                  extension_color_edge=None, physics=True):
     """
-    Visualize the extended network with new nodes and edges highlighted.
+    Visualize the network with KG (Knowledge Graph) extension, highlighting new nodes and edges.
     
     Args:
         original_network: Original BooleanNetwork or ProbabilisticBN
         extended_network: Extended network with additional nodes/edges
         output_html (str): Output HTML file name
         interactive (bool): If True, return network visualization in interactive html file
+        color_node (str): Color for nodes from the original network (e.g., 'lightblue', '#FF5733').
+                         If None, nodes are colored by type (input/output/intermediate)
+        color_edge (str): Color for edges from the original network. If None, edges are colored
+                         by regulation type (blue for inhibition, red for activation)
+        extension_color_node (str): Color for new nodes present only in KG (e.g., '#E1F2D0')
+        extension_color_edge (str): Color for new edges present only in KG. If None, edges are 
+                                   colored by regulation type (blue for inhibition, red for activation)
+        physics (bool): If True, enable physics simulation
     """
     # Extract logic rules from both networks
     original_rules, _ = extract_logic_rules_from_network(original_network)
@@ -677,7 +790,9 @@ def vis_extension(original_network, extended_network, output_html="extension_com
     
     # For non-interactive mode, use matplotlib visualization with highlights
     if not interactive:
-        return create_matplotlib_extension_visualization(extended_rules, new_nodes, new_edges)
+        return create_matplotlib_extension_visualization(extended_rules, new_nodes, new_edges,
+                                                         color_node=color_node, extension_color_node=extension_color_node,
+                                                         extension_color_edge=extension_color_edge)
     
     # For interactive mode, use the extended network but highlight new elements
     # Check if this is PBN
@@ -700,80 +815,93 @@ def vis_extension(original_network, extended_network, output_html="extension_com
     )
     
     # Set network options
-    net.set_options("""
-    var options = {
-        "configure": {
-            "enabled": false
-        },
-        "edges": {
-            "color": {
-                "inherit": true
+    if physics:
+        net.set_options("""
+        var options = {
+            "configure": {
+                "enabled": false
             },
-            "smooth": {
+            "edges": {
+                "color": {
+                    "inherit": true
+                },
+                "smooth": {
+                    "enabled": true,
+                    "type": "dynamic"
+                }
+            },
+            "interaction": {
+                "dragNodes": true,
+                "hideEdgesOnDrag": false,
+                "hideNodesOnDrag": false
+            },
+            "physics": {
                 "enabled": true,
-                "type": "dynamic"
-            }
-        },
-        "interaction": {
-            "dragNodes": true,
-            "hideEdgesOnDrag": false,
-            "hideNodesOnDrag": false
-        },
-        "physics": {
-            "enabled": true,
-            "stabilization": {
-                "enabled": true,
-                "fit": true,
-                "iterations": 1000,
-                "onlyDynamicEdges": false,
-                "updateInterval": 50
+                "stabilization": {
+                    "enabled": true,
+                    "fit": true,
+                    "iterations": 1000,
+                    "onlyDynamicEdges": false,
+                    "updateInterval": 50
+                }
             }
         }
-    }
-    """)
+        """)
+    else:
+        net.set_options("""
+        var options = {
+            "configure": {
+                "enabled": false
+            },
+            "edges": {
+                "color": {
+                    "inherit": true
+                },
+                "smooth": {
+                    "enabled": true,
+                    "type": "dynamic"
+                }
+            },
+            "interaction": {
+                "dragNodes": true,
+                "hideEdgesOnDrag": false,
+                "hideNodesOnDrag": false
+            },
+            "physics": {
+                "enabled": false
+            }
+        }
+        """)
 
     # Add nodes to the PyVis network
     for v in g.vs:
         node_name = v["name"]
-        upstream_count = len([pred for pred in g.predecessors(v.index) if pred != v.index])
-        downstream_count = len([succ for succ in g.successors(v.index) if succ != v.index])
         
-        # Check if this is a new node
+        # Check if this is a new node (from KG extension)
         is_new_node = node_name in new_nodes
         
-        # Determine base node type and color
-        if upstream_count == 0:
-            base_color = "lightgreen"  # Input
-            font_color = "black"
-            node_type = "input"
-        elif downstream_count == 0:
-            base_color = "yellow"  # Output
-            font_color = "black" 
-            node_type = "output"
-        else:
-            base_color = "lightblue"  # Intermediate
-            font_color = "black"
-            node_type = "intermediate"
-        
-        # Add orange border for new nodes
+        # Set node color based on whether it's from original network or KG extension
         if is_new_node:
-            border_color = "orange"
-            border_width = 4
-            title = f"{node_name} (NEW {node_type})"
-            node_color = {'background': base_color, 'border': border_color}
+            node_color = extension_color_node
+            title = f"{node_name} (from KG)"
+        elif color_node:
+            node_color = color_node
+            title = f"{node_name} (original)"
         else:
-            border_width = 0
-            title = f"{node_name} ({node_type})"
-            node_color = base_color  # No border for existing nodes
+            # Default color based on node type
+            node_color = "lightblue"
+            title = f"{node_name} (original)"
+        
+        font_color = "black"
 
         net.add_node(
             v.index, 
             label=node_name, 
             title=title, 
             color=node_color,
-            borderWidth=border_width,
             size=40,
-            font={'size': 20, 'color': font_color}
+            font={'size': 20, 'color': font_color},
+            shape='dot'
         )
 
     # Add edges to the PyVis network
@@ -797,26 +925,34 @@ def vis_extension(original_network, extended_network, output_html="extension_com
             edge_title = f"{tgt_name} = {rule_label}"
         
         if is_new_edge:
-            edge_title += " (NEW)"
+            edge_title += " (from KG)"
+        
+        # Determine if this is an inhibitory edge based on rule
+        is_inhibitory = (
+            (is_entire_rule_negated(rule_label) and src_name in rule_label) or
+            f"!{src_name}" in rule_label or 
+            f"! {src_name}" in rule_label or
+            (rule_label.startswith("!(") and src_name in rule_label) or
+            (rule_label.startswith("! (") and src_name in rule_label) or
+            ("! (" in rule_label and src_name in rule_label)
+        )
         
         # Set edge color and style
         if is_new_edge:
-            edge_color = "orange"
-            edge_width = 4
-        elif rule_label.startswith("!(") and src_name in rule_label:
-            edge_color = "grey"
-            edge_width = 2
-        elif rule_label.startswith("! (") and src_name in rule_label:
-            edge_color = "grey" 
-            edge_width = 2
-        elif "! (" in rule_label and src_name in rule_label:
-            edge_color = "grey"
-            edge_width = 2
-        elif f"!{src_name}" in rule_label or f"! {src_name}" in rule_label:
-            edge_color = "blue"
-            edge_width = 2
+            # New edge from KG
+            if extension_color_edge:
+                edge_color = extension_color_edge
+            else:
+                # Fall back to regulation type
+                edge_color = "blue" if is_inhibitory else "red"
+            edge_width = 3
         else:
-            edge_color = "red"
+            # Original network edge
+            if color_edge:
+                edge_color = color_edge
+            else:
+                # Fall back to regulation type
+                edge_color = "blue" if is_inhibitory else "red"
             edge_width = 2
         
         # For PBN, adjust edge width and transparency based on probability
@@ -844,50 +980,46 @@ def vis_extension(original_network, extended_network, output_html="extension_com
     legend_y_start = -800
     legend_spacing = 120
     
-    legend_items = [
-        ("Input", "lightgreen", "black"),
-        ("Output", "yellow", "black"), 
-        ("Intermediate", "lightblue", "black"),
-        ("New Node", "white", "black", "orange")
-    ]
+    # Build legend items based on what colors are being used
+    legend_items = []
+    if color_node:
+        legend_items.append(("Original Network", color_node, "black"))
+    legend_items.append(("KG Extension (Node)", extension_color_node, "black"))
+    if extension_color_edge:
+        legend_items.append(("KG Extension (Edge)", extension_color_edge, "black"))
     
-    for i, item in enumerate(legend_items):
-        if len(item) == 4:  # Node with border
-            label, color, font_color, border_color = item
-            net.add_node(
-                f"legend_{i}",
-                label=label,
-                title=f"{label}",
-                color={'background': color, 'border': border_color},
-                borderWidth=4 if border_color == "orange" else 1,
-                size=30,
-                x=legend_x,
-                y=legend_y_start + i * legend_spacing,
-                physics=False,
-                font={'size': 14, 'color': font_color}
-            )
-        else:
-            label, color, font_color = item
-            net.add_node(
-                f"legend_{i}",
-                label=label,
-                title=f"{label}",
-                color=color,
-                size=30,
-                x=legend_x,
-                y=legend_y_start + i * legend_spacing,
-                physics=False,
-                font={'size': 14, 'color': font_color}
-            )
+    for i, (label, legend_color, font_color) in enumerate(legend_items):
+        net.add_node(
+            f"legend_{i}",
+            label=label,
+            title=f"{label}",
+            color=legend_color,
+            size=30,
+            shape='dot',
+            x=legend_x,
+            y=legend_y_start + i * legend_spacing,
+            physics=False,
+            font={'size': 14, 'color': font_color}
+        )
 
     # Save the network
     net.save_graph(output_html)
     print(f"Extension visualization saved to {output_html}")
 
 
-def create_matplotlib_extension_visualization(logic_rules, new_nodes, new_edges):
+def create_matplotlib_extension_visualization(logic_rules, new_nodes, new_edges,
+                                              color_node='lightblue', extension_color_node='#E1F2D0',
+                                              extension_color_edge=None):
     """
     Create a matplotlib-based visualization for extension comparison.
+    
+    Args:
+        logic_rules: Dictionary of logic rules
+        new_nodes: Set of new node names from KG extension
+        new_edges: Set of new edge tuples from KG extension
+        color_node (str): Color for nodes from the original network
+        extension_color_node (str): Color for new nodes from KG
+        extension_color_edge (str): Color for new edges from KG. If None, uses default color
     """
     # Create networkx graph
     G = nx.DiGraph()
@@ -934,32 +1066,14 @@ def create_matplotlib_extension_visualization(logic_rules, new_nodes, new_edges)
     existing_nodes = [n for n in G.nodes() if n not in new_nodes]
     new_node_list = [n for n in G.nodes() if n in new_nodes]
     
-    # Categorize existing nodes
-    input_nodes = []
-    output_nodes = []
-    intermediate_nodes = []
-    
-    for node in existing_nodes:
-        if G.in_degree(node) == 0:
-            input_nodes.append(node)
-        elif G.out_degree(node) == 0:
-            output_nodes.append(node)
-        else:
-            intermediate_nodes.append(node)
-    
-    # Draw nodes
-    if input_nodes:
-        nx.draw_networkx_nodes(G, pos, nodelist=input_nodes, node_color='lightgreen', 
-                             node_size=500, alpha=0.8, label='Input', edgecolors='black')
-    if output_nodes:
-        nx.draw_networkx_nodes(G, pos, nodelist=output_nodes, node_color='yellow', 
-                             node_size=500, alpha=0.8, label='Output', edgecolors='black')
-    if intermediate_nodes:
-        nx.draw_networkx_nodes(G, pos, nodelist=intermediate_nodes, node_color='lightblue', 
-                             node_size=500, alpha=0.8, label='Intermediate', edgecolors='black')
+    # Draw nodes with custom colors
+    original_node_color = color_node if color_node else 'lightblue'
+    if existing_nodes:
+        nx.draw_networkx_nodes(G, pos, nodelist=existing_nodes, node_color=original_node_color, 
+                             node_size=500, alpha=0.8, label='Original Network', edgecolors='black')
     if new_node_list:
-        nx.draw_networkx_nodes(G, pos, nodelist=new_node_list, node_color='white', 
-                             node_size=500, alpha=0.8, label='New Nodes', edgecolors='orange', linewidths=3)
+        nx.draw_networkx_nodes(G, pos, nodelist=new_node_list, node_color=extension_color_node, 
+                             node_size=500, alpha=0.8, label='KG Extension', edgecolors='black')
     
     # Draw edges
     existing_edges = [(u, v) for u, v in G.edges() if (u, v) not in new_edges]
@@ -969,13 +1083,14 @@ def create_matplotlib_extension_visualization(logic_rules, new_nodes, new_edges)
         nx.draw_networkx_edges(G, pos, edgelist=existing_edges, edge_color='black', 
                              arrows=True, arrowsize=20, alpha=0.6)
     if new_edge_list:
-        nx.draw_networkx_edges(G, pos, edgelist=new_edge_list, edge_color='orange', 
+        new_edge_color = extension_color_edge if extension_color_edge else 'orange'
+        nx.draw_networkx_edges(G, pos, edgelist=new_edge_list, edge_color=new_edge_color, 
                              arrows=True, arrowsize=20, alpha=0.8, width=3)
     
     # Draw labels
     nx.draw_networkx_labels(G, pos, font_size=10, font_weight='bold')
     
-    plt.title("Network Extension Visualization", fontsize=14, fontweight='bold')
+    plt.title("Network + KG Extension Visualization", fontsize=14, fontweight='bold')
     plt.axis('off')
     plt.tight_layout()
     
