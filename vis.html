@@ -256,6 +256,26 @@
           <section id="module-BNMPy.vis">
 <span id="bnmpy-vis"></span><h1>BNMPy.vis<a class="headerlink" href="#module-BNMPy.vis" title="Link to this heading">¶</a></h1>
 <dl class="py function">
+<dt class="sig sig-object py" id="BNMPy.vis.is_entire_rule_negated">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">is_entire_rule_negated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rule</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#is_entire_rule_negated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.is_entire_rule_negated" title="Link to this definition">¶</a></dt>
+<dd><p>Check if the entire rule is a single negated expression like !(A | B).</p>
+<dl class="simple">
+<dt>Returns True for rules like:</dt><dd><ul class="simple">
+<li><p>!(A | B)</p></li>
+<li><p>!(A &amp; B &amp; C)</p></li>
+<li><p>! (A | B)</p></li>
+</ul>
+</dd>
+<dt>Returns False for rules like:</dt><dd><ul class="simple">
+<li><p>!(A) | B  (negation is only partial)</p></li>
+<li><p>A &amp; !B    (negation is on individual variable)</p></li>
+<li><p>!A        (no parentheses)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="BNMPy.vis.read_logic_rules">
 <span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">read_logic_rules</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#read_logic_rules"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.read_logic_rules" title="Link to this definition">¶</a></dt>
 <dd><p>Reads logic rules from a file path or from a string containing rules.</p>
@@ -294,13 +314,17 @@ dict: Mapping from edges to probabilities (for PBN) or empty dict (for BN)</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="BNMPy.vis.create_matplotlib_visualization">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">create_matplotlib_visualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logic_rules</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removed_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#create_matplotlib_visualization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.create_matplotlib_visualization" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">create_matplotlib_visualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logic_rules</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removed_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#create_matplotlib_visualization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.create_matplotlib_visualization" title="Link to this definition">¶</a></dt>
 <dd><p>Create a matplotlib-based visualization for Jupyter notebooks.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>color_node (str): If provided, all nodes will use this color (overrides default coloring)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="BNMPy.vis.vis_network">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">vis_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_html</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'network_graph.html'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removed_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#vis_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.vis_network" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">vis_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_html</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'network_graph.html'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removed_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measured_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbed_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_edge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">physics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#vis_network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.vis_network" title="Link to this definition">¶</a></dt>
 <dd><p>Visualize the logic graph using PyVis and igraph.</p>
 <dl>
 <dt>Args:</dt><dd><dl class="simple">
@@ -312,7 +336,13 @@ interactive (bool): If True, return the network visualization in interactive htm
 removed_nodes (set): Set of node names that were removed (shown in grey)
 removed_edges (set): Set of edge tuples that were removed (shown in grey)
 measured_nodes (set): Set of node names that are measured (shown in orange)
-perturbed_nodes (set): Set of node names that are perturbed (shown in red)</p>
+perturbed_nodes (set): Set of node names that are perturbed (shown in red)
+color_node (str): If provided, all nodes will use this color (e.g., ‘lightblue’, ‘#FF5733’)
+color_edge (str): If provided, all edges will use this color. If None, edges are colored</p>
+<blockquote>
+<div><p>by regulation type (blue for inhibition, red for activation)</p>
+</div></blockquote>
+<p>physics (bool): If True, enable physics simulation</p>
 </dd>
 </dl>
 </dd></dl>
@@ -333,21 +363,44 @@ interactive (bool): If True, return network visualization in interactive html fi
 
 <dl class="py function">
 <dt class="sig sig-object py" id="BNMPy.vis.vis_extension">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">vis_extension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">original_network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extended_network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_html</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'extension_comparison.html'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#vis_extension"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.vis_extension" title="Link to this definition">¶</a></dt>
-<dd><p>Visualize the extended network with new nodes and edges highlighted.</p>
-<dl class="simple">
+<span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">vis_extension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">original_network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extended_network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_html</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'network+KG.html'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightblue'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_edge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension_color_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'#E1F2D0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension_color_edge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">physics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#vis_extension"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.vis_extension" title="Link to this definition">¶</a></dt>
+<dd><p>Visualize the network with KG (Knowledge Graph) extension, highlighting new nodes and edges.</p>
+<dl>
 <dt>Args:</dt><dd><p>original_network: Original BooleanNetwork or ProbabilisticBN
 extended_network: Extended network with additional nodes/edges
 output_html (str): Output HTML file name
-interactive (bool): If True, return network visualization in interactive html file</p>
+interactive (bool): If True, return network visualization in interactive html file
+color_node (str): Color for nodes from the original network (e.g., ‘lightblue’, ‘#FF5733’).</p>
+<blockquote>
+<div><p>If None, nodes are colored by type (input/output/intermediate)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>color_edge (str): Color for edges from the original network. If None, edges are colored</dt><dd><p>by regulation type (blue for inhibition, red for activation)</p>
+</dd>
+</dl>
+<p>extension_color_node (str): Color for new nodes present only in KG (e.g., ‘#E1F2D0’)
+extension_color_edge (str): Color for new edges present only in KG. If None, edges are</p>
+<blockquote>
+<div><p>colored by regulation type (blue for inhibition, red for activation)</p>
+</div></blockquote>
+<p>physics (bool): If True, enable physics simulation</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="BNMPy.vis.create_matplotlib_extension_visualization">
-<span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">create_matplotlib_extension_visualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logic_rules</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_edges</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#create_matplotlib_extension_visualization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.create_matplotlib_extension_visualization" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">BNMPy.vis.</span></span><span class="sig-name descname"><span class="pre">create_matplotlib_extension_visualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logic_rules</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lightblue'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension_color_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'#E1F2D0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension_color_edge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BNMPy/vis.html#create_matplotlib_extension_visualization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#BNMPy.vis.create_matplotlib_extension_visualization" title="Link to this definition">¶</a></dt>
 <dd><p>Create a matplotlib-based visualization for extension comparison.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>logic_rules: Dictionary of logic rules
+new_nodes: Set of new node names from KG extension
+new_edges: Set of new edge tuples from KG extension
+color_node (str): Color for nodes from the original network
+extension_color_node (str): Color for new nodes from KG
+extension_color_edge (str): Color for new edges from KG. If None, uses default color</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -408,6 +461,7 @@ interactive (bool): If True, return network visualization in interactive html fi
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">BNMPy.vis</a><ul>
+<li><a class="reference internal" href="#BNMPy.vis.is_entire_rule_negated"><code class="docutils literal notranslate"><span class="pre">is_entire_rule_negated()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.vis.read_logic_rules"><code class="docutils literal notranslate"><span class="pre">read_logic_rules()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.vis.extract_logic_rules_from_network"><code class="docutils literal notranslate"><span class="pre">extract_logic_rules_from_network()</span></code></a></li>
 <li><a class="reference internal" href="#BNMPy.vis.build_igraph_pbn"><code class="docutils literal notranslate"><span class="pre">build_igraph_pbn()</span></code></a></li>
