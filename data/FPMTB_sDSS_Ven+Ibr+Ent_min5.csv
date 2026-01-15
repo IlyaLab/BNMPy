@@ -1,0 +1,13 @@
+Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values,n_patients,std,drug
+1,,,BTK,1,DSS,0.71,90,1.61,Ibrutinib
+2,,,SYK,1,DSS,0.43,52,1.19,Entospletinib
+3,,,BCL2,1,DSS,8.04,78,9.61,Venetoclax
+4,FLT3,1,BTK,1,DSS,0.72,5,1.61,Ibrutinib
+5,,,"BTK,NPM1","1,1",DSS,0.43,9,0.72,Ibrutinib
+6,,,"NPM1,SYK","1,1",DSS,1.07,6,2.24,Entospletinib
+7,,,"BCL2,NPM1","1,1",DSS,8.73,7,9.11,Venetoclax
+8,,,"BTK,DNMT3A","1,1",DSS,0.55,12,1.30,Ibrutinib
+9,,,"DNMT3A,SYK","1,1",DSS,0.27,7,0.68,Entospletinib
+10,,,"BCL2,DNMT3A","1,1",DSS,8.00,7,10.44,Venetoclax
+11,,,"BTK,DNMT3A,NPM1","1,1,1",DSS,0.60,6,0.83,Ibrutinib
+12,,,"BCL2,DNMT3A,NPM1","1,1,1",DSS,13.23,5,11.77,Venetoclax

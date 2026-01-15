@@ -7,11 +7,12 @@ class ExperimentData:
     """
     
     @staticmethod
-    def load_from_csv(csv_file):
+    def load_from_csv(csv_file, use_formula: bool = False):
         """
         Load experiments from CSV file
 
         Only required columns are used. Extra columns in the CSV are ignored.
+        If use_formula is True, the Measured_nodes column should contain the formula string, and Measured_values must have a single value per row.
 
         CSV Format:
         Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values
@@ -60,19 +61,9 @@ class ExperimentData:
 
         for _, row in df.iterrows():
             # Use .get to avoid KeyError if column is missing
-            measured_nodes = ExperimentData._parse_node_list(row.get('Measured_nodes', ''))
+            measured_nodes_field = row.get('Measured_nodes', '')
+            measured_nodes = ExperimentData._parse_node_list(measured_nodes_field)
             measured_values = ExperimentData._parse_value_list(row.get('Measured_values', ''))
-
-            # Validate that we have the same number of nodes and values
-            if len(measured_nodes) != len(measured_values):
-                raise ValueError(f"Experiment {row.get('Experiments', '')}: Number of measured nodes "
-                                 f"({len(measured_nodes)}) does not match "
-                                 f"number of measured values ({len(measured_values)})")
-
-            # Normalize values if necessary
-            if measured_values and max(measured_values) > 1:
-                max_val = max(measured_values)
-                measured_values = [v / max_val for v in measured_values]
 
             # Parse stimuli and their efficacies
             stimuli = ExperimentData._parse_node_list(row.get('Stimuli', ''))
@@ -90,13 +81,34 @@ class ExperimentData:
             if not inhibitors_efficacy and inhibitors:
                 inhibitors_efficacy = [1.0] * len(inhibitors)
 
+            # Determine if Measured_nodes should be treated as a formula
+            measured_formula = None
+            measured_value = None
+            if use_formula and isinstance(measured_nodes_field, str) and measured_nodes_field.strip() != '':
+                measured_formula = str(measured_nodes_field).strip().strip('"\'')
+                # For formula-based measurements, expect a single measured value
+                if len(measured_values) != 1:
+                    raise ValueError(f"Experiment {row.get('Experiments', '')}: Formula provided in Measured_nodes requires exactly one Measured_values entry")
+                measured_value = measured_values[0]
+                # Clear node list/values since we're using a formula
+                measured_nodes = []
+                measured_values = []
+            else:
+                # Normalize values if necessary (only for non-formula measurements)
+                if measured_values and max(measured_values) > 1:
+                    max_val = max(measured_values)
+                    measured_values = [v / max_val for v in measured_values]
+
             experiment = {
                 'id': row.get('Experiments', ''),
                 'stimuli': stimuli,
                 'stimuli_efficacy': stimuli_efficacy,
                 'inhibitors': inhibitors,
                 'inhibitors_efficacy': inhibitors_efficacy,
-                'measurements': dict(zip(measured_nodes, measured_values))
+                'measurements': dict(zip(measured_nodes, measured_values)),
+                'measured_formula': measured_formula,
+                'measured_value': measured_value,
+                'measured_values_raw': ExperimentData._parse_value_list(row.get('Measured_values', ''))
             }
 
             experiments.append(experiment)
@@ -155,6 +167,53 @@ class ExperimentData:
         return values
     
     @staticmethod
+    def _extract_variables_from_formula(formula: str):
+        import re
+        # Variables: tokens that look like identifiers; filter out numeric literals
+        tokens = re.findall(r"\b[A-Za-z_]\w*\b", str(formula))
+        return list(dict.fromkeys(tokens))
+    
+    @staticmethod
+    def _safe_eval_formula(formula: str, variables: dict) -> float:
+        import ast
+        import operator as op
+
+        # Supported operators
+        allowed_operators = {
+            ast.Add: op.add,
+            ast.Sub: op.sub,
+            ast.Mult: op.mul,
+            ast.Div: op.truediv,
+            ast.USub: op.neg,
+            ast.UAdd: op.pos,
+            ast.Pow: op.pow,
+        }
+
+        def _eval(node):
+            if isinstance(node, ast.Num):  # type: ignore[attr-defined]
+                return node.n
+            if isinstance(node, ast.Constant):
+                if isinstance(node.value, (int, float)):
+                    return node.value
+                raise ValueError("Invalid constant in formula")
+            if isinstance(node, ast.Name):
+                if node.id in variables:
+                    return variables[node.id]
+                raise ValueError(f"Unknown variable '{node.id}' in formula")
+            if isinstance(node, ast.BinOp):
+                if type(node.op) not in allowed_operators:
+                    raise ValueError("Operator not allowed in formula")
+                return allowed_operators[type(node.op)](_eval(node.left), _eval(node.right))
+            if isinstance(node, ast.UnaryOp):
+                if type(node.op) not in allowed_operators:
+                    raise ValueError("Unary operator not allowed in formula")
+                return allowed_operators[type(node.op)](_eval(node.operand))
+            raise ValueError("Unsupported expression in formula")
+
+        tree = ast.parse(str(formula), mode='eval')
+        return float(_eval(tree.body))
+    
+    @staticmethod
     def validate_experiments(experiments, node_dict):
         """
         Validate experiments against PBN structure
@@ -191,17 +250,33 @@ class ExperimentData:
                 raise ValueError(f"Experiment {exp['id']}: Inhibitor nodes {invalid_inhibitors} "
                                f"not found in the network")
             
-            # Check measured nodes
-            invalid_measured = set(exp['measurements'].keys()) - nodes
-            if invalid_measured:
-                raise ValueError(f"Experiment {exp['id']}: Measured nodes {invalid_measured} "
-                               f"not found in the network")
-            
-            # Check value ranges for measurements
-            for node, value in exp['measurements'].items():
-                if not (0 <= value <= 1):
-                    raise ValueError(f"Experiment {exp['id']}: Measured value {value} for node "
-                                   f"{node} must be between 0 and 1")
+            # If formula-based measurement, validate variables; allow any measured_value (will normalize later)
+            if exp.get('measured_formula'):
+                vars_in_formula = ExperimentData._extract_variables_from_formula(exp['measured_formula'])
+                invalid_vars = set(vars_in_formula) - nodes
+                if invalid_vars:
+                    raise ValueError(f"Experiment {exp['id']}: Variables {invalid_vars} in measured formula not found in the network")
+                mv = exp.get('measured_value')
+                if mv is None:
+                    # Fallback: if raw list exists and has exactly one value
+                    raw_vals = exp.get('measured_values_raw') or []
+                    if len(raw_vals) == 1:
+                        mv = raw_vals[0]
+                        exp['measured_value'] = mv
+                if mv is None:
+                    raise ValueError(f"Experiment {exp['id']}: Measured formula value must be provided (single number)")
+            else:
+                # Check measured nodes
+                invalid_measured = set(exp['measurements'].keys()) - nodes
+                if invalid_measured:
+                    raise ValueError(f"Experiment {exp['id']}: Measured nodes {invalid_measured} "
+                                   f"not found in the network")
+                
+                # Check value ranges for measurements
+                for node, value in exp['measurements'].items():
+                    if not (0 <= value <= 1):
+                        raise ValueError(f"Experiment {exp['id']}: Measured value {value} for node "
+                                       f"{node} must be between 0 and 1")
             
             # Check stimuli efficacy values
             if len(exp['stimuli_efficacy']) != len(exp['stimuli']):
@@ -293,7 +368,7 @@ class ExperimentData:
         
         return summary
 
-def extract_experiment_nodes(csv_file):
+def extract_experiment_nodes(csv_file, use_formula: bool = False):
     """
     Extract measured and perturbed nodes from experimental CSV file.
     
@@ -315,8 +390,12 @@ def extract_experiment_nodes(csv_file):
     for _, row in df.iterrows():
         # Extract measured nodes
         if 'Measured_nodes' in row and not pd.isna(row['Measured_nodes']):
-            nodes = ExperimentData._parse_node_list(row['Measured_nodes'])
-            measured_nodes.update(nodes)
+            if use_formula:
+                vars_in_formula = ExperimentData._extract_variables_from_formula(row['Measured_nodes'])
+                measured_nodes.update(vars_in_formula)
+            else:
+                nodes = ExperimentData._parse_node_list(row['Measured_nodes'])
+                measured_nodes.update(nodes)
         
         # Extract stimuli (perturbed nodes)
         if 'Stimuli' in row and not pd.isna(row['Stimuli']):
@@ -398,11 +477,17 @@ def generate_experiments(pbn, experiment_csv: str, config: dict = None, output_c
         # Reset experimental conditions
         steady_state_calc.reset_network_conditions()
         
-        # Extract predicted values for measured nodes
+        # Extract predicted values for measured nodes or formula
         predicted_values = []
-        for node in experiment['measurements'].keys():
-            node_idx = pbn.nodeDict[node]
-            predicted_values.append(round(steady_state[node_idx], round_to))
+        if experiment.get('measured_formula'):
+            # Evaluate formula using current steady state values
+            var_values = {name: steady_state[idx] for name, idx in pbn.nodeDict.items()}
+            predicted = ExperimentData._safe_eval_formula(experiment['measured_formula'], var_values)
+            predicted_values = [round(float(predicted), round_to)]
+        else:
+            for node in experiment['measurements'].keys():
+                node_idx = pbn.nodeDict[node]
+                predicted_values.append(round(steady_state[node_idx], round_to))
         
         # Create result row
         result_row = {
@@ -411,8 +496,8 @@ def generate_experiments(pbn, experiment_csv: str, config: dict = None, output_c
             'Stimuli_efficacy': ','.join(map(str, experiment['stimuli_efficacy'])) if experiment['stimuli_efficacy'] else '',
             'Inhibitors': ','.join(experiment['inhibitors']) if experiment['inhibitors'] else '',
             'Inhibitors_efficacy': ','.join(map(str, experiment['inhibitors_efficacy'])) if experiment['inhibitors_efficacy'] else '',
-            'Measured_nodes': ','.join(experiment['measurements'].keys()),
-            'Measured_values': ','.join(map(str, experiment['measurements'].values())),
+            'Measured_nodes': experiment['measured_formula'] if experiment.get('measured_formula') else ','.join(experiment['measurements'].keys()),
+            'Measured_values': str(experiment.get('measured_value')) if experiment.get('measured_formula') else ','.join(map(str, experiment['measurements'].values())),
             'Predicted_values': ','.join(map(str, predicted_values))
         }
         
@@ -427,3 +512,50 @@ def generate_experiments(pbn, experiment_csv: str, config: dict = None, output_c
         print(f"Generated experiment results saved to: {output_csv}")
     
     return df
+
+@staticmethod
+def _extract_variables_from_formula(formula: str):
+    import re
+    # Variables: tokens that look like identifiers; filter out numeric literals
+    tokens = re.findall(r"\b[A-Za-z_]\w*\b", str(formula))
+    return list(dict.fromkeys(tokens))
+
+@staticmethod
+def _safe_eval_formula(formula: str, variables: dict) -> float:
+    import ast
+    import operator as op
+
+    # Supported operators
+    allowed_operators = {
+        ast.Add: op.add,
+        ast.Sub: op.sub,
+        ast.Mult: op.mul,
+        ast.Div: op.truediv,
+        ast.USub: op.neg,
+        ast.UAdd: op.pos,
+        ast.Pow: op.pow,
+    }
+
+    def _eval(node):
+        if isinstance(node, ast.Num):  # type: ignore[attr-defined]
+            return node.n
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, (int, float)):
+                return node.value
+            raise ValueError("Invalid constant in formula")
+        if isinstance(node, ast.Name):
+            if node.id in variables:
+                return variables[node.id]
+            raise ValueError(f"Unknown variable '{node.id}' in formula")
+        if isinstance(node, ast.BinOp):
+            if type(node.op) not in allowed_operators:
+                raise ValueError("Operator not allowed in formula")
+            return allowed_operators[type(node.op)](_eval(node.left), _eval(node.right))
+        if isinstance(node, ast.UnaryOp):
+            if type(node.op) not in allowed_operators:
+                raise ValueError("Unary operator not allowed in formula")
+            return allowed_operators[type(node.op)](_eval(node.operand))
+        raise ValueError("Unsupported expression in formula")
+
+    tree = ast.parse(str(formula), mode='eval')
+    return float(_eval(tree.body))

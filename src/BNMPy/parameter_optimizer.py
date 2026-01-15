@@ -31,7 +31,7 @@ class ParameterOptimizer:
     Parameter optimization for Probabilistic Boolean Networks using experimental data.
     """
     
-    def __init__(self, pbn, experiments, config=None, nodes_to_optimize=None, discrete=False, verbose=False):
+    def __init__(self, pbn, experiments, config=None, nodes_to_optimize=None, discrete=False, verbose=False, Measured_formula: Optional[str] = None, normalize: bool = False):
         """
         Initialize the parameter optimizer.
         
@@ -49,10 +49,16 @@ class ParameterOptimizer:
             Whether to perform discrete optimization
         verbose : bool, default=False
             Whether to print detailed optimization progress
+        Measured_formula : str, optional
+            Formula to use for calculating the objective function. Overrides CSV `Measured_nodes` for scoring.
+        normalize : bool, default=False
+            Whether to normalize formula-based measurements using min-max scaling across experiments.
+            When True, both predicted and measured formula values are scaled to [0,1] range.
         """
         self.pbn = pbn
         self.verbose = verbose
         self.discrete = discrete
+        self.normalize = normalize
         
         # Load experiments if string (CSV file path)
         if isinstance(experiments, str):
@@ -60,11 +66,25 @@ class ParameterOptimizer:
         else:
             self.experiments = experiments
         
+        # Use a measured formula across all experiments
+        if Measured_formula:
+            override_formula = str(Measured_formula)
+            for exp in self.experiments:
+                exp['measured_formula'] = override_formula
+                # Determine measured_value: prefer existing formula value, else first raw value
+                if exp.get('measured_value') is None:
+                    raw_vals = exp.get('measured_values_raw') or []
+                    if len(raw_vals) != 1:
+                        raise ValueError("Measured_formula requires each experiment to have exactly one Measured_values entry in the CSV")
+                    exp['measured_value'] = raw_vals[0]
+                # Clear per-node measurements when using a formula target
+                exp['measurements'] = {}
+        
         # Validate experiments
         ExperimentData.validate_experiments(self.experiments, pbn.nodeDict)
         
         # Initialize evaluator
-        self.evaluator = SimulationEvaluator(pbn, self.experiments, config, nodes_to_optimize)
+        self.evaluator = SimulationEvaluator(pbn, self.experiments, config, nodes_to_optimize, normalize=normalize)
         
         # Set configuration
         self.config = config or self._default_config()

@@ -16,7 +16,6 @@ Documentation
 
    basic_simulation
    knowledge_graph_guide
-   phenotype_score_guide
    steady_state_guide
    optimization_guide
 

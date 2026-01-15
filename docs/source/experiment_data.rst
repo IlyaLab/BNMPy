@@ -30,8 +30,8 @@ Column Descriptions
 - **Stimuli_efficacy**: Efficacy values 0-1 (optional, defaults to 1.0)
 - **Inhibitors**: Nodes fixed to 0 (comma-separated)
 - **Inhibitors_efficacy**: Efficacy values 0-1 (optional, defaults to 1.0)
-- **Measured_nodes**: Nodes with experimental measurements
-- **Measured_values**: Corresponding values 0-1 (normalized)
+- **Measured_nodes**: Nodes with experimental measurements OR a formula expression (when use_formula=True)
+- **Measured_values**: Corresponding values 0-1 (normalized). For formulas, provide a single value per row in the formula's natural range
 
 Efficacy Values
 ~~~~~~~~~~~~~~~
@@ -43,3 +43,21 @@ Efficacy Values
   - For stimuli (target=1): P(node=1) = efficacy, P(node=0) = 1-efficacy
 
 - **Example**: ``PI3K,0.7`` means PI3K inhibition has 70% probability of setting PI3K=0, 30% of PI3K=1
+
+Formula-based Measurements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When using formulas (``use_formula=True``):
+
+- **Measured_nodes**: Contains a formula expression (e.g., ``N1 + N2 - N3``)
+- **Measured_values**: Single value per row in the formula's natural range
+- Supported operators: ``+``, ``-``, ``*``, ``/``, parentheses
+- Variables must be node names from the network
+
+**Important**: Ensure measured values are scaled to match the theoretical formula range:
+
+- ``N1 + N2 + N3``: range [0, 3]
+- ``N1 + N2 - N3``: range [-1, 2]  
+- ``N1 - N2``: range [-1, 1]
+
+The optimizer will warn if measured values fall outside the expected range.

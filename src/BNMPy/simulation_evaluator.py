@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 from typing import Dict, List, Union, Optional
 from BNMPy.steady_state import SteadyStateCalculator
 
@@ -8,7 +9,7 @@ class SimulationEvaluator:
     Handles experiment simulation and SSE calculation
     """
     
-    def __init__(self, pbn, experiments, config=None, nodes_to_optimize=None):
+    def __init__(self, pbn, experiments, config=None, nodes_to_optimize=None, normalize=False):
         """
         Initialize evaluator with PBN and experiments
         
@@ -22,11 +23,14 @@ class SimulationEvaluator:
             Configuration parameters for simulation
         nodes_to_optimize : list, optional
             List of node names to optimize. If None, optimize all nodes.
+        normalize : bool, default=False
+            Whether to normalize formula-based measurements using min-max scaling across experiments
         """
         self.pbn = pbn
         self.experiments = experiments
         self.steady_state_calc = SteadyStateCalculator(pbn)
         self.config = config or self._default_config()
+        self.normalize = normalize
         
         # Set up nodes to optimize
         self.nodes_to_optimize = nodes_to_optimize
@@ -45,6 +49,97 @@ class SimulationEvaluator:
         # Store original parameters for non-optimized nodes
         self._store_original_parameters()
         
+        # Pre-compute normalized measured values for formula-based experiments if normalize=True
+        self.normalized_measured_values = {}
+        if self.normalize:
+            self._normalize_measured_values()
+
+        # Check formula-based measurements and warn if measured values are outside theoretical range
+        # Skip warning if normalize=True since values will be normalized anyway
+        if not self.normalize:
+            formula_experiments = [exp for exp in self.experiments if exp.get('measured_formula')]
+            if formula_experiments:
+                formula = formula_experiments[0]['measured_formula']
+                variables = self._extract_variables_from_formula(formula)
+                
+                try:
+                    # Calculate theoretical range by evaluating formula at all corners
+                    n_vars = len(variables)
+                    formula_values = []
+                    
+                    for combo in itertools.product([0.0, 1.0], repeat=n_vars):
+                        var_values = dict(zip(variables, combo))
+                        for node in self.pbn.nodeDict.keys():
+                            if node not in var_values:
+                                var_values[node] = 0.0
+                        value = self._safe_eval_formula(formula, var_values)
+                        formula_values.append(value)
+                    
+                    theoretical_min = float(np.min(formula_values))
+                    theoretical_max = float(np.max(formula_values))
+                    
+                    # Check if any measured values are outside theoretical range
+                    for exp in formula_experiments:
+                        mv = exp.get('measured_value')
+                        if mv is not None and (mv < theoretical_min or mv > theoretical_max):
+                            print(f"WARNING: Experiment {exp['id']} measured value {mv} is outside theoretical range [{theoretical_min}, {theoretical_max}]")
+                            print(f"         Formula: {formula}")
+                            print(f"         Consider rescaling your measured values to match the formula's range.")
+                except Exception as e:
+                    print(f"Warning: Could not validate formula range: {e}")
+        
+    def _normalize_measured_values(self):
+        """
+        Pre-compute min-max normalized measured values for all experiments.
+        Stores mapping from (experiment id, node name) to normalized measured value.
+        """
+        # Collect all measured values across all experiments
+        all_measured_values = []
+        
+        # For formula-based experiments
+        for exp in self.experiments:
+            if exp.get('measured_formula'):
+                mv = exp.get('measured_value')
+                if mv is not None:
+                    all_measured_values.append(float(mv))
+            else:
+                # For node-based measurements
+                for node_name, measured_value in exp['measurements'].items():
+                    all_measured_values.append(float(measured_value))
+        
+        if len(all_measured_values) == 0:
+            return
+        
+        # Calculate min and max across ALL measured values
+        min_val = min(all_measured_values)
+        max_val = max(all_measured_values)
+        
+        # Store the range for later use
+        self.measured_value_range = (min_val, max_val)
+        
+        # Normalize each experiment's measured values
+        for exp in self.experiments:
+            if exp.get('measured_formula'):
+                # Formula-based measurement
+                mv = exp.get('measured_value')
+                if mv is not None:
+                    if max_val - min_val > 1e-10:  # Avoid division by zero
+                        normalized = (float(mv) - min_val) / (max_val - min_val)
+                    else:
+                        normalized = 0.5  # If all values are the same, use 0.5
+                    self.normalized_measured_values[exp['id']] = normalized
+            else:
+                # Node-based measurements
+                for node_name, measured_value in exp['measurements'].items():
+                    if max_val - min_val > 1e-10:
+                        normalized = (float(measured_value) - min_val) / (max_val - min_val)
+                    else:
+                        normalized = 0.5
+                    # Use tuple (exp_id, node_name) as key for node-based measurements
+                    self.normalized_measured_values[(exp['id'], node_name)] = normalized
+        
+        print(f"Normalization enabled: Measured values range [{min_val:.4f}, {max_val:.4f}] scaled to [0, 1]")
+    
     def _store_original_parameters(self):
         """Store original parameters for non-optimized nodes"""
         self.original_cij = self.pbn.cij.copy()
@@ -85,10 +180,17 @@ class SimulationEvaluator:
                 if node not in node_dict:
                     raise ValueError(f"Inhibitor node {node} not found in network")
             
-            # Check measured nodes from the measurements dictionary keys
-            for node in exp['measurements'].keys():
-                if node not in node_dict:
-                    raise ValueError(f"Measured node {node} not found in network")
+            # Check measured nodes or formula
+            if exp.get('measured_formula'):
+                # Validate that variables in formula exist in node dict
+                vars_in_formula = self._extract_variables_from_formula(exp['measured_formula'])
+                for var in vars_in_formula:
+                    if var not in node_dict:
+                        raise ValueError(f"Variable {var} in measured formula not found in network")
+            else:
+                for node in exp['measurements'].keys():
+                    if node not in node_dict:
+                        raise ValueError(f"Measured node {node} not found in network")
     
     def objective_function(self, cij_vector: np.ndarray) -> float:
         """
@@ -131,38 +233,71 @@ class SimulationEvaluator:
             return 1e10
         
         # 4. Calculate SSE across all experiments
-        total_sse = 0
+        # If normalize=True, collect all predicted values first for normalization
         max_retries = 3
         
-        for i, experiment in enumerate(self.experiments):
-            # print(f"\n- Simulating experiment {i+1} -")
-            success = False
-            for retry in range(max_retries):
-                try:
-                    predicted = self._simulate_experiment(experiment)
-                    # print(f"  Predicted steady state: {predicted}")
-
-                    if np.any(np.isnan(predicted)) or np.any(np.isinf(predicted)):
-                        raise ValueError("Invalid simulation results (NaN or Inf)")
-                    
-                    sse = self._calculate_sse(predicted, experiment['measurements'])
-                    # print(f"  SSE for experiment {i+1}: {sse}")
-
-                    if np.isfinite(sse):
-                        total_sse += sse
+        if self.normalize:
+            # Collect all predicted values across experiments first
+            experiment_predictions = []
+            
+            for i, experiment in enumerate(self.experiments):
+                success = False
+                for retry in range(max_retries):
+                    try:
+                        predicted = self._simulate_experiment(experiment)
+                        
+                        if np.any(np.isnan(predicted)) or np.any(np.isinf(predicted)):
+                            raise ValueError("Invalid simulation results (NaN or Inf)")
+                        
+                        # Store the predicted steady state for later use
+                        experiment_predictions.append({
+                            'experiment': experiment,
+                            'predicted': predicted
+                        })
                         success = True
                         break
-                except Exception as e:
-                    print(f"  Warning: Simulation retry {retry+1}/{max_retries} failed: {str(e)}")
-                    if retry == max_retries - 1:
-                        print(f"  Objective function penalty: Experiment simulation failed after {max_retries} retries.")
-                        return 1e10
-                    # Reset network state and try again
-                    self.pbn.resetNetwork()
+                    except Exception as e:
+                        print(f"  Warning: Simulation retry {retry+1}/{max_retries} failed: {str(e)}")
+                        if retry == max_retries - 1:
+                            print(f"  Objective function penalty: Experiment simulation failed after {max_retries} retries.")
+                            return 1e10
+                        self.pbn.resetNetwork()
+                
+                if not success:
+                    print("  Objective function penalty: Experiment simulation did not succeed.")
+                    return 1e10
             
-            if not success:
-                print("  Objective function penalty: Experiment simulation did not succeed.")
-                return 1e10
+            # Calculate normalized SSE
+            total_sse = self._calculate_normalized_sse(experiment_predictions)
+        else:
+            # Standard SSE calculation without normalization
+            total_sse = 0
+            
+            for i, experiment in enumerate(self.experiments):
+                success = False
+                for retry in range(max_retries):
+                    try:
+                        predicted = self._simulate_experiment(experiment)
+                        
+                        if np.any(np.isnan(predicted)) or np.any(np.isinf(predicted)):
+                            raise ValueError("Invalid simulation results (NaN or Inf)")
+                        
+                        sse = self._calculate_sse(predicted, experiment)
+                        
+                        if np.isfinite(sse):
+                            total_sse += sse
+                            success = True
+                            break
+                    except Exception as e:
+                        print(f"  Warning: Simulation retry {retry+1}/{max_retries} failed: {str(e)}")
+                        if retry == max_retries - 1:
+                            print(f"  Objective function penalty: Experiment simulation failed after {max_retries} retries.")
+                            return 1e10
+                        self.pbn.resetNetwork()
+                
+                if not success:
+                    print("  Objective function penalty: Experiment simulation did not succeed.")
+                    return 1e10
         
         # 5. Calculate MSE by dividing by number of experiments
         mse = total_sse / len(self.experiments)
@@ -321,7 +456,89 @@ class SimulationEvaluator:
         
         return steady_state
     
-    def _calculate_sse(self, predicted: np.ndarray, measurements: Dict[str, float]) -> float:
+    def _calculate_normalized_sse(self, experiment_predictions: List[Dict]) -> float:
+        """
+        Calculate SSE with min-max normalization of predicted values across all experiments.
+        
+        Parameters:
+        -----------
+        experiment_predictions : List[Dict]
+            List of dicts containing 'experiment' and 'predicted' keys for each experiment
+            
+        Returns:
+        --------
+        float
+            Sum of squared errors with normalized values
+        """
+        # Collect all predicted values (both formula and node-based)
+        all_predicted_values = []
+        predicted_info = []  # Store (type, value, experiment, predicted_array)
+        
+        for pred_info in experiment_predictions:
+            experiment = pred_info['experiment']
+            predicted = pred_info['predicted']
+            
+            if experiment.get('measured_formula'):
+                # Formula-based measurement
+                var_values = {name: predicted[idx] for name, idx in self.pbn.nodeDict.items()}
+                predicted_value = self._safe_eval_formula(experiment['measured_formula'], var_values)
+                all_predicted_values.append(predicted_value)
+                predicted_info.append(('formula', predicted_value, experiment, predicted))
+            else:
+                # Node-based measurements
+                for node_name, measured_value in experiment['measurements'].items():
+                    node_idx = self.pbn.nodeDict[node_name]
+                    predicted_value = predicted[node_idx]
+                    all_predicted_values.append(predicted_value)
+                    predicted_info.append(('node', predicted_value, experiment, predicted, node_name))
+        
+        # Calculate min-max range for all predicted values
+        if len(all_predicted_values) > 0:
+            pred_min = min(all_predicted_values)
+            pred_max = max(all_predicted_values)
+        else:
+            pred_min = 0.0
+            pred_max = 1.0
+        
+        # Calculate SSE with normalized values
+        total_sse = 0.0
+        for info in predicted_info:
+            if info[0] == 'formula':
+                # Formula-based measurement
+                _, predicted_value, experiment, _ = info
+                
+                # Normalize predicted value
+                if pred_max - pred_min > 1e-10:
+                    normalized_predicted = (predicted_value - pred_min) / (pred_max - pred_min)
+                else:
+                    normalized_predicted = 0.5
+                
+                # Get normalized measured value
+                normalized_measured = self.normalized_measured_values.get(experiment['id'], 0.5)
+                
+                # Calculate squared error
+                sse = (normalized_predicted - normalized_measured) ** 2
+                total_sse += sse
+            else:
+                # Node-based measurement
+                _, predicted_value, experiment, _, node_name = info
+                
+                # Normalize predicted value
+                if pred_max - pred_min > 1e-10:
+                    normalized_predicted = (predicted_value - pred_min) / (pred_max - pred_min)
+                else:
+                    normalized_predicted = 0.5
+                
+                # Get normalized measured value
+                normalized_measured = self.normalized_measured_values.get((experiment['id'], node_name), 0.5)
+                
+                # Calculate squared error
+                sse = (normalized_predicted - normalized_measured) ** 2
+                total_sse += sse
+        
+        return total_sse
+    
+    def _calculate_sse(self, predicted: np.ndarray, experiment: Dict) -> float:
         """
         Calculate sum of squared errors for measured nodes
         
@@ -329,20 +546,77 @@ class SimulationEvaluator:
         -----------
         predicted : np.ndarray
             Predicted steady state probabilities
-        measurements : dict
-            Measured values for nodes
+        experiment : dict
+            Experiment dictionary containing either node measurements or a measured formula
             
         Returns:
         --------
         float
             Sum of squared errors
         """
+        # Formula-based single measurement
+        if experiment.get('measured_formula'):
+            measured_value = float(experiment.get('measured_value')) if experiment.get('measured_value') is not None else 0.0
+            
+            # Compute predicted formula value
+            var_values = {name: predicted[idx] for name, idx in self.pbn.nodeDict.items()}
+            predicted_value = self._safe_eval_formula(experiment['measured_formula'], var_values)
+            # print(f"  Predicted formula value: {predicted_value}, Measured value: {measured_value}")
+            
+            return float(predicted_value - measured_value) ** 2
+        
+        # Standard per-node SSE
         sse = 0.0
-        for node, measured_value in measurements.items():
+        for node, measured_value in experiment['measurements'].items():
             node_idx = self.pbn.nodeDict[node]
             predicted_value = predicted[node_idx]
             sse += (predicted_value - measured_value) ** 2
         return sse
+
+    @staticmethod
+    def _extract_variables_from_formula(formula: str):
+        import re
+        tokens = re.findall(r"\b[A-Za-z_]\w*\b", str(formula))
+        return list(dict.fromkeys(tokens))
+
+    @staticmethod
+    def _safe_eval_formula(formula: str, variables: Dict[str, float]) -> float:
+        import ast
+        import operator as op
+
+        allowed_operators = {
+            ast.Add: op.add,
+            ast.Sub: op.sub,
+            ast.Mult: op.mul,
+            ast.Div: op.truediv,
+            ast.USub: op.neg,
+            ast.UAdd: op.pos,
+            ast.Pow: op.pow,
+        }
+
+        def _eval(node):
+            if isinstance(node, ast.Num):  # type: ignore[attr-defined]
+                return node.n
+            if isinstance(node, ast.Constant):
+                if isinstance(node.value, (int, float)):
+                    return node.value
+                raise ValueError("Invalid constant in formula")
+            if isinstance(node, ast.Name):
+                if node.id in variables:
+                    return variables[node.id]
+                raise ValueError(f"Unknown variable '{node.id}' in formula")
+            if isinstance(node, ast.BinOp):
+                if type(node.op) not in allowed_operators:
+                    raise ValueError("Operator not allowed in formula")
+                return allowed_operators[type(node.op)](_eval(node.left), _eval(node.right))
+            if isinstance(node, ast.UnaryOp):
+                if type(node.op) not in allowed_operators:
+                    raise ValueError("Unary operator not allowed in formula")
+                return allowed_operators[type(node.op)](_eval(node.operand))
+            raise ValueError("Unsupported expression in formula")
+
+        tree = ast.parse(str(formula), mode='eval')
+        return float(_eval(tree.body))
     
     def get_parameter_bounds(self) -> List[tuple]:
         """

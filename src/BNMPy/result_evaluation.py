@@ -6,6 +6,43 @@ import pandas as pd
 from .simulation_evaluator import SimulationEvaluator
 from .experiment_data import ExperimentData
 
+
+def get_pbn_rules_string(pbn) -> str:
+    """
+    Format the final PBN into a readable string.
+    """
+    if not hasattr(pbn, 'gene_functions'):
+        return "Could not format PBN rules: function strings not found in PBN object."
+
+    rules_string = []
+    node_names = sorted(pbn.nodeDict.keys(), key=lambda k: pbn.nodeDict[k])
+    
+    for node_name in node_names:
+        node_idx = pbn.nodeDict[node_name]
+        if node_name in pbn.gene_functions:
+            functions = pbn.gene_functions[node_name]
+            probabilities = pbn.cij[node_idx, :len(functions)].copy()
+            
+            # Round probabilities to 4 decimal places
+            probabilities = np.round(probabilities, 4)
+            
+            # Ensure they sum to 1.0 by adjusting the largest probability
+            prob_sum = np.sum(probabilities)
+            if not np.isclose(prob_sum, 1.0):
+                # Find the largest probability and adjust it
+                max_idx = np.argmax(probabilities)
+                probabilities[max_idx] += (1.0 - prob_sum)
+                # Round again to avoid floating point errors
+                probabilities[max_idx] = np.round(probabilities[max_idx], 4)
+            
+            for i, func in enumerate(functions):
+                prob = probabilities[i]
+                if prob > 1e-6 or (len(functions) == 1 and np.isclose(prob, 1.0)):
+                    rules_string.append(f"{node_name} = {func}, {prob:.4f}")
+                    
+    return "\n".join(rules_string)
+
+
 class ResultEvaluator:
     """
     Evaluate optimization results by comparing simulation output with experimental data.
@@ -60,13 +97,17 @@ class ResultEvaluator:
             'experiment_ids': [],
             'measured_nodes': [],
             'predicted_values': [],
-            'measured_values': []
+            'measured_values': [],
+            'original_measured_values': []  # For plotting with original scale
         }
         
         # Ensure the PBN has the optimized parameters
         if hasattr(self.result, 'x') and self.result.x is not None:
             cij_matrix = self.evaluator._vector_to_cij_matrix(self.result.x)
             self.evaluator._update_pbn_parameters(cij_matrix)
+        
+        # Check if normalization was used
+        is_normalized = hasattr(self.evaluator, 'normalize') and self.evaluator.normalize
         
         for i, experiment in enumerate(self.experiments):
             try:
@@ -77,25 +118,51 @@ class ResultEvaluator:
                 exp_predictions = {}
                 exp_measurements = {}
                 
-                for node_name, measured_value in experiment['measurements'].items():
-                    if node_name in self.pbn.nodeDict:
-                        node_idx = self.pbn.nodeDict[node_name]
-                        predicted_value = predicted_steady_state[node_idx]
-                        
-                        exp_predictions[node_name] = predicted_value
-                        exp_measurements[node_name] = measured_value
-                        
-                        # Store for correlation analysis
-                        simulation_results['predicted_values'].append(predicted_value)
-                        simulation_results['measured_values'].append(measured_value)
-                        simulation_results['measured_nodes'].append(node_name)
-                        simulation_results['experiment_ids'].append(experiment.get('id', i+1))
+                # Handle formula-based measurements
+                if experiment.get('measured_formula'):
+                    formula = experiment['measured_formula']
+                    original_measured_value = float(experiment.get('measured_value', 0.0))
+                    
+                    # Compute predicted formula value
+                    var_values = {name: predicted_steady_state[idx] for name, idx in self.pbn.nodeDict.items()}
+                    predicted_value = self.evaluator._safe_eval_formula(formula, var_values)
+                    
+                    # Store as if it's a special "Formula" node
+                    exp_predictions['Formula'] = predicted_value
+                    exp_measurements['Formula'] = original_measured_value
+                    
+                    # Store for correlation analysis ( use original values for plotting)
+                    simulation_results['predicted_values'].append(predicted_value)
+                    simulation_results['measured_values'].append(original_measured_value)
+                    simulation_results['original_measured_values'].append(original_measured_value)
+                    simulation_results['measured_nodes'].append('Formula')
+                    simulation_results['experiment_ids'].append(experiment.get('id', i+1))
+                    
+                    print(f"  Experiment {i+1}: Formula measurement (predicted={predicted_value:.4f}, measured={original_measured_value:.4f})")
+                else:
+                    # Handle regular node-based measurements
+                    for node_name, measured_value in experiment['measurements'].items():
+                        if node_name in self.pbn.nodeDict:
+                            node_idx = self.pbn.nodeDict[node_name]
+                            predicted_value = predicted_steady_state[node_idx]
+                            
+                            original_measured_value = measured_value
+                            
+                            exp_predictions[node_name] = predicted_value
+                            exp_measurements[node_name] = original_measured_value
+                            
+                            # Store for correlation analysis ( use original values for plotting)
+                            simulation_results['predicted_values'].append(predicted_value)
+                            simulation_results['measured_values'].append(original_measured_value)
+                            simulation_results['original_measured_values'].append(original_measured_value)
+                            simulation_results['measured_nodes'].append(node_name)
+                            simulation_results['experiment_ids'].append(experiment.get('id', i+1))
+                    
+                    print(f"  Experiment {i+1}: {len(exp_predictions)} nodes simulated")
                 
                 simulation_results['experiments'].append(experiment)
                 simulation_results['predictions'].append(exp_predictions)
                 simulation_results['measurements'].append(exp_measurements)
-                
-                print(f"  Experiment {i+1}: {len(exp_predictions)} nodes simulated")
                 
             except Exception as e:
                 print(f"  Warning: Failed to simulate experiment {i+1}: {str(e)}")
@@ -210,8 +277,14 @@ class ResultEvaluator:
         if self.evaluation_metrics is None:
             self.calculate_evaluation_metrics()
         
+        # Check if metrics are empty
+        if not self.evaluation_metrics:
+            print("No data available for plotting")
+            return None
+        
         predicted = np.array(self.simulation_results['predicted_values'])
         measured = np.array(self.simulation_results['measured_values'])
+        original_measured = np.array(self.simulation_results['original_measured_values'])
         nodes = self.simulation_results['measured_nodes']
         experiment_ids = self.simulation_results['experiment_ids']
         
@@ -221,23 +294,23 @@ class ResultEvaluator:
         
         # Create figure
         fig, ax = plt.subplots(figsize=figsize)
-        ax.scatter(measured, predicted, alpha=0.7, s=60, c='lightgreen')
+        ax.scatter(original_measured, predicted, alpha=0.7, s=60, c='lightgreen')
         
         # Add experiment ID labels
         if show_experiment_ids:
-            for i, (meas, pred, exp_id) in enumerate(zip(measured, predicted, experiment_ids)):
-                ax.annotate(f'E{exp_id}', (meas, pred), xytext=(5, 5), 
+            for i, (orig_meas, pred, exp_id) in enumerate(zip(original_measured, predicted, experiment_ids)):
+                ax.annotate(f'E{exp_id}', (orig_meas, pred), xytext=(5, 5), 
                            textcoords='offset points', fontsize=8, alpha=0.7)
         
         # Perfect prediction line
-        min_val = min(np.min(predicted), np.min(measured))
-        max_val = max(np.max(predicted), np.max(measured))
+        min_val = min(np.min(predicted), np.min(original_measured))
+        max_val = max(np.max(predicted), np.max(original_measured))
         # ax.plot([min_val, max_val], [min_val, max_val], 'r--', 
         #         linewidth=2, label='Perfect prediction')
         
-        # Calculate regression line
+        # Calculate regression line using original measured values
         from scipy import stats
-        slope, intercept, r_value, p_value, std_err = stats.linregress(measured, predicted)
+        slope, intercept, r_value, p_value_reg, std_err = stats.linregress(original_measured, predicted)
         
         # Create regression line
         x_reg = np.linspace(min_val, max_val, 100)
@@ -247,7 +320,7 @@ class ResultEvaluator:
         # Add confidence interval bands
         if show_confidence_interval:
             # Add confidence bands (approximate)
-            residuals = predicted - (slope * measured + intercept)
+            residuals = predicted - (slope * original_measured + intercept)
             mse_residuals = np.mean(residuals**2)
             confidence_interval = 1.96 * np.sqrt(mse_residuals)  # 95% CI
             
@@ -275,7 +348,7 @@ class ResultEvaluator:
         
         # Equal aspect ratio
         # ax.set_aspect('equal', adjustable='box')
-        ax.set_xlim(np.min(measured) - 0.05, np.max(measured) + 0.05)
+        ax.set_xlim(np.min(original_measured) - 0.05, np.max(original_measured) + 0.05)
         ax.set_ylim(np.min(predicted) - 0.05, np.max(predicted) + 0.05)
         
         # Tight layout
@@ -365,7 +438,7 @@ class ResultEvaluator:
         
         return fig
     
-    def generate_evaluation_report(self, save_path: Optional[str] = None) -> str:
+    def generate_evaluation_report(self, save_path: Optional[str] = None, include_config: bool = True) -> str:
         """
         Generate a comprehensive evaluation report.
         
@@ -373,6 +446,8 @@ class ResultEvaluator:
         -----------
         save_path : str, optional
             Path to save the report as a text file
+        include_config : bool, default=True
+            Whether to include optimization configuration in the report
             
         Returns:
         --------
@@ -381,6 +456,15 @@ class ResultEvaluator:
         """
         if self.evaluation_metrics is None:
             self.calculate_evaluation_metrics()
+        
+        # Check if metrics are empty (no data available)
+        if not self.evaluation_metrics:
+            report_text = "No evaluation metrics available. Check if experiments have valid measurements."
+            if save_path:
+                with open(save_path, 'w') as f:
+                    f.write(report_text)
+                print(f"Evaluation report saved to {save_path}")
+            return report_text
         
         report = []
         report.append("="*60)
@@ -410,6 +494,14 @@ class ResultEvaluator:
         report.append(f"Iterations: {opt['iterations']}")
         report.append(f"Function evaluations: {opt['function_evaluations']}")
         report.append("")
+        
+        # Add optimization configuration
+        if include_config and hasattr(self.optimizer, 'config') and self.optimizer.config:
+            report.append("CONFIGURATION:")
+            report.append("-" * 20)
+            for key, value in self.optimizer.config.items():
+                report.append(f"{key}: {value}")
+            report.append("")
         
         # Per-node metrics
         if self.evaluation_metrics['per_node']:
@@ -454,6 +546,10 @@ class ResultEvaluator:
             'Absolute_Error': np.abs(np.array(self.simulation_results['predicted_values']) - np.array(self.simulation_results['measured_values']))
         }
         
+        # Add original measured values if available (i.e., if normalization was used)
+        if hasattr(self.evaluator, 'normalize') and self.evaluator.normalize:
+            data['Original_Measured_Value'] = self.simulation_results['original_measured_values']
+        
         df = pd.DataFrame(data)
         df.to_csv(save_path, index=False)
         print(f"Results exported to {save_path}")
@@ -468,6 +564,13 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
                                 show_confidence_interval: bool = False) -> ResultEvaluator:
     """
     Convenience function to perform a complete evaluation of optimization results.
+    
+    This function generates and saves the following files in output_dir:
+    - prediction_vs_experimental.png: Scatter plot of predicted vs experimental values
+    - residual_analysis.png: Residual plots (if plot_residuals=True)
+    - evaluation_report.txt: Text report with metrics and optimization config
+    - detailed_results.csv: CSV file with all data points
+    - pbn.txt: Optimized PBN model in text format
     
     Parameters:
     -----------
@@ -520,6 +623,14 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
         # Export CSV
         csv_path = os.path.join(output_dir, "detailed_results.csv")
         evaluator.export_results_to_csv(csv_path)
+
+        # Export PBN
+        pbn_path = os.path.join(output_dir, "pbn.txt")
+        pbn_string = get_pbn_rules_string(evaluator.pbn)
+        with open(pbn_path, 'w') as f:
+            f.write(pbn_string)
+        print(f"Optimized PBN saved to {pbn_path}")
+    
     else:
         # Display plots without saving
         evaluator.plot_prediction_vs_experimental(show_experiment_ids=detailed)
@@ -533,9 +644,19 @@ def evaluate_optimization_result(optimizer_result, parameter_optimizer,
     return evaluator
 
 
-def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool = True, generate_report: bool = True, config: dict = None):
+def evaluate_pbn(pbn, experiments, output_dir: str = '.', plot_residuals: bool = True, 
+                save: bool = True, detailed: bool = True, config: dict = None, 
+                Measured_formula: Optional[str] = None, normalize: bool = False,
+                figsize: Tuple[int, int] = (8, 6), show_confidence_interval: bool = False):
     """
     Evaluate a PBN directly against experiment data (list or CSV).
+    
+    This function generates and saves the following files in output_dir:
+    - prediction_vs_experimental.png: Scatter plot of predicted vs experimental values
+    - residual_analysis.png: Residual plots (if plot_residuals=True)
+    - evaluation_report.txt: Text report with metrics
+    - detailed_results.csv: CSV file with all data points
+    - pbn.txt: PBN model in text format
 
     Parameters:
     -----------
@@ -545,12 +666,22 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
         List of experiment dicts or path to CSV file
     output_dir : str, default='.'
         Directory to save output files
-    generate_plots : bool, default=True
-        Whether to generate plots
-    generate_report : bool, default=True
-        Whether to generate evaluation report
+    plot_residuals : bool, default=True
+        Whether to plot residuals
+    save : bool, default=True
+        Whether to save plots and reports to files. If False, displays plots.
+    detailed : bool, default=True
+        Whether to label dots in plots with experiment IDs
     config : dict, optional
         Simulation configuration
+    Measured_formula : str, optional
+        Formula to use for calculating the objective function. Overrides CSV `Measured_nodes` for scoring.
+    normalize : bool, default=False
+        Whether to normalize measured values to [0, 1] range
+    figsize : Tuple[int, int], default=(8, 6)
+        Figure size in inches for the prediction vs experimental plot
+    show_confidence_interval : bool, default=False
+        Whether to show confidence interval bands
 
     Returns:
     --------
@@ -558,7 +689,8 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
         Dictionary with evaluation metrics and file paths
     """
     import os
-    os.makedirs(output_dir, exist_ok=True)
+    if save:
+        os.makedirs(output_dir, exist_ok=True)
     from .experiment_data import ExperimentData
     from .simulation_evaluator import SimulationEvaluator
     import numpy as np
@@ -569,6 +701,54 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
     # Load experiments if needed
     if isinstance(experiments, str):
         experiments = ExperimentData.load_from_csv(experiments)
+    
+    # Use a measured formula across all experiments if provided
+    if Measured_formula:
+        override_formula = str(Measured_formula)
+        for exp in experiments:
+            exp['measured_formula'] = override_formula
+            # Determine measured_value: prefer existing formula value, else first raw value
+            if exp.get('measured_value') is None:
+                raw_vals = exp.get('measured_values_raw') or []
+                if len(raw_vals) != 1:
+                    raise ValueError("Measured_formula requires each experiment to have exactly one Measured_values entry in the CSV")
+                exp['measured_value'] = raw_vals[0]
+            # Clear per-node measurements when using a formula target
+            exp['measurements'] = {}
+    
+    # Handle normalization of measured values
+    # Store original values for plotting before normalization
+    original_measured_values = {}
+    if normalize:
+        # Collect all measured values for normalization
+        all_measured = []
+        for i, exp in enumerate(experiments):
+            if exp.get('measured_formula'):
+                all_measured.append(exp.get('measured_value', 0.0))
+            else:
+                all_measured.extend(exp['measurements'].values())
+        
+        if all_measured:
+            min_val = min(all_measured)
+            max_val = max(all_measured)
+            if max_val > min_val:
+                # Store original values before normalization
+                for i, exp in enumerate(experiments):
+                    if exp.get('measured_formula'):
+                        original_measured_values[i] = exp['measured_value']
+                    else:
+                        original_measured_values[i] = exp['measurements'].copy()
+                
+                # Normalize to [0, 1]
+                for exp in experiments:
+                    if exp.get('measured_formula'):
+                        exp['measured_value'] = (exp['measured_value'] - min_val) / (max_val - min_val)
+                    else:
+                        normalized_measurements = {}
+                        for node, val in exp['measurements'].items():
+                            normalized_measurements[node] = (val - min_val) / (max_val - min_val)
+                        exp['measurements'] = normalized_measurements
+    
     # Validate experiments
     ExperimentData.validate_experiments(experiments, pbn.nodeDict)
 
@@ -583,23 +763,56 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
         'experiment_ids': [],
         'measured_nodes': [],
         'predicted_values': [],
-        'measured_values': []
+        'measured_values': [],
+        'original_measured_values': []  # For plotting with original scale
     }
     for i, experiment in enumerate(experiments):
         try:
             predicted_steady_state = evaluator._simulate_experiment(experiment)
             exp_predictions = {}
             exp_measurements = {}
-            for node_name, measured_value in experiment['measurements'].items():
-                if node_name in pbn.nodeDict:
-                    node_idx = pbn.nodeDict[node_name]
-                    predicted_value = predicted_steady_state[node_idx]
-                    exp_predictions[node_name] = predicted_value
-                    exp_measurements[node_name] = measured_value
-                    simulation_results['predicted_values'].append(predicted_value)
-                    simulation_results['measured_values'].append(measured_value)
-                    simulation_results['measured_nodes'].append(node_name)
-                    simulation_results['experiment_ids'].append(experiment.get('id', i+1))
+            
+            # Handle formula-based measurements
+            if experiment.get('measured_formula'):
+                formula = experiment['measured_formula']
+                measured_value = float(experiment.get('measured_value', 0.0))
+                
+                # Get original value if normalization was applied
+                original_value = original_measured_values.get(i, measured_value) if normalize else measured_value
+                
+                # Compute predicted formula value
+                var_values = {name: predicted_steady_state[idx] for name, idx in pbn.nodeDict.items()}
+                predicted_value = evaluator._safe_eval_formula(formula, var_values)
+                
+                # Store as if it's a special "Formula" node
+                exp_predictions['Formula'] = predicted_value
+                exp_measurements['Formula'] = measured_value
+                simulation_results['predicted_values'].append(predicted_value)
+                simulation_results['measured_values'].append(measured_value)
+                simulation_results['original_measured_values'].append(original_value)
+                simulation_results['measured_nodes'].append('Formula')
+                simulation_results['experiment_ids'].append(experiment.get('id', i+1))
+            else:
+                # Handle regular node-based measurements
+                for node_name, measured_value in experiment['measurements'].items():
+                    if node_name in pbn.nodeDict:
+                        node_idx = pbn.nodeDict[node_name]
+                        predicted_value = predicted_steady_state[node_idx]
+                        
+                        # Get original value if normalization was applied
+                        if normalize and i in original_measured_values:
+                            original_value = original_measured_values[i].get(node_name, measured_value)
+                        else:
+                            original_value = measured_value
+                        
+                        exp_predictions[node_name] = predicted_value
+                        exp_measurements[node_name] = measured_value
+                        simulation_results['predicted_values'].append(predicted_value)
+                        simulation_results['measured_values'].append(measured_value)
+                        simulation_results['original_measured_values'].append(original_value)
+                        simulation_results['measured_nodes'].append(node_name)
+                        simulation_results['experiment_ids'].append(experiment.get('id', i+1))
+            
             simulation_results['experiments'].append(experiment)
             simulation_results['predictions'].append(exp_predictions)
             simulation_results['measurements'].append(exp_measurements)
@@ -653,76 +866,99 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
 
     # Plotting
     plot_paths = {}
-    if generate_plots and len(predicted) > 0:
+    if len(predicted) > 0:
+        # Use original measured values for plotting if normalization was applied
+        original_measured = np.array(simulation_results['original_measured_values'])
+        
         # Scatter plot
-        fig, ax = plt.subplots(figsize=(8, 6))
-        unique_nodes = list(set(simulation_results['measured_nodes']))
-        colors = plt.cm.Set3(np.linspace(0, 1, len(unique_nodes)))
-        node_color_map = dict(zip(unique_nodes, colors))
-        for node in unique_nodes:
-            node_indices = [i for i, n in enumerate(simulation_results['measured_nodes']) if n == node]
-            node_pred = predicted[node_indices]
-            node_meas = measured[node_indices]
-            ax.scatter(node_meas, node_pred, c=[node_color_map[node]], label=node, alpha=0.7, s=60)
-        min_val = min(np.min(predicted), np.min(measured))
-        max_val = max(np.max(predicted), np.max(measured))
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.scatter(original_measured, predicted, alpha=0.7, s=60, c='lightgreen')
+        
+        # Add experiment ID labels if detailed mode
+        if detailed:
+            for i, (orig_meas, pred, exp_id) in enumerate(zip(original_measured, predicted, simulation_results['experiment_ids'])):
+                ax.annotate(f'E{exp_id}', (orig_meas, pred), xytext=(5, 5), 
+                           textcoords='offset points', fontsize=8, alpha=0.7)
+        
+        min_val = min(np.min(predicted), np.min(original_measured))
+        max_val = max(np.max(predicted), np.max(original_measured))
+        
+        # Calculate regression line
         from scipy import stats
-        slope, intercept, r_value, p_value, std_err = stats.linregress(measured, predicted)
+        slope, intercept, r_value, p_value_reg, std_err = stats.linregress(original_measured, predicted)
         x_reg = np.linspace(min_val, max_val, 100)
         y_reg = slope * x_reg + intercept
         ax.plot(x_reg, y_reg, 'g-', linewidth=2, alpha=0.8, label='Regression line')
-        residuals = predicted - (slope * measured + intercept)
-        mse_residuals = np.mean(residuals**2)
-        # confidence_interval = 1.96 * np.sqrt(mse_residuals)
-        # ax.fill_between(x_reg, y_reg - confidence_interval, y_reg + confidence_interval, alpha=0.2, color='green', label='95% Confidence interval')
-        for i, (meas, pred, exp_id) in enumerate(zip(measured, predicted, simulation_results['experiment_ids'])):
-            ax.annotate(f'E{exp_id}', (meas, pred), xytext=(5, 5), 
-                        textcoords='offset points', fontsize=8, alpha=0.7)
+        
+        # Add confidence interval bands if requested
+        if show_confidence_interval:
+            residuals = predicted - (slope * original_measured + intercept)
+            mse_residuals = np.mean(residuals**2)
+            confidence_interval = 1.96 * np.sqrt(mse_residuals)  # 95% CI
+            ax.fill_between(x_reg, y_reg - confidence_interval, y_reg + confidence_interval, 
+                           alpha=0.2, color='green', label='95% Confidence interval')
+        
         ax.set_xlabel('Experimental Values', fontsize=12)
         ax.set_ylabel('Predicted Values', fontsize=12)
-        # title = f'Predicted vs Experimental (r={metrics["overall"]["correlation"]:.3f}, p={metrics["overall"]["p_value"]:.3e}, MSE={metrics["overall"]["mse"]:.6f})'
         title = f'Predicted vs Experimental (r={metrics["overall"]["correlation"]:.3f}, p={metrics["overall"]["p_value"]:.3e})'
         ax.set_title(title, fontsize=12, fontweight='bold')
         ax.grid(True, alpha=0.3)
-        if len(unique_nodes) <= 10:
-            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-        else:
-            ax.legend()
-        # ax.set_aspect('equal', adjustable='box')
-        ax.set_xlim(np.min(measured) - 0.05, np.max(measured) + 0.05)
+        ax.legend()
+        ax.set_xlim(np.min(original_measured) - 0.05, np.max(original_measured) + 0.05)
         ax.set_ylim(np.min(predicted) - 0.05, np.max(predicted) + 0.05)
         plt.tight_layout()
-        plot_path = os.path.join(output_dir, "prediction_vs_experimental.png")
-        plt.savefig(plot_path, dpi=300, bbox_inches='tight')
-        plot_paths['prediction_vs_experimental'] = plot_path
-        plt.close(fig)
+        
+        if save:
+            plot_path = os.path.join(output_dir, "prediction_vs_experimental.png")
+            plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+            plot_paths['prediction_vs_experimental'] = plot_path
+            print(f"Plot saved to {plot_path}")
+            plt.close(fig)
+        else:
+            plt.show()
+        
         # Residual plot
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-        residuals = predicted - measured
-        ax1.scatter(predicted, residuals, alpha=0.7, s=60)
-        ax1.axhline(y=0, color='r', linestyle='--', linewidth=2)
-        ax1.set_xlabel('Predicted Values')
-        ax1.set_ylabel('Residuals (Predicted - Measured)')
-        ax1.set_title('Residuals vs Predicted Values')
-        ax1.grid(True, alpha=0.3)
-        ax2.hist(residuals, bins=min(20, len(residuals)//3), alpha=0.7, edgecolor='black')
-        ax2.axvline(x=0, color='r', linestyle='--', linewidth=2)
-        ax2.set_xlabel('Residuals')
-        ax2.set_ylabel('Frequency')
-        ax2.set_title('Distribution of Residuals')
-        ax2.grid(True, alpha=0.3)
-        mean_residual = np.mean(residuals)
-        std_residual = np.std(residuals)
-        ax2.text(0.02, 0.98, f'Mean: {mean_residual:.4f}\nStd: {std_residual:.4f}', transform=ax2.transAxes, verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
-        plt.tight_layout()
-        residual_path = os.path.join(output_dir, "residual_analysis.png")
-        plt.savefig(residual_path, dpi=300, bbox_inches='tight')
-        plot_paths['residual_analysis'] = residual_path
-        plt.close(fig)
+        if plot_residuals:
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4))
+            residuals = predicted - measured
+            ax1.scatter(predicted, residuals, alpha=0.7, s=60)
+            ax1.axhline(y=0, color='r', linestyle='--', linewidth=2)
+            ax1.set_xlabel('Predicted Values')
+            ax1.set_ylabel('Residuals (Predicted - Measured)')
+            ax1.set_title('Residuals vs Predicted Values')
+            ax1.grid(True, alpha=0.3)
+            
+            # Add experiment ID labels if detailed mode
+            if detailed:
+                for pred, res, exp_id in zip(predicted, residuals, simulation_results['experiment_ids']):
+                    ax1.annotate(f'E{exp_id}', (pred, res), xytext=(5, 5), 
+                               textcoords='offset points', fontsize=8, alpha=0.7)
+            
+            ax2.hist(residuals, bins=min(20, len(residuals)//3), alpha=0.7, edgecolor='black')
+            ax2.axvline(x=0, color='r', linestyle='--', linewidth=2)
+            ax2.set_xlabel('Residuals')
+            ax2.set_ylabel('Frequency')
+            ax2.set_title('Distribution of Residuals')
+            ax2.grid(True, alpha=0.3)
+            mean_residual = np.mean(residuals)
+            std_residual = np.std(residuals)
+            ax2.text(0.02, 0.98, f'Mean: {mean_residual:.4f}\nStd: {std_residual:.4f}', 
+                    transform=ax2.transAxes, verticalalignment='top', 
+                    bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+            plt.tight_layout()
+            
+            if save:
+                residual_path = os.path.join(output_dir, "residual_analysis.png")
+                plt.savefig(residual_path, dpi=300, bbox_inches='tight')
+                plot_paths['residual_analysis'] = residual_path
+                print(f"Residual plot saved to {residual_path}")
+                plt.close(fig)
+            else:
+                plt.show()
 
     # Report
     report_path = None
-    if generate_report and metrics:
+    if metrics:
         report_lines = []
         report_lines.append("="*60)
         report_lines.append("PBN EVALUATION REPORT")
@@ -739,6 +975,13 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
         report_lines.append(f"Mean Absolute Error: {overall['mae']:.6f}")
         report_lines.append(f"Number of data points: {overall['n_points']}")
         report_lines.append("")
+        # Add simulation configuration if provided
+        if config:
+            report_lines.append("CONFIGURATION:")
+            report_lines.append("-" * 20)
+            for key, value in config.items():
+                report_lines.append(f"{key}: {value}")
+            report_lines.append("")
         if metrics['per_node']:
             report_lines.append("PER-NODE PERFORMANCE:")
             report_lines.append("-" * 20)
@@ -750,29 +993,48 @@ def evaluate_pbn(pbn, experiments, output_dir: str = '.', generate_plots: bool =
                 report_lines.append(f"  Data points: {m['n_points']}")
                 report_lines.append("")
         report_text = "\n".join(report_lines)
-        report_path = os.path.join(output_dir, "evaluation_report.txt")
-        with open(report_path, 'w') as f:
-            f.write(report_text)
-        print(f"Evaluation report saved to {report_path}")
+        
+        if save:
+            report_path = os.path.join(output_dir, "evaluation_report.txt")
+            with open(report_path, 'w') as f:
+                f.write(report_text)
+            print(f"Evaluation report saved to {report_path}")
+        else:
+            print(report_text)
 
     # Export CSV
-    csv_path = os.path.join(output_dir, "detailed_results.csv")
-    data = {
-        'Experiment_ID': simulation_results['experiment_ids'],
-        'Node': simulation_results['measured_nodes'],
-        'Predicted_Value': simulation_results['predicted_values'],
-        'Measured_Value': simulation_results['measured_values'],
-        'Residual': np.array(simulation_results['predicted_values']) - np.array(simulation_results['measured_values']),
-        'Absolute_Error': np.abs(np.array(simulation_results['predicted_values']) - np.array(simulation_results['measured_values']))
-    }
-    df = pd.DataFrame(data)
-    df.to_csv(csv_path, index=False)
-    print(f"Results exported to {csv_path}")
+    csv_path = None
+    if save:
+        csv_path = os.path.join(output_dir, "detailed_results.csv")
+        data = {
+            'Experiment_ID': simulation_results['experiment_ids'],
+            'Node': simulation_results['measured_nodes'],
+            'Predicted_Value': simulation_results['predicted_values'],
+            'Measured_Value': simulation_results['measured_values'],
+            'Residual': np.array(simulation_results['predicted_values']) - np.array(simulation_results['measured_values']),
+            'Absolute_Error': np.abs(np.array(simulation_results['predicted_values']) - np.array(simulation_results['measured_values']))
+        }
+        # Add original measured values if normalization was applied
+        if normalize:
+            data['Original_Measured_Value'] = simulation_results['original_measured_values']
+        df = pd.DataFrame(data)
+        df.to_csv(csv_path, index=False)
+        print(f"Results exported to {csv_path}")
+
+    # Export PBN
+    pbn_path = None
+    if save:
+        pbn_path = os.path.join(output_dir, "pbn.txt")
+        pbn_string = get_pbn_rules_string(pbn)
+        with open(pbn_path, 'w') as f:
+            f.write(pbn_string)
+        print(f"PBN saved to {pbn_path}")
 
     return {
         'metrics': metrics,
         'plot_paths': plot_paths,
         'report_path': report_path,
         'csv_path': csv_path,
+        'pbn_path': pbn_path,
         'simulation_results': simulation_results
     }

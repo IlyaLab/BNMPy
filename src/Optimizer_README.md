@@ -41,8 +41,9 @@ Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nod
 - `Stimuli_efficacy`: Efficacy of stimuli (0-1, comma-separated, optional)
 - `Inhibitors`: Nodes fixed to 0 (comma-separated)
 - `Inhibitors_efficacy`: Efficacy of inhibitors (0-1, comma-separated, optional)
-- `Measured_nodes`: Nodes with experimental measurements
-- `Measured_values`: Corresponding values (0-1, normalized)
+- `Measured_nodes`: Nodes with experimental measurements OR a formula expression
+- `Measured_values`: Corresponding values. For formulas, a single value per row is required
+  - Values can be in any range; use the `normalize` parameter for automatic scaling
 
 See [Examples/files/experiments_example.csv](../Examples/files/experiments_example.csv) for an example file.
 
@@ -55,9 +56,56 @@ See [Examples/files/experiments_example.csv](../Examples/files/experiments_examp
 - **Example**: `PI3K,0.7` means PI3K inhibition has 70% probability of setting PI3K=0, 30% of PI3K=1
 - If efficacy columns are empty, defaults to 1.0 for all perturbations
 
-#### PBN Data
+#### Formula-based Measurements (Phenotype score)
 
-A ProbabilisticBN object, see [PBN_simulation.ipynb](../Examples/PBN_simulation.ipynb).
+We can target an aggregate score instead of individual nodes using a formula based on node names and arithmetic operators. Two ways to use formulas:
+
+- Place the formula directly in `Measured_nodes` and provide a single target value in `Measured_values`:
+
+```csv
+Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values
+1,,,,,"nodeA + nodeB - nodeC",0.75
+```
+
+- Or supply a global formula via the optimizer argument `Measured_formula` (overrides CSV `Measured_nodes` ), with each CSV row having a single `Measured_values` entry:
+
+```python
+optimizer = ParameterOptimizer(
+    pbn,
+    "experiments.csv",
+    nodes_to_optimize=['nodeX'],
+    verbose=False,
+    Measured_formula="nodeA + nodeB - nodeC"
+)
+```
+
+- Supported operators: `+`, `-`, `*`, `/`, parentheses and unary `+/-`
+- Variables must correspond to nodes in the network (`pbn.nodeDict`)
+- Measured values should be in the same range as the theoretical formula range
+  - Formula range examples: `N1+N2+N3` → [0,3], `N1+N2-N3` → [-1,2], `N1-N2` → [-1,1]
+
+#### Value Normalization
+
+When experimental measurements span different scales, enable automatic min-max normalization:
+
+```python
+optimizer = ParameterOptimizer(
+    pbn,
+    "experiments.csv",
+    normalize=True  # Enable automatic normalization
+)
+```
+
+**How normalization works:**
+
+1. **Measured values** (from CSV): All measured values across all experiments are collected and scaled to [0, 1] using min-max normalization:
+
+   - `normalized = (value - min) / (max - min)`
+   - Example: Values `[0.5, 2.0, 2.5, 3.0]` → `[0.0, 0.6, 0.8, 1.0]`
+2. **Predicted values** (from simulation): At each optimization iteration, all predicted values (node states or phenotype scores) across all experiments are collected and scaled to [0, 1]:
+
+   - Example: Predicted `[2, 3, 4]` → `[0.0, 0.5, 1.0]`
+3. **SSE calculation**: Mean squared error is computed using normalized values
 
 ### Configurations
 

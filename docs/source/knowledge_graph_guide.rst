@@ -161,10 +161,21 @@ Compute phenotype scores using ProxPath-derived effects and simulation results:
 
 .. code-block:: python
 
-   # Get genes from network
-   genes = list(merged_pbn.nodeDict.keys())
+   # Get all available phenotypes
+   BNMPy.get_phenotypes()
+
+   # Genes for phenotype scoring
+   genes = list(merged_pbn.nodeDict.keys()) # or specify a list of genes
+
+   # Get the formula for the phenotype scores without simulation results
+   formulas = BNMPy.phenotype_scores(
+       genes=genes,
+       simulation_results=None,
+       phenotypes=['APOPTOSIS', 'PROLIFERATION', 'DIFFERENTIATION']
+   )
+   print(formulas)
    
-   # Compute phenotype scores
+   # Compute phenotype scores with simulation results
    scores = BNMPy.phenotype_scores(
        genes=genes,
        simulation_results=steady_state,
@@ -178,7 +189,11 @@ The function supports multiple simulation result formats:
 - numpy arrays
 - BN attractor dictionaries
 
-See documentation for :doc:`phenotype_score_guide` for more details.
+References
+----------
+- ProxPath: https://github.com/SaccoPerfettoLab/ProxPath
+- Iannuccelli, M., Vitriolo, A., Licata, L. et al. Curation of causal interactions mediated by genes associated with autism accelerates the understanding of gene-phenotype relationships underlying neurodevelopmental disorders. Mol Psychiatry 29, 186–196 (2024). https://doi-org.offcampus.lib.washington.edu/10.1038/s41380-023-02317-3
+
 
 Complete Workflow Example
 -------------------------

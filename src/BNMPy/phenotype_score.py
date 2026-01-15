@@ -163,7 +163,7 @@ def _convert_simulation_to_dataframe(simulation_results, genes=None) -> pd.DataF
         raise TypeError(f"Unsupported simulation_results type: {type(simulation_results)}")
 
 def phenotype_scores(phenotypes = ['APOPTOSIS', 'DIFFERENTIATION', 'PROLIFERATION'], 
-                    file_path = file_path, genes=None, simulation_results=None, network=None):
+                    file_path = file_path, genes=None, simulation_results=None, network=None, reversed = False):
     """
     Calculate phenotype scores for given genes and phenotypes using ProxPath.
     If simulation_results is not provided, it will return the formula to calculate the score.
@@ -184,7 +184,8 @@ def phenotype_scores(phenotypes = ['APOPTOSIS', 'DIFFERENTIATION', 'PROLIFERATIO
         - dict: steady state results from BN with 'fixed_points' and 'cyclic_attractors'
     network : optional
         Network object; only used to infer gene order if 'genes' is not provided.
-
+    reversed : bool, default=False
+        If True, the phenotype scores will be reversed, i.e., multiply by -1.
     Returns:
     --------
     pd.DataFrame or dict
@@ -241,6 +242,12 @@ def phenotype_scores(phenotypes = ['APOPTOSIS', 'DIFFERENTIATION', 'PROLIFERATIO
     else:
         formulas_dict = {}
     
+    # if reversed is True, multiply the effect by -1
+    if reversed:
+        effect_sign = -1
+    else:
+        effect_sign = 1
+
     # Loop through each phenotype
     for phenotype in phenotypes:
         
@@ -258,16 +265,16 @@ def phenotype_scores(phenotypes = ['APOPTOSIS', 'DIFFERENTIATION', 'PROLIFERATIO
                 if gene in sim_df.columns:
                     # Calculate score for each state
                     for state in sim_df.index:
-                        results[state][phenotype] += sim_df.loc[state, gene] * effect
+                        results[state][phenotype] += sim_df.loc[state, gene] * effect * effect_sign
             else:
                 # Build terms for the formula string, using appropriate sign placement
-                if effect == 1:
+                if effect * effect_sign == 1:
                     terms.append(f"{gene}")
-                elif effect == -1:
+                elif effect * effect_sign == -1:
                     terms.append(f"- {gene}")
         
         if simulation_results is None:
-            formula = ' + '.join(terms).replace('+ -', '- ')
+            formula = ' + '.join(terms).replace('+ -', '-')
             formulas_dict[phenotype] = formula
 
     # Return as DataFrame if simulation_results was provided

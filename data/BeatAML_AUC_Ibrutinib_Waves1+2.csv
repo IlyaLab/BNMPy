@@ -1,0 +1,9 @@
+Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values
+1,,,BTK,1,AUC,221.07
+2,FLT3,1,BTK,1,AUC,163.62
+3,,,"BTK,NPM1","1,1",AUC,187.75
+4,,,"BTK,DNMT3A","1,1",AUC,208.28
+5,FLT3,1,"BTK,NPM1","1,1",AUC,183.47
+6,FLT3,1,"BTK,DNMT3A","1,1",AUC,213.26
+7,,,"BTK,DNMT3A,NPM1","1,1,1",AUC,175.14
+8,FLT3,1,"BTK,DNMT3A,NPM1","1,1,1",AUC,162.93

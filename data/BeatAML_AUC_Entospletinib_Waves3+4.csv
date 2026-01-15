@@ -1,0 +1,9 @@
+Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values
+1,,,SYK,1,AUC,180.61
+2,FLT3,1,SYK,1,AUC,143.94
+3,,,"NPM1,SYK","1,1",AUC,184.96
+4,,,"DNMT3A,SYK","1,1",AUC,191.59
+5,FLT3,1,"NPM1,SYK","1,1",AUC,120.19
+6,FLT3,1,"DNMT3A,SYK","1,1",AUC,183.65
+7,,,"DNMT3A,NPM1,SYK","1,1,1",AUC,145.95
+8,FLT3,1,"DNMT3A,NPM1,SYK","1,1,1",AUC,143.50

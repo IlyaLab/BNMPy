@@ -4,16 +4,6 @@
 
 The `SteadyStateCalculator` class provides steady-state calculation capabilities for both Boolean Networks and Probabilistic Boolean Networks in BNMPy.
 
-## Features
-
-- **Dual Network Support**: Works with both `BooleanNetwork` and `ProbabilisticBN` objects
-- **Multiple Methods**:
-  - Monte Carlo simulation
-  - Two-State Markov Chain (TSMC) with convergence analysis
-  - Deterministic attractor finding (for Boolean networks)
-- **Experimental Conditions**: Support for stimuli and inhibitors with efficacy control
-- **Convergence Analysis**: Convergence checking for Monte Carlo method
-
 ## Quick Start
 
 ```python
@@ -28,7 +18,7 @@ N3 = N1, 0.6
 N3 = N1 & !N2, 0.4
 """
 x0 = np.array([1, 1, 0])
-network = BNMPy.load_pbn_from_string(network_string, initial_state=x0)
+network = BNMPy.load_network(network_string, initial_state=x0)
 
 # Create calculator
 calc = BNMPy.SteadyStateCalculator(network)
@@ -204,7 +194,7 @@ steady_state, convergence_info = calc.compute_steady_state(
 import BNMPy
 
 # Load a Boolean network
-network = BNMPy.load_network_from_file("network.txt")
+network = BNMPy.load_network("network.txt")
 calc = BNMPy.SteadyStateCalculator(network)
 
 # Find attractors

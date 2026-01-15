@@ -359,9 +359,10 @@ class SteadyStateCalculator:
             
             # Calculate m0 and N
             if alpha + beta > 0 and abs(1 - alpha - beta) > 1e-10:
-                m0_temp = np.log10(epsilon * (alpha + beta) / max(alpha, beta)) / np.log10(abs(1 - alpha - beta))
-                N_temp = (alpha * beta * (2 - alpha - beta) / 
-                         (alpha + beta)**3 * (r / norm.ppf(0.5 * (1 + s)))**(-2))
+                with np.errstate(divide='ignore', invalid='ignore'):
+                    m0_temp = np.log10(epsilon * (alpha + beta) / max(alpha, beta)) / np.log10(abs(1 - alpha - beta))
+                    N_temp = (alpha * beta * (2 - alpha - beta) / 
+                             (alpha + beta)**3 * (r / norm.ppf(0.5 * (1 + s)))**(-2))
                 
                 m0_collect[counter] = max(0, np.real(m0_temp))
                 N_collect[counter] = max(0, N_temp)

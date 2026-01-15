@@ -1,0 +1,9 @@
+Experiments,Stimuli,Stimuli_efficacy,Inhibitors,Inhibitors_efficacy,Measured_nodes,Measured_values
+1,,,BCL2,1,AUC,155.79
+2,FLT3,1,BCL2,1,AUC,106.12
+3,,,"BCL2,NPM1","1,1",AUC,137.37
+4,,,"BCL2,DNMT3A","1,1",AUC,163.84
+5,FLT3,1,"BCL2,NPM1","1,1",AUC,95.32
+6,FLT3,1,"BCL2,DNMT3A","1,1",AUC,151.24
+7,,,"BCL2,DNMT3A,NPM1","1,1,1",AUC,185.21
+8,FLT3,1,"BCL2,DNMT3A,NPM1","1,1,1",AUC,151.12
