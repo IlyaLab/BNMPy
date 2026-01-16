@@ -17,12 +17,21 @@ def steiner_tree_wrapper(graph, ids, method='takahashi'):
     indices = [graph.vs.find(name=i).index for i in ids]
     if method == 'takahashi':
         tree = takahashi_matsuyama_steiner_tree(graph, indices)
+    elif method == 'takahashi_multi_start':
+        min_tree_size = len(graph.vs)
+        best_tree = graph
+        for i in range(len(indices)):
+            tree = takahashi_matsuyama_steiner_tree(graph, indices, initial_terminal=i)
+            if len(tree.vs) < min_tree_size:
+                best_tree = tree
+                min_tree_size = len(tree.vs)
+        tree = best_tree
     elif method == 'shortest_paths':
         tree = shortest_paths_steiner_tree(graph, indices)
     elif method == 'mehlhorn':
         tree = mehlhorn_steiner_tree(graph, indices)
     else:
-        raise ValueError('Error: method must be one of "takahashi", "mehlhorn", or "shortest_paths"')
+        raise ValueError('Error: method must be one of "takahashi", "takahashi_multi_start", "mehlhorn", or "shortest_paths"')
     ids_set = set(ids)
     for n in tree.vs:
         if n['name'] in ids_set:
@@ -44,12 +53,21 @@ def steiner_tree(G, source_nodes, method='takahashi'):
     indices = [G.vs.find(name=i).index for i in source_nodes]
     if method == 'takahashi':
         tree = takahashi_matsuyama_steiner_tree(G, indices)
+    elif method == 'takahashi_multi_start':
+        min_tree_size = len(G.vs)
+        best_tree = None
+        for i in range(len(source_nodes)):
+            tree = takahashi_matsuyama_steiner_tree(G, indices, initial_terminal=i)
+            if len(tree.vs) < min_tree_size:
+                best_tree = tree
+                min_tree_size = len(tree.vs)
+        tree = best_tree
     elif method == 'shortest_paths':
         tree = shortest_paths_steiner_tree(G, indices)
     elif method == 'mehlhorn':
         tree = mehlhorn_steiner_tree(G, indices)
     else:
-        raise ValueError('Error: method must be one of "takahashi", "mehlhorn", or "shortest_paths"')
+        raise ValueError('Error: method must be one of "takahashi", "takahashi_multi_start", "mehlhorn", or "shortest_paths"')
     return tree
 
 
