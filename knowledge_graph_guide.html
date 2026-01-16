@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Steady State Calculation Guide" href="steady_state_guide.html"><link rel="prev" title="Basic Simulation" href="basic_simulation.html">
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2025.12.19 -->
-        <title>Knowledge Graph Augmentation - BNMPy 0.2 documentation</title>
+        <title>Knowledge Graph Augmentation - KGBN 0.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -161,7 +161,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">BNMPy 0.2 documentation</div></a>
+      <a href="index.html"><div class="brand">KGBN 0.2 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -182,7 +182,7 @@
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
-  <span class="sidebar-brand-text">BNMPy 0.2 documentation</span>
+  <span class="sidebar-brand-text">KGBN 0.2 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -195,24 +195,23 @@
 <li class="toctree-l1"><a class="reference internal" href="basic_simulation.html">Basic Simulation</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Knowledge Graph Augmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="steady_state_guide.html">Steady State Calculation Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="optimization_guide.html">BNMPy Optimizer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimization_guide.html">KGBN Optimizer</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
 <ul>
 <li class="toctree-l1 has-children"><a class="reference internal" href="api.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="bmatrix.html">BNMPy.BMatrix</a></li>
-<li class="toctree-l2"><a class="reference internal" href="booleanNetwork.html">BNMPy.booleanNetwork</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PBN.html">BNMPy.PBN</a></li>
-<li class="toctree-l2"><a class="reference internal" href="steady_state.html">BNMPy.steady_state</a></li>
-<li class="toctree-l2"><a class="reference internal" href="vis.html">BNMPy.vis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="build_bn_from_kg.html">BNMPy.build_bn_from_kg</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model_parser.html">BNMPy.model_parser</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phenotype_score.html">BNMPy.phenotype_score</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html">BNMPy.parameter_optimizer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation_evaluator.html">BNMPy.simulation_evaluator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="experiment_data.html">BNMPy.experiment_data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html">BNMPy.result_evaluation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model_compressor.html">BNMPy.model_compressor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bmatrix.html">KGBN.BMatrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="booleanNetwork.html">KGBN.booleanNetwork</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PBN.html">KGBN.PBN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="steady_state.html">KGBN.steady_state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vis.html">KGBN.vis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_parser.html">KGBN.model_parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phenotype_score.html">KGBN.phenotype_score</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameter_optimizer.html">KGBN.parameter_optimizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation_evaluator.html">KGBN.simulation_evaluator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_data.html">KGBN.experiment_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="result_evaluation.html">KGBN.result_evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_compressor.html">KGBN.model_compressor</a></li>
 </ul>
 </li>
 </ul>
@@ -258,7 +257,7 @@
 <p>This guide covers building Boolean Networks from SIGNOR knowledge graphs, extending existing models, merging networks, and computing phenotype scores.</p>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
-<p>BNMPy integrates with the SIGNOR knowledge graph to:</p>
+<p>KGBN integrates with the SIGNOR knowledge graph to:</p>
 <ol class="arabic simple">
 <li><p><strong>Build KG-derived BNs</strong>: Create Boolean networks directly from SIGNOR pathways</p></li>
 <li><p><strong>Extend existing models</strong>: Add KG-informed rules to curated networks</p></li>
@@ -269,14 +268,14 @@
 </section>
 <section id="building-kg-derived-boolean-networks">
 <h2>Building KG-derived Boolean Networks<a class="headerlink" href="#building-kg-derived-boolean-networks" title="Link to this heading">¶</a></h2>
-<p>Use <code class="docutils literal notranslate"><span class="pre">BNMPy.load_signor_network</span></code> to build a Boolean network from SIGNOR:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">BNMPy</span>
+<p>Use <code class="docutils literal notranslate"><span class="pre">KGBN.load_signor_network</span></code> to build a Boolean network from SIGNOR:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">KGBN</span>
 
 <span class="c1"># Define genes of interest</span>
 <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;KRAS&#39;</span><span class="p">,</span> <span class="s1">&#39;GNAS&#39;</span><span class="p">,</span> <span class="s1">&#39;TP53&#39;</span><span class="p">,</span> <span class="s1">&#39;SMAD4&#39;</span><span class="p">,</span> <span class="s1">&#39;CDKN2A&#39;</span><span class="p">,</span> <span class="s1">&#39;RNF43&#39;</span><span class="p">]</span>
 
 <span class="c1"># Build BN with different joiner schemes</span>
-<span class="n">bn_string</span><span class="p">,</span> <span class="n">relations</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_signor_network</span><span class="p">(</span>
+<span class="n">bn_string</span><span class="p">,</span> <span class="n">relations</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">load_signor_network</span><span class="p">(</span>
     <span class="n">genes</span><span class="p">,</span>
     <span class="n">joiner</span><span class="o">=</span><span class="s1">&#39;inhibitor_wins&#39;</span><span class="p">,</span>  <span class="c1"># &#39;&amp;&#39;, &#39;|&#39;, &#39;inhibitor_wins&#39;, &#39;majority&#39;, &#39;plurality&#39;</span>
     <span class="n">score_cutoff</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>        <span class="c1"># optional: filter low-confidence edges</span>
@@ -284,7 +283,7 @@
 <span class="p">)</span>
 
 <span class="c1"># Load the network</span>
-<span class="n">kg_bn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="n">bn_string</span><span class="p">)</span>
+<span class="n">kg_bn</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="n">bn_string</span><span class="p">)</span>
 </pre></div>
 </div>
 <section id="joiner-schemes">
@@ -315,19 +314,19 @@ TP53 = !SRC &amp; MAPK1 # Scores: SRC_inhibit:0.524; MAPK1_activate:0.777
 <h2>Extending Existing Models<a class="headerlink" href="#extending-existing-models" title="Link to this heading">¶</a></h2>
 <p>Extend networks by adding KG-informed rules for selected nodes:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load original model</span>
-<span class="n">orig_bn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="s1">&#39;Vundavilli2020_standardized.txt&#39;</span><span class="p">)</span>
+<span class="n">orig_bn</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="s1">&#39;Vundavilli2020_standardized.txt&#39;</span><span class="p">)</span>
 
 <span class="c1"># Build KG model for same genes</span>
 <span class="n">orig_genes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">orig_bn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-<span class="n">kg_string</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_signor_network</span><span class="p">(</span>
+<span class="n">kg_string</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">load_signor_network</span><span class="p">(</span>
     <span class="n">orig_genes</span><span class="p">,</span>
     <span class="n">joiner</span><span class="o">=</span><span class="s1">&#39;inhibitor_wins&#39;</span><span class="p">,</span>
     <span class="n">score_cutoff</span><span class="o">=</span><span class="mf">0.5</span>
 <span class="p">)</span>
-<span class="n">kg_bn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="n">kg_string</span><span class="p">)</span>
+<span class="n">kg_bn</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="n">kg_string</span><span class="p">)</span>
 
 <span class="c1"># Extend specific nodes to PBN</span>
-<span class="n">extended_pbn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">extend_networks</span><span class="p">(</span>
+<span class="n">extended_pbn</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">extend_networks</span><span class="p">(</span>
     <span class="n">orig_bn</span><span class="p">,</span>
     <span class="n">kg_bn</span><span class="p">,</span>
     <span class="n">nodes_to_extend</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;AKT1&#39;</span><span class="p">,</span> <span class="s1">&#39;PIK3CA&#39;</span><span class="p">],</span>
@@ -344,7 +343,7 @@ TP53 = !SRC &amp; MAPK1 # Scores: SRC_inhibit:0.524; MAPK1_activate:0.777
 <section id="deterministic-merge-boolean-network">
 <h3>Deterministic Merge (Boolean Network)<a class="headerlink" href="#deterministic-merge-boolean-network" title="Link to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Merge into deterministic BN</span>
-<span class="n">merged_bn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">merge_networks</span><span class="p">(</span>
+<span class="n">merged_bn</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">merge_networks</span><span class="p">(</span>
     <span class="p">[</span><span class="n">orig_bn</span><span class="p">,</span> <span class="n">kg_bn</span><span class="p">],</span>
     <span class="n">method</span><span class="o">=</span><span class="s1">&#39;Inhibitor Wins&#39;</span><span class="p">,</span>  <span class="c1"># &#39;OR&#39;, &#39;AND&#39;, &#39;Inhibitor Wins&#39;</span>
     <span class="n">descriptive</span><span class="o">=</span><span class="kc">True</span>
@@ -355,7 +354,7 @@ TP53 = !SRC &amp; MAPK1 # Scores: SRC_inhibit:0.524; MAPK1_activate:0.777
 <section id="probabilistic-merge-pbn">
 <h3>Probabilistic Merge (PBN)<a class="headerlink" href="#probabilistic-merge-pbn" title="Link to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Merge into PBN with specified probabilities</span>
-<span class="n">merged_pbn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">merge_networks</span><span class="p">(</span>
+<span class="n">merged_pbn</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">merge_networks</span><span class="p">(</span>
     <span class="p">[</span><span class="n">orig_bn</span><span class="p">,</span> <span class="n">kg_bn</span><span class="p">],</span>
     <span class="n">method</span><span class="o">=</span><span class="s1">&#39;PBN&#39;</span><span class="p">,</span>
     <span class="n">prob</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>  <span class="c1"># probability for original model rules</span>
@@ -378,7 +377,7 @@ TP53 = !SRC &amp; MAPK1 # Scores: SRC_inhibit:0.524; MAPK1_activate:0.777
 <h2>Visualization and Simulation<a class="headerlink" href="#visualization-and-simulation" title="Link to this heading">¶</a></h2>
 <p>Visualize merged networks:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Visualize PBN</span>
-<span class="n">BNMPy</span><span class="o">.</span><span class="n">vis_network</span><span class="p">(</span>
+<span class="n">KGBN</span><span class="o">.</span><span class="n">vis_network</span><span class="p">(</span>
     <span class="n">merged_pbn</span><span class="p">,</span>
     <span class="n">output_html</span><span class="o">=</span><span class="s2">&quot;merged_network.html&quot;</span><span class="p">,</span>
     <span class="n">interactive</span><span class="o">=</span><span class="kc">True</span>
@@ -387,7 +386,7 @@ TP53 = !SRC &amp; MAPK1 # Scores: SRC_inhibit:0.524; MAPK1_activate:0.777
 </div>
 <p>Simulate the network:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Calculate steady states</span>
-<span class="n">calc</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">SteadyStateCalculator</span><span class="p">(</span><span class="n">merged_pbn</span><span class="p">)</span>
+<span class="n">calc</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">SteadyStateCalculator</span><span class="p">(</span><span class="n">merged_pbn</span><span class="p">)</span>
 <span class="n">steady_state</span> <span class="o">=</span> <span class="n">calc</span><span class="o">.</span><span class="n">compute_steady_state</span><span class="p">(</span><span class="n">n_runs</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">n_steps</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -396,13 +395,13 @@ TP53 = !SRC &amp; MAPK1 # Scores: SRC_inhibit:0.524; MAPK1_activate:0.777
 <h2>Phenotype Scoring<a class="headerlink" href="#phenotype-scoring" title="Link to this heading">¶</a></h2>
 <p>Compute phenotype scores using ProxPath-derived effects and simulation results:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get all available phenotypes</span>
-<span class="n">BNMPy</span><span class="o">.</span><span class="n">get_phenotypes</span><span class="p">()</span>
+<span class="n">KGBN</span><span class="o">.</span><span class="n">get_phenotypes</span><span class="p">()</span>
 
 <span class="c1"># Genes for phenotype scoring</span>
 <span class="n">genes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">merged_pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="c1"># or specify a list of genes</span>
 
 <span class="c1"># Get the formula for the phenotype scores without simulation results</span>
-<span class="n">formulas</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">phenotype_scores</span><span class="p">(</span>
+<span class="n">formulas</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">phenotype_scores</span><span class="p">(</span>
     <span class="n">genes</span><span class="o">=</span><span class="n">genes</span><span class="p">,</span>
     <span class="n">simulation_results</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">phenotypes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;APOPTOSIS&#39;</span><span class="p">,</span> <span class="s1">&#39;PROLIFERATION&#39;</span><span class="p">,</span> <span class="s1">&#39;DIFFERENTIATION&#39;</span><span class="p">]</span>
@@ -410,7 +409,7 @@ TP53 = !SRC &amp; MAPK1 # Scores: SRC_inhibit:0.524; MAPK1_activate:0.777
 <span class="nb">print</span><span class="p">(</span><span class="n">formulas</span><span class="p">)</span>
 
 <span class="c1"># Compute phenotype scores with simulation results</span>
-<span class="n">scores</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">phenotype_scores</span><span class="p">(</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">phenotype_scores</span><span class="p">(</span>
     <span class="n">genes</span><span class="o">=</span><span class="n">genes</span><span class="p">,</span>
     <span class="n">simulation_results</span><span class="o">=</span><span class="n">steady_state</span><span class="p">,</span>
     <span class="n">phenotypes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;APOPTOSIS&#39;</span><span class="p">,</span> <span class="s1">&#39;PROLIFERATION&#39;</span><span class="p">,</span> <span class="s1">&#39;DIFFERENTIATION&#39;</span><span class="p">]</span>
@@ -433,39 +432,39 @@ TP53 = !SRC &amp; MAPK1 # Scores: SRC_inhibit:0.524; MAPK1_activate:0.777
 </section>
 <section id="complete-workflow-example">
 <h2>Complete Workflow Example<a class="headerlink" href="#complete-workflow-example" title="Link to this heading">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">BNMPy</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">KGBN</span>
 
 <span class="c1"># 1. Build KG-derived BN</span>
 <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;KRAS&#39;</span><span class="p">,</span> <span class="s1">&#39;TP53&#39;</span><span class="p">,</span> <span class="s1">&#39;SMAD4&#39;</span><span class="p">,</span> <span class="s1">&#39;CDKN2A&#39;</span><span class="p">]</span>
-<span class="n">kg_string</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_signor_network</span><span class="p">(</span>
+<span class="n">kg_string</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">load_signor_network</span><span class="p">(</span>
     <span class="n">genes</span><span class="p">,</span>
     <span class="n">joiner</span><span class="o">=</span><span class="s1">&#39;inhibitor_wins&#39;</span><span class="p">,</span>
     <span class="n">score_cutoff</span><span class="o">=</span><span class="mf">0.5</span>
 <span class="p">)</span>
-<span class="n">kg_bn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="n">kg_string</span><span class="p">)</span>
+<span class="n">kg_bn</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="n">kg_string</span><span class="p">)</span>
 
 <span class="c1"># 2. Load curated model</span>
-<span class="n">orig_bn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="s1">&#39;curated_model.txt&#39;</span><span class="p">)</span>
+<span class="n">orig_bn</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">load_network</span><span class="p">(</span><span class="s1">&#39;curated_model.txt&#39;</span><span class="p">)</span>
 
 <span class="c1"># 3. Merge into PBN</span>
-<span class="n">merged_pbn</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">merge_networks</span><span class="p">(</span>
+<span class="n">merged_pbn</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">merge_networks</span><span class="p">(</span>
     <span class="p">[</span><span class="n">orig_bn</span><span class="p">,</span> <span class="n">kg_bn</span><span class="p">],</span>
     <span class="n">method</span><span class="o">=</span><span class="s1">&#39;PBN&#39;</span><span class="p">,</span>
     <span class="n">prob</span><span class="o">=</span><span class="mf">0.8</span>
 <span class="p">)</span>
 
 <span class="c1"># 4. Simulate</span>
-<span class="n">calc</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">SteadyStateCalculator</span><span class="p">(</span><span class="n">merged_pbn</span><span class="p">)</span>
+<span class="n">calc</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">SteadyStateCalculator</span><span class="p">(</span><span class="n">merged_pbn</span><span class="p">)</span>
 <span class="n">steady_state</span> <span class="o">=</span> <span class="n">calc</span><span class="o">.</span><span class="n">compute_steady_state</span><span class="p">()</span>
 
 <span class="c1"># 5. Score phenotypes</span>
-<span class="n">scores</span> <span class="o">=</span> <span class="n">BNMPy</span><span class="o">.</span><span class="n">phenotype_scores</span><span class="p">(</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">KGBN</span><span class="o">.</span><span class="n">phenotype_scores</span><span class="p">(</span>
     <span class="n">genes</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">merged_pbn</span><span class="o">.</span><span class="n">nodeDict</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
     <span class="n">simulation_results</span><span class="o">=</span><span class="n">steady_state</span>
 <span class="p">)</span>
 
 <span class="c1"># 6. Visualize</span>
-<span class="n">BNMPy</span><span class="o">.</span><span class="n">vis_network</span><span class="p">(</span><span class="n">merged_pbn</span><span class="p">,</span> <span class="n">output_html</span><span class="o">=</span><span class="s2">&quot;result.html&quot;</span><span class="p">)</span>
+<span class="n">KGBN</span><span class="o">.</span><span class="n">vis_network</span><span class="p">(</span><span class="n">merged_pbn</span><span class="p">,</span> <span class="n">output_html</span><span class="o">=</span><span class="s2">&quot;result.html&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>See <code class="docutils literal notranslate"><span class="pre">Examples/knowledge_graph.ipynb</span></code> and <code class="docutils literal notranslate"><span class="pre">Examples/phenotype_score.ipynb</span></code> for detailed examples.</p>

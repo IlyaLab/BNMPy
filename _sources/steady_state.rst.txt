@@ -1,5 +1,5 @@
-BNMPy.steady_state
+KGBN.steady_state
 =================
-.. automodule:: BNMPy.steady_state
+.. automodule:: KGBN.steady_state
    :members:
    :undoc-members:

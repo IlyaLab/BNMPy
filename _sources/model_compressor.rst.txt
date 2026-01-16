@@ -1,9 +1,9 @@
-BNMPy.model_compressor
+KGBN.model_compressor
 ======================
 
 The model_compressor module provides tools for simplifying Boolean Networks before optimization.
 
-.. automodule:: BNMPy.model_compressor
+.. automodule:: KGBN.model_compressor
    :members:
    :undoc-members:
    :show-inheritance:
@@ -24,17 +24,17 @@ Basic Usage
 
 .. code-block:: python
 
-   import BNMPy
+   import KGBN
 
    # Load network
-   network = BNMPy.load_network("network.txt")
+   network = KGBN.load_network("network.txt")
 
    # Define nodes
    measured_nodes = {'Output1', 'Output2', 'Biomarker'}
    perturbed_nodes = {'Drug1', 'Drug2', 'Input'}
 
    # Compress
-   compressed_network, compression_info = BNMPy.compress_model(
+   compressed_network, compression_info = KGBN.compress_model(
        network,
        measured_nodes=measured_nodes,
        perturbed_nodes=perturbed_nodes,
@@ -46,16 +46,16 @@ Extract nodes directly from experimental data:
 
 .. code-block:: python
 
-   import BNMPy
+   import KGBN
 
    # Load network
-   network = BNMPy.load_network_from_file("network.txt")
+   network = KGBN.load_network_from_file("network.txt")
 
    # Extract nodes from experiments
-   measured_nodes, perturbed_nodes = BNMPy.extract_experiment_nodes("experiments.csv")
+   measured_nodes, perturbed_nodes = KGBN.extract_experiment_nodes("experiments.csv")
 
    # Compress using experimental information
-   compressed_network, compression_info = BNMPy.compress_model(
+   compressed_network, compression_info = KGBN.compress_model(
        network,
        measured_nodes=measured_nodes,
        perturbed_nodes=perturbed_nodes
@@ -69,7 +69,7 @@ For detailed control:
 
 .. code-block:: python
 
-   from BNMPy.model_compressor import ModelCompressor
+   from KGBN.model_compressor import ModelCompressor
 
    # Initialize compressor
    compressor = ModelCompressor(network, measured_nodes, perturbed_nodes)
@@ -104,17 +104,17 @@ The module provides visualization capabilities:
 
 .. code-block:: python
 
-   import BNMPy
+   import KGBN
 
    # Compress network
-   compressed_network, compression_info = BNMPy.compress_model(
+   compressed_network, compression_info = KGBN.compress_model(
        network,
        measured_nodes=measured_nodes,
        perturbed_nodes=perturbed_nodes
    )
 
    # Visualize compression results
-   BNMPy.vis_compression(
+   KGBN.vis_compression(
        network,                    # Original network
        compressed_network,         # Compressed network
        compression_info,           # Compression information

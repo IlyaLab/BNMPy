@@ -1,5 +1,5 @@
-BNMPy.vis
+KGBN.vis
 =================
-.. automodule:: BNMPy.vis
+.. automodule:: KGBN.vis
    :members:
    :undoc-members:

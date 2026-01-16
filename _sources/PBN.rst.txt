@@ -1,5 +1,5 @@
-BNMPy.PBN
+KGBN.PBN
 =================
-.. automodule:: BNMPy.PBN
+.. automodule:: KGBN.PBN
    :members:
    :undoc-members:
