@@ -10,6 +10,10 @@ src/__pycache__/
 # ignore lib folder
 lib/
 
+# ignore data folder
+data/
+input_files/
+
 # ignore simulation results in any subfolder except notebooks
 pancreatic_cancer_simulation/**
 AML_simulation/**

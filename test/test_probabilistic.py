@@ -1,5 +1,5 @@
 import unittest
-from BNMPy import BMatrix
+from KGBN import BMatrix
 
 class PBNTest(unittest.TestCase):
 

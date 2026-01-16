@@ -1,22 +1,22 @@
 Basic Simulation
 ===============
 
-Welcome to BNMPy! This guide will help you get started with Boolean Network and Probabilistic Boolean Network modeling.
+Welcome to KGBN! This guide will help you get started with Boolean Network and Probabilistic Boolean Network modeling.
 
 Installation
 ------------
 
-To install BNMPy, navigate to the BNMPy directory and run:
+To install KGBN, navigate to the KGBN directory and run:
 
 .. code-block:: bash
 
-   cd BNMPy
+   cd KGBN
    pip install -e .
 
 Dependencies
 ~~~~~~~~~~~~
 
-BNMPy requires the following packages:
+KGBN requires the following packages:
 
 - pandas
 - numpy
@@ -26,7 +26,7 @@ BNMPy requires the following packages:
 - scipy == 1.15.2
 - pyswarms == 1.3.0
 
-These will be installed automatically when you install BNMPy using the command above.
+These will be installed automatically when you install KGBN using the command above.
 
 Quick Start
 -----------
@@ -34,14 +34,14 @@ Quick Start
 Loading a Network
 ~~~~~~~~~~~~~~~~~
 
-BNMPy provides a unified function to load networks from files or strings. The function automatically detects the format (Boolean Network or Probabilistic Boolean Network):
+KGBN provides a unified function to load networks from files or strings. The function automatically detects the format (Boolean Network or Probabilistic Boolean Network):
 
 .. code-block:: python
 
-   import BNMPy
+   import KGBN
 
    # From a text file
-   network = BNMPy.load_network("network.txt")
+   network = KGBN.load_network("network.txt")
 
    # Or from a string
    network_string = """
@@ -52,7 +52,7 @@ BNMPy provides a unified function to load networks from files or strings. The fu
    E = C & D
    F = !A & B
    """
-   network = BNMPy.load_network(
+   network = KGBN.load_network(
        network_string,
        initial_state=[0, 0, 0, 0, 0, 0]
    )
@@ -87,7 +87,7 @@ You can specify initial states in two ways:
 
 .. code-block:: python
 
-   network = BNMPy.load_network_from_string(
+   network = KGBN.load_network_from_string(
        network_string,
        initial_state=[0, 1, 0, 1, 0, 0]
    )
@@ -96,7 +96,7 @@ You can specify initial states in two ways:
 
 .. code-block:: python
 
-   network = BNMPy.load_network_from_string(
+   network = KGBN.load_network_from_string(
        network_string,
        initial_state={'A': 0, 'B': 1, 'C': 0, 'D': 1, 'E': 0, 'F': 0}
    )
@@ -138,7 +138,7 @@ Find stable states:
 
 .. code-block:: python
 
-   from BNMPy import SteadyStateCalculator
+   from KGBN import SteadyStateCalculator
 
    calc = SteadyStateCalculator(network)
    
@@ -165,7 +165,7 @@ Create interactive network visualizations:
 .. code-block:: python
 
    # Create visualization
-   BNMPy.vis_network(
+   KGBN.vis_network(
        network,
        output_html="network.html",
        interactive=True
@@ -185,7 +185,7 @@ PBNs are loaded using the same ``load_network()`` function. The function automat
 .. code-block:: python
 
    # From file
-   pbn = BNMPy.load_network("pbn_network.txt")
+   pbn = KGBN.load_network("pbn_network.txt")
 
    # Or from string
    pbn_string = """
@@ -193,7 +193,7 @@ PBNs are loaded using the same ``load_network()`` function. The function automat
    Gene1 = Gene4, 0.4
    Gene2 = !Gene1
    """
-   pbn = BNMPy.load_network(pbn_string)
+   pbn = KGBN.load_network(pbn_string)
 
 PBN Format
 ~~~~~~~~~~
@@ -256,14 +256,14 @@ Combine multiple networks:
 .. code-block:: python
 
    # Load networks
-   network1 = BNMPy.load_network("network1.txt")
-   network2 = BNMPy.load_network("network2.txt")
+   network1 = KGBN.load_network("network1.txt")
+   network2 = KGBN.load_network("network2.txt")
 
    # Merge into Boolean Network using Inhibitor Wins method
-   merged_bn = BNMPy.merge_networks([network1, network2], method='Inhibitor Wins')
+   merged_bn = KGBN.merge_networks([network1, network2], method='Inhibitor Wins')
 
    # Merge into PBN (creates alternative rules with probability 0.9)
-   merged_pbn = BNMPy.merge_networks([network1, network2], method='PBN', prob=0.9)
+   merged_pbn = KGBN.merge_networks([network1, network2], method='PBN', prob=0.9)
 
 More Information
 ----------

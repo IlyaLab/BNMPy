@@ -1,5 +1,5 @@
-BNMPy.build_bn_from_kg
+KGBN.KG_BN
 =================
-.. automodule:: BNMPy.build_bn_from_kg
+.. automodule:: KGBN.KG_BN
    :members:
    :undoc-members:

@@ -1,0 +1,1069 @@
+## Created by Tazein on 1/29/24
+"""
+Resources for loading boolean networks from files (strings)
+"""
+
+import numpy as np
+import pandas as pd
+import re
+from itertools import product
+import os
+
+################## equations for simulation variables ##################
+
+BUILT_INS = {'0', '1', 'True', 'False'}
+
+def get_equations(file = None, string = None):
+    if file is not None:
+        with open(file, 'r') as file:
+            string = file.readlines()
+    elif string is not None:
+        string = string.split('\n')
+    else:
+        raise ValueError("Either file or string must be provided")
+    seen_genes = set()
+    duplicate_genes = []
+    equations = []
+    for equation in string:
+        equation = equation.strip()
+        if len(equation) > 0 and not equation.startswith('#'):
+            # Remove inline comments
+            if '#' in equation:
+                equation = equation.split('#')[0].strip()
+            if len(equation) > 0 and '=' in equation:
+                parts = equation.split('=')
+                gene = parts[0].strip()
+                if gene and gene not in seen_genes:
+                    seen_genes.add(gene)
+                    equations.append(equation)
+                elif gene and gene in seen_genes:
+                    duplicate_genes.append(gene)
+    if len(duplicate_genes) > 0:
+        print(f"Duplicate genes found: {duplicate_genes}\nUsing the first occurrence of each gene.")
+    return equations
+
+
+def get_gene_dict(equations):
+    left_side = []
+    for equation in equations:
+        parts = equation.split('=')
+        value = parts[0].strip()
+        if value not in left_side:
+            left_side.append(value)
+    
+    genes = left_side
+    
+    # making a dictionary for the genes starting from 0
+    gene_dict = {gene: i for i, gene in enumerate(genes)}
+    return(gene_dict)
+
+def get_upstream_genes(equations): 
+    "Returns a string of gene names, space-separated, for each of the equations."
+    #get only the right side of the equations
+    right_side = []
+    for equation in equations:
+        parts = equation.split('=')
+        value = parts[1].strip()
+        right_side.append(value)
+    functions = right_side
+
+    #getting rid of the Boolean characters ! | & and ()
+    characters_to_remove = "!|&()"
+    values = []
+    for function in functions:
+        translation_table = str.maketrans({c: ' ' for c in characters_to_remove})
+        cleaned_expression = function.translate(translation_table) 
+        tokens = list(set(cleaned_expression.split()))
+        tokens = [x for x in tokens if x not in BUILT_INS]
+        cleaned_expression = ' '.join(tokens)
+        values.append(cleaned_expression)
+    upstream_genes = values
+
+    return(upstream_genes)
+    
+def get_connectivity_matrix(equations,upstream_genes,gene_dict):    
+    #now we actually make the connectivity matrix
+    result_list = []
+
+    for function in upstream_genes:
+        genes = function.split()
+        values = tuple([gene_dict[gene] for gene in genes])
+        result_list.append(values)
+    result_array = np.array(result_list, dtype=object) #they are not all the same length
+    
+    #now we fix the length by adding the -1 (aka the padding) 
+    max_length = max(len(t) for t in result_array)
+    connectivity_matrix = [tuple(np.pad(t, (0, max_length - len(t)), constant_values=-1)) for t in result_array]
+    connectivity_matrix = np.array(connectivity_matrix, dtype=int)
+    
+    return(connectivity_matrix)
+
+def get_truth_table(equations,upstream_genes,show_functions=None):
+    
+    if show_functions is None: 
+        show_functions = False
+
+    #get only the right side of the equations
+    right_side = []
+    for equation in equations:
+        parts = equation.split('=')
+        value = parts[1].strip()
+        right_side.append(value)
+    functions = right_side
+
+    functions = [function.replace('!', ' not ').replace('|', ' or ').replace('&',' and ') for function in functions]
+        
+    truth = []
+    var1 = []
+    i = 1
+
+    for i in range(len(equations)):
+        function = functions[i]   
+        if show_functions is False:
+            pass
+        else:
+            print(function)
+            
+        variables = [upstream_genes[i]] #get the genes in the expression (ex: FLT3)
+        variables = variables[0].split()
+        combinations = product([0, 1], repeat=len(variables)) #gets all possiblities
+        i += 1
+    
+        for combo in combinations:
+            values = dict(zip(variables, combo))
+        
+            if len(variables) == 1 and variables[0] == function: #if the node is equal to itself (aka FLT3=FLT3)
+                output = values[variables[0]]
+
+            else:
+                output = (int(eval(function, values))) #evaluates the equations
+
+            var1.append(output) #adds the output to var1
+        
+        truth.append(tuple(var1))
+        var1 = []
+
+    truth_table = np.array(truth, dtype=object) #they are not all the same length
+
+    #now we fix the length by adding the -1 (aka the padding) 
+    max_length = max(len(t) for t in truth_table)
+    truth_table = [tuple(np.pad(t, (0, max_length - len(t)), constant_values=-1)) for t in truth_table]
+    truth_table = np.array(truth_table)
+    
+    return(truth_table)
+
+################## knocking in/out genes after creating variables but before simulation ##################
+
+##can also use mutation_dict for perturbed_dict, just replace the file 
+def get_mutation_dict(file):
+    mutation_dict = {}
+    
+    with open(file) as f:
+        for line in f:
+            if bool(re.search('=', line)) == False: #there is no = sign
+                print('There is a formatting error: ' + str(line) + '\nMake sure that it is formatted with an equal sign. For example: FLT3 = 1')
+                return
+            
+            key, val = line.split("=")
+            mutation_dict[key.strip()] = int(val.strip())
+    
+    return(mutation_dict)
+
+def get_knocking_genes(profile, mutation_dict, connectivity_matrix, gene_dict, perturbed_genes=None, perturbed_dict=None):
+    ngenes = len(gene_dict)
+    mutated_connectivity_matrix = connectivity_matrix.copy()  # Create a copy of connectivity_matrix for each iteration 
+    x0 = np.random.randint(2, size=ngenes)  # Random initial state resets with every profile
+
+    
+    if perturbed_genes is None: 
+        perturbed_genes = []
+        
+    if perturbed_dict is None:
+        perturbed_dict = {}
+        
+    if profile is not None: #if there is a profile
+        mutation_profile = list(set(profile.split(',')))  # Removes any repeat values 
+        
+    if profile is not None and mutation_dict is None: #there are no mutation_dict (aka no mutations) 
+        mutation_profile = ''
+            
+    if perturbed_genes is not None: #if there are perturbed genes
+        perturbed_genes = perturbed_genes if isinstance(perturbed_genes, list) else perturbed_genes.split(',')
+        perturbed_genes = list(set(perturbed_genes))  # Removes any repeat values
+
+        
+    # Setting that gene's value to wild value
+    for gene in mutation_dict:
+        if gene == '' or gene == 'NA':
+            print('no_mutation')
+        else:
+            if ( mutation_dict[gene] > 0  ) :
+                x0[gene_dict[gene]] = 0 
+            else :
+                x0[gene_dict[gene]] = 1
+
+    # Make the mutated_connectivity_matrix rows in mutation_profile all -1 
+    for gene in mutation_profile:
+        if gene == '' or gene == 'NA':
+            print('no_mutation')
+        else:
+            mutated_connectivity_matrix[[gene_dict[gene]], :] = -1  # Knock the connectivity_matrix to -1
+            x0[gene_dict[gene]] = mutation_dict.get(gene, 0)  # Setting that gene's value to mutation value
+            
+    for gene in perturbed_genes:
+        if len(gene) == 0:
+            print('no perturbed genes in the simulation')
+        else:
+            mutated_connectivity_matrix[[gene_dict[gene]], :] = -1  # Knock the connectivity_matrix to -1
+            x0[gene_dict[gene]] = perturbed_dict.get(gene, 0)  # Setting that gene's value to mutation value
+            
+    return(mutated_connectivity_matrix,x0)
+
+
+################## equations for calculating phenotype and network ##################
+
+#getting the equations uses the same function (equations(file))
+
+def get_cal_upstream_genes(equations):
+    right_side = []
+    for equation in equations:
+        parts = equation.split('=')
+        value = parts[1].strip()
+        right_side.append(value)
+    functions = right_side
+
+    #getting rid of the Boolean characters ! | & and ()
+    characters_to_remove = "!|&()"
+    values = []
+    for function in functions:
+        translation_table = str.maketrans("", "", characters_to_remove)
+        cleaned_expression = function.translate(translation_table)  
+        cleaned_expression = ' '.join(list(set(cleaned_expression.split())))
+        values.append(cleaned_expression)
+    cal_upstream_genes = values
+    
+    for i in range(len(cal_upstream_genes)):
+        cal_upstream_genes[i] = cal_upstream_genes[i].split()
+    
+    return cal_upstream_genes
+
+def get_cal_functions(equations):
+    right_side = []
+    for equation in equations:
+        parts = equation.split('=')
+        value = parts[1].strip()
+        right_side.append(value)
+    cal_functions = right_side
+
+    cal_functions = [function.replace('!', '-').replace('|', '+').replace('&','+') for function in cal_functions]
+
+    characters_to_remove = "()"
+    values = []
+    for function in cal_functions:
+        translation_table = str.maketrans("", "", characters_to_remove)
+        cleaned_expression = function.translate(translation_table)  
+        values.append(cleaned_expression)
+        cal_functions = values
+    
+    #cleaning up the cal_functions format so it can be eval()
+    cal_functions = [function.replace(' - ', ' -') for function in cal_functions]
+    cal_functions = [function.replace('- ', '-') for function in cal_functions]
+    cal_functions = [function.replace('- ', '-') for function in cal_functions]
+    cal_functions = [function.replace('  ', ' ') for function in cal_functions]
+
+    values = []
+    for function in cal_functions:
+        new_func = re.sub(r'(-\w+)', r'(\1)', function)
+        values.append(new_func)
+        cal_functions = values
+        
+    return(cal_functions)
+
+#assumes that cal_functions == len(scores_dict)
+def get_calculating_scores(network_traj, cal_functions, cal_upstream_genes, gene_dict, cal_range=None, scores_dict=None, title=None):
+    if scores_dict is None:
+        scores_dict = {"Apoptosis": [], "Differentiation": [], "Proliferation": [], "Network": []}
+        
+    if cal_range is None:
+        cal_range = network_traj[-100000:]
+    
+    if title is None:
+        title = ["Apoptosis", "Differentiation", "Proliferation", "Network"]
+    
+    for i in range(len(cal_functions)):
+        score_function = cal_functions[i]
+        variables = cal_upstream_genes[i]
+        scores = []  # List to store scores for this iteration
+
+        for row in cal_range:
+            gene_values = []  # Clear gene_values for each row
+            for gene in variables:
+                value = row[gene_dict[gene]]
+                gene_values.append(value)
+
+            values = dict(zip(variables, gene_values))
+            output = int(eval(score_function, values))
+
+            scores.append(output)  # Append the score to the list for this iteration
+
+        scores_dict[title[i]] = scores
+        
+    # Calculate the 'Network' scores
+    scores = []
+    Apoptosis = np.mean( scores_dict['Apoptosis'] )
+    Differentiation = np.mean( scores_dict['Differentiation'] )
+    Proliferation = np.mean( scores_dict['Proliferation'] )
+    
+    final_scores_dict = {} 
+    
+    final_scores_dict['Apoptosis']  = Apoptosis
+    final_scores_dict['Differentiation'] = Differentiation
+    final_scores_dict['Proliferation'] = Proliferation
+    #for i in range(len(cal_range)): 
+    #output = Proliferation[i] - (Differentiation[i] + Apoptosis[i])
+    #scores.append(output)
+    
+    final_score = Proliferation - Differentiation - Apoptosis
+    final_scores_dict['Network'] = final_score #scores
+    #final_score = np.mean(scores_dict['Network'])
+    
+    return (final_scores_dict,final_score)
+
+################## load BN/PBN from files/strings ##################
+def load_network_from_file(filename, initial_state=None):
+    """
+    Given a file representing a boolean network, this generates a BooleanNetwork object.
+
+    Formatting:
+   
+        gene = equation
+   
+    - all genes must have their own equation in a line (sometimes the equation is just A = A)
+    - each equation must have an equal sign and a space before and after it
+    - If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed
+    
+    Parameters:
+    -----------
+    filename : str
+        Path to the file containing the network definition
+    initial_state : array-like or dict, optional
+        Initial values for each node. If array-like, order matches gene order in file.
+        If dict, keys are gene names and values are initial states (0 or 1).
+        If None, random initial values are used.
+    """
+    from .booleanNetwork import BooleanNetwork
+    equations = get_equations(filename)
+    ngenes = len(equations)
+    gene_dict = get_gene_dict(equations)
+    upstream_genes = get_upstream_genes(equations)
+    connectivity_matrix = get_connectivity_matrix(equations, upstream_genes, gene_dict)
+    truth_table = get_truth_table(equations, upstream_genes)
+    
+    # Initialize x0 array
+    if initial_state is None:
+        print('No initial state provided, using a random initial state')
+        x0 = np.random.randint(2, size=ngenes) #random inital state 
+    elif isinstance(initial_state, dict):
+        # Dictionary input: keys are gene names, values are initial states
+        x0 = np.zeros(ngenes, dtype=int)
+        for gene, value in initial_state.items():
+            if gene in gene_dict:
+                x0[gene_dict[gene]] = int(value)
+        print(f'Initial state set from dictionary. Genes not specified default to 0.')
+    else:
+        x0 = np.array(initial_state)
+    
+    # Handle constant values (0 or 1) in equations
+    for equation in equations:
+        parts = equation.split('=')
+        gene = parts[0].strip()
+        value = parts[1].strip()
+        
+        # Check if the equation is a constant value (0 or 1)
+        if value == '0' or value == '1':
+            gene_index = gene_dict[gene]
+            # Set the gene's initial state to the constant value
+            x0[gene_index] = int(value)
+            # Set the connectivity matrix row to -1 to indicate it's a constant/perturbed gene
+            connectivity_matrix[gene_index, :] = -1
+        
+    # create a Boolean network object
+    network = BooleanNetwork(ngenes, connectivity_matrix, truth_table, x0,
+            nodeDict=gene_dict, equations=equations)
+    print(f"Network loaded successfully. There are {ngenes} genes in the network.")
+    return network
+
+def load_network_from_string(network_string, initial_state=None):
+    """
+    Given a string representing a boolean network, this generates a BooleanNetwork object.
+
+    Formatting:
+
+    - all genes must have their own equation (sometimes the equation is just A = A)
+    - each equation must have an equal sign and a space before and after it
+    - If the equation is a constant value (0 or 1), meaning that the gene is set as mutated/perturbed
+    
+    Parameters:
+    -----------
+    network_string : str
+        String containing the network definition
+    initial_state : array-like or dict, optional
+        Initial values for each node. If array-like, order matches gene order in string.
+        If dict, keys are gene names and values are initial states (0 or 1).
+        If None, random initial values are used.
+    """
+    from .booleanNetwork import BooleanNetwork
+    equations = get_equations(string = network_string)
+
+    ngenes = len(equations)
+    gene_dict = get_gene_dict(equations)
+    upstream_genes = get_upstream_genes(equations)
+    connectivity_matrix = get_connectivity_matrix(equations, upstream_genes, gene_dict)
+    truth_table = get_truth_table(equations, upstream_genes)
+    if initial_state is None:
+        print('No initial state provided, using a random initial state')
+        x0 = np.random.randint(2, size=ngenes) #random inital state 
+    elif isinstance(initial_state, dict):
+        # Dictionary input: keys are gene names, values are initial states
+        x0 = np.zeros(ngenes, dtype=int)
+        for gene, value in initial_state.items():
+            if gene in gene_dict:
+                x0[gene_dict[gene]] = int(value)
+        print(f'Initial state set from dictionary. Genes not specified default to 0.')
+    else:
+        x0 = np.array(initial_state)
+    
+    # Handle constant values (0 or 1) in equations
+    for equation in equations:
+        parts = equation.split('=')
+        gene = parts[0].strip()
+        value = parts[1].strip()
+        
+        # Check if the equation is a constant value (0 or 1)
+        if value == '0' or value == '1':
+            gene_index = gene_dict[gene]
+            x0[gene_index] = int(value)
+            connectivity_matrix[gene_index, :] = -1
+    
+    network = BooleanNetwork(ngenes, connectivity_matrix, truth_table, x0,
+            nodeDict=gene_dict, equations=equations)
+    print(f"Network loaded successfully. There are {ngenes} genes in the network.")
+    return network
+
+def load_pbn_from_file(filename, initial_state=None):
+    """
+    Given a file representing a probabilistic boolean network, this generates a ProbabilisticBN object.
+
+    File format example::
+    
+        x1 = (x1 | x2 | x3) & (!x1 | x2 | x3), 0.6
+        x1 = (x1 | x2 | x3) & (x1 | !x2 | !x3) & (!x1 | x2 | x3), 0.4
+        x2 = (x1 | x2 | x3) & (x1 | !x2 | !x3) & (!x1 | !x2 | x3)
+        x3 = (!x1 & x2 & x3) | (x1 & !x2 & x3) | (x1 & x2 & !x3) | (x1 & x2 & x3), 0.5
+        x3 = (x1 & x2 & x3), 0.5
+    
+
+    Each line has format: node = boolean_function, probability
+    The probability part can be omitted if there is only one function for that gene.
+    The boolean_function can also be a constant value (0 or 1), meaning that the gene is set as mutated/perturbed
+    
+    Parameters:
+    -----------
+    filename : str
+        Path to the file containing the PBN definition
+    initial_state : array-like or dict, optional
+        Initial values for each node. If array-like, order matches gene order in file.
+        If dict, keys are gene names and values are initial states (0 or 1).
+        If None, random initial values are used.
+        
+    Returns:
+    --------
+    ProbabilisticBN
+        A probabilistic boolean network object
+    """
+    from .PBN import ProbabilisticBN
+    with open(filename, 'r') as file:
+        lines = file.readlines()
+    # Filter out empty lines and comment lines (starting with #)
+    # For non-comment lines, remove inline comments (after #)
+    processed_lines = []
+    for line in lines:
+        line = line.strip()
+        if len(line) > 0 and not line.startswith('#'):
+            # Remove inline comments
+            if '#' in line:
+                line = line.split('#')[0].strip()
+            if len(line) > 0:
+                processed_lines.append(line)
+    
+    lines = processed_lines
+
+    gene_funcs = {}
+    gene_probs = {}
+    seen_gene_funcs = {}  # Track which gene-function combinations we've seen
+    
+    for line in lines:
+        # Check if line contains probability
+        if ',' in line:
+            func_part, prob_part = line.rsplit(',', 1)
+            probability = float(prob_part.strip())
+        else:
+            func_part = line
+            probability = None  # Will be set to 1.0 later if it's the only function
+        
+        if '=' not in func_part:
+            continue
+            
+        gene, equation = func_part.split('=', 1)
+        gene = gene.strip()
+        equation = equation.strip()
+        
+        # Check for duplicate gene-function pairs
+        gene_func_key = (gene, equation, probability)
+        if gene_func_key in seen_gene_funcs:
+            continue  # Skip duplicate
+        seen_gene_funcs[gene_func_key] = True
+        
+        if gene not in gene_funcs:
+            gene_funcs[gene] = []
+            gene_probs[gene] = []
+            
+        gene_funcs[gene].append(equation)
+        gene_probs[gene].append(probability)
+    
+    # Validate and set probabilities
+    for gene in gene_funcs:
+        if len(gene_funcs[gene]) == 1:
+            # If there's only one function, set probability to 1.0 if not specified
+            if gene_probs[gene][0] is None:
+                gene_probs[gene][0] = 1.0
+        else:
+            # Check if all probabilities are specified
+            if None in gene_probs[gene]:
+                raise ValueError(f"Gene {gene} has multiple functions but not all have probabilities specified")
+            
+            # Check if probabilities sum to 1
+            prob_sum = sum(gene_probs[gene])
+            if not np.isclose(prob_sum, 1.0, atol=1e-6):
+                raise ValueError(f"Probabilities for gene {gene} sum to {prob_sum}, not 1.0")
+    
+    # Create a mapping of gene names to indices
+    gene_dict = {gene: i for i, gene in enumerate(gene_funcs.keys())}
+    ngenes = len(gene_dict)
+    
+    # Create array for number of functions per node
+    nf = np.zeros(ngenes, dtype=int)
+    for gene, funcs in gene_funcs.items():
+        idx = gene_dict[gene]
+        nf[idx] = len(funcs)
+    
+    # Create probability matrix
+    max_funcs = max(nf)
+    cij = np.full((ngenes, max_funcs), -1.0)
+    for gene, probs in gene_probs.items():
+        idx = gene_dict[gene]
+        for j, prob in enumerate(probs):
+            cij[idx, j] = prob
+    
+    # Process each function to get connectivity and truth tables
+    all_equations = []
+    for gene in gene_funcs:
+        for func in gene_funcs[gene]:
+            all_equations.append(f"{gene} = {func}")
+    
+    upstream_genes = get_upstream_genes(all_equations)
+    
+    # Create connectivity matrix and truth table
+    connectivity_matrix = get_connectivity_matrix(all_equations, upstream_genes, gene_dict)
+    truth_table = get_truth_table(all_equations, upstream_genes)
+    
+    # Set initial state
+    if initial_state is None:
+        print('No initial state provided, using a random initial state')
+        x0 = np.random.randint(2, size=ngenes)
+    else:
+        x0 = np.array(initial_state)
+    
+    # Handle constant values (0 or 1) in equations
+    for equation in all_equations:
+        parts = equation.split('=')
+        gene = parts[0].strip()
+        value = parts[1].strip()
+        
+        # Check if the equation is a constant value (0 or 1)
+        if value == '0' or value == '1':
+            gene_index = gene_dict[gene]
+            # Set the gene's initial state to the constant value
+            x0[gene_index] = int(value)
+            # Set the connectivity matrix row to -1 to indicate it's a constant
+            connectivity_matrix[gene_index, :] = -1
+    
+    # Create and return the PBN
+    network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0, nodeDict=gene_dict)
+    network.gene_functions = gene_funcs  # Store the function strings
+    network.equations = all_equations  # Store the expanded equations
+    print(f"PBN loaded successfully. There are {ngenes} genes in the network.")
+    return network
+
+def load_pbn_from_string(network_string, initial_state=None):
+    """
+    Given a string representing a probabilistic boolean network, this generates a ProbabilisticBN object.
+    
+    String format should match the file format expected by load_pbn_from_file.
+    
+    Parameters:
+    -----------
+    network_string : str
+        String containing the PBN definition
+    initial_state : array-like or dict, optional
+        Initial values for each node. If array-like, order matches gene order in string.
+        If dict, keys are gene names and values are initial states (0 or 1).
+        If None, random initial values are used.
+        
+    Returns:
+    --------
+    ProbabilisticBN
+        A probabilistic boolean network object
+    """
+    from .PBN import ProbabilisticBN
+    
+    # Split the string into lines
+    lines = [x.strip() for x in network_string.strip().split('\n') if x.strip()]
+    
+    # Filter out empty lines and comment lines (starting with #)
+    # For non-comment lines, remove inline comments (after #)
+    processed_lines = []
+    for line in lines:
+        if len(line) > 0 and not line.startswith('#'):
+            # Remove inline comments
+            if '#' in line:
+                line = line.split('#')[0].strip()
+            if len(line) > 0:
+                processed_lines.append(line)
+    
+    lines = processed_lines
+
+    gene_funcs = {}
+    gene_probs = {}
+    seen_gene_funcs = {}  # Track which gene-function combinations we've seen
+    
+    for line in lines:
+        # Skip empty lines
+        if not line:
+            continue
+            
+        # Split by the last comma to separate function and probability
+        # Check if line contains probability
+        if ',' in line:
+            func_part, prob_part = line.rsplit(',', 1)
+            probability = float(prob_part.strip())
+        else:
+            func_part = line
+            probability = None  # Will be set to 1.0 later if it's the only function
+        
+        if '=' not in func_part:
+            continue
+            
+        gene, equation = func_part.split('=', 1)
+        gene = gene.strip()
+        equation = equation.strip()
+        
+        # Check for duplicate gene-function pairs
+        gene_func_key = (gene, equation, probability)
+        if gene_func_key in seen_gene_funcs:
+            continue  # Skip duplicate
+        seen_gene_funcs[gene_func_key] = True
+        
+        if gene not in gene_funcs:
+            gene_funcs[gene] = []
+            gene_probs[gene] = []
+            
+        gene_funcs[gene].append(equation)
+        gene_probs[gene].append(probability)
+
+    # Validate and set probabilities
+    for gene in gene_funcs:
+        if len(gene_funcs[gene]) == 1:
+            # If there's only one function, set probability to 1.0 if not specified
+            if gene_probs[gene][0] is None:
+                gene_probs[gene][0] = 1.0
+        else:
+            # Check if all probabilities are specified
+            if None in gene_probs[gene]:
+                raise ValueError(f"Gene {gene} has multiple functions but not all have probabilities specified")
+            
+            # Check if probabilities sum to 1
+            prob_sum = sum(gene_probs[gene])
+            if not np.isclose(prob_sum, 1.0, atol=1e-6):
+                raise ValueError(f"Probabilities for gene {gene} sum to {prob_sum}, not 1.0")
+
+    # Create a mapping of gene names to indices
+    gene_dict = {gene: i for i, gene in enumerate(gene_funcs.keys())}
+    ngenes = len(gene_dict)
+    
+    # Create array for number of functions per node
+    nf = np.zeros(ngenes, dtype=int)
+    for gene, funcs in gene_funcs.items():
+        idx = gene_dict[gene]
+        nf[idx] = len(funcs)
+    
+    # Create probability matrix
+    max_funcs = max(nf)
+    cij = np.full((ngenes, max_funcs), -1.0)
+    for gene, probs in gene_probs.items():
+        idx = gene_dict[gene]
+        for j, prob in enumerate(probs):
+            cij[idx, j] = prob
+    
+    # Process each function to get connectivity and truth tables
+    all_equations = []
+    for gene in gene_funcs:
+        for func in gene_funcs[gene]:
+            all_equations.append(f"{gene} = {func}")
+    
+    upstream_genes = get_upstream_genes(all_equations)
+    
+    # Create connectivity matrix and truth table
+    connectivity_matrix = get_connectivity_matrix(all_equations, upstream_genes, gene_dict)
+    truth_table = get_truth_table(all_equations, upstream_genes)
+    
+    # Set initial state
+    if initial_state is None:
+        print('No initial state provided, using a random initial state')
+        x0 = np.random.randint(2, size=ngenes)
+    elif isinstance(initial_state, dict):
+        # Dictionary input: keys are gene names, values are initial states
+        x0 = np.zeros(ngenes, dtype=int)
+        for gene, value in initial_state.items():
+            if gene in gene_dict:
+                x0[gene_dict[gene]] = int(value)
+        print(f'Initial state set from dictionary. Genes not specified default to 0.')
+    else:
+        x0 = np.array(initial_state)
+    
+    # Handle constant values (0 or 1) in equations
+    for equation in all_equations:
+        parts = equation.split('=')
+        gene = parts[0].strip()
+        value = parts[1].strip()
+        
+        # Check if the equation is a constant value (0 or 1)
+        if value == '0' or value == '1':
+            gene_index = gene_dict[gene]
+            x0[gene_index] = int(value)
+            connectivity_matrix[gene_index, :] = -1
+    
+    # Create and return the PBN
+    network = ProbabilisticBN(ngenes, connectivity_matrix, nf, truth_table, cij, x0, nodeDict=gene_dict)
+    network.gene_functions = gene_funcs  # Store the function strings
+    network.equations = all_equations  # Store the expanded equations
+    print(f"PBN loaded successfully. There are {ngenes} genes in the network.")
+    return network
+
+def load_network(source, initial_state=None, network_type='auto'):
+    """
+    Unified function to load a Boolean Network or Probabilistic Boolean Network from a file or string.
+    
+    This function automatically detects whether the input is a file path or a network string,
+    and whether it represents a Boolean Network (BN) or Probabilistic Boolean Network (PBN).
+    
+    Parameters:
+    -----------
+    source : str
+        Either a file path to a network definition file, or a string containing the network definition.
+        The function automatically detects which one it is.
+        
+    initial_state : array-like or dict, optional
+        Initial values for each node. If array-like, order matches gene order in the network.
+        If dict, keys are gene names and values are initial states (0 or 1).
+        If None, random initial values are used.
+        
+    network_type : str, optional
+        Type of network to load. Options are:
+        - 'auto' (default): Automatically detect BN vs PBN based on presence of probabilities
+        - 'bn': Force loading as Boolean Network
+        - 'pbn': Force loading as Probabilistic Boolean Network
+    
+    Returns:
+    --------
+    BooleanNetwork or ProbabilisticBN
+        A network object of the appropriate type
+    
+    Examples:
+    ---------
+    Load a BN from file:
+    
+    >>> network = load_network('my_network.txt')
+    
+    Load a BN from string:
+    
+    >>> network_str = '''
+    ... A = A
+    ... B = A & C
+    ... C = B | A
+    ... '''
+    >>> network = load_network(network_str)
+    
+    Load a PBN from file:
+    
+    >>> pbn = load_network('my_pbn.txt')
+    
+    Load a PBN from string with initial state:
+    
+    >>> pbn_str = '''
+    ... x1 = (x1 | x2), 0.6
+    ... x1 = (!x1 & x2), 0.4
+    ... x2 = x1 & x2
+    ... '''
+    >>> pbn = load_network(pbn_str, initial_state={'x1': 1, 'x2': 0})
+    
+    Notes:
+    ------
+    - For BN format: Each line should have format 'gene = boolean_expression'
+    - For PBN format: Each line should have format 'gene = boolean_expression, probability'
+    - Probabilities can be omitted if there's only one function for a gene
+    - Duplicate equations for the same gene are automatically filtered (first occurrence is kept)
+    - Comments (lines starting with #) and inline comments (after #) are ignored
+    - Constant values (0 or 1) are supported for genes
+    """
+    # Detect if source is a file or string
+    is_file = os.path.isfile(source)
+    
+    # Get raw lines for detection
+    if is_file:
+        with open(source, 'r') as f:
+            raw_lines = f.readlines()
+    else:
+        raw_lines = source.strip().split('\n')
+    
+    # Clean and filter lines for detection
+    detection_lines = []
+    for line in raw_lines:
+        line = line.strip()
+        if len(line) > 0 and not line.startswith('#'):
+            # Remove inline comments
+            if '#' in line:
+                line = line.split('#')[0].strip()
+            if len(line) > 0 and '=' in line:
+                detection_lines.append(line)
+    
+    # Auto-detect network type if needed
+    if network_type == 'auto':
+        is_pbn = False
+        for line in detection_lines:
+            # Check if line contains a comma after the equation (probability indicator)
+            if '=' in line:
+                parts = line.split('=', 1)
+                if len(parts) == 2:
+                    right_side = parts[1].strip()
+                    # Check if there's a comma that's not inside parentheses
+                    paren_count = 0
+                    for i, char in enumerate(right_side):
+                        if char == '(':
+                            paren_count += 1
+                        elif char == ')':
+                            paren_count -= 1
+                        elif char == ',' and paren_count == 0:
+                            # Found a comma outside parentheses - this is a probability
+                            is_pbn = True
+                            break
+            if is_pbn:
+                break
+        
+        network_type = 'pbn' if is_pbn else 'bn'
+    
+    # Load the appropriate network type
+    if network_type == 'bn':
+        if is_file:
+            return load_network_from_file(source, initial_state)
+        else:
+            return load_network_from_string(source, initial_state)
+    elif network_type == 'pbn':
+        if is_file:
+            return load_pbn_from_file(source, initial_state)
+        else:
+            return load_pbn_from_string(source, initial_state)
+    else:
+        raise ValueError(f"Invalid network_type: {network_type}. Must be 'auto', 'bn', or 'pbn'")
+
+def rename_nodes(network, mapping, expand_complexes=False):
+    """
+    Rename nodes in a boolean network based on a mapping.
+
+    Parameters:
+    -----------
+    network : str
+        Network definition as file path or string
+    mapping : str or dict
+        Excel file path with 'Node' and 'NewName' columns, or dictionary with
+        original names as keys and new names as values
+    expand_complexes : bool, optional
+        Whether to expand complex nodes into their components. Default is False.
+    Returns:
+    --------
+    str
+        Updated network string with renamed nodes and optionally expanded complexes
+    """
+    # Load network from file if needed
+    if os.path.isfile(network):
+        with open(network, 'r') as f:
+            network_string = f.read()
+    else:
+        network_string = network
+
+    # Process mapping input - either file or dictionary
+    node_mapping = {}
+    complex_nodes = {}
+    single_node_mapping = {}
+
+    if isinstance(mapping, str):
+        mapping_df = pd.read_excel(mapping)
+        for _, row in mapping_df.iterrows():
+            original_node = row['Node'].strip()
+            new_name = row['NewName']
+            if pd.isnull(new_name):
+                new_name = ''
+            else:
+                new_name = str(new_name).strip()
+            if not original_node or not new_name:
+                continue
+            
+            if ',' in new_name:
+                if expand_complexes:
+                    # Parse components for expansion
+                    components = [comp.strip() for comp in new_name.split(',') if comp.strip()]
+                    if components:
+                        node_mapping[original_node] = components
+                        complex_nodes[original_node] = components
+                # If expand_complexes=False, skip complex nodes (keep original name)
+            else:
+                node_mapping[original_node] = [new_name]
+                single_node_mapping[original_node] = new_name
+    elif isinstance(mapping, dict):
+        for original_node, new_name in mapping.items():
+            original_node = str(original_node).strip()
+            if not original_node:
+                continue
+            if isinstance(new_name, list):
+                if expand_complexes:
+                    components = [str(comp).strip() for comp in new_name if str(comp).strip()]
+                    if components:
+                        node_mapping[original_node] = components
+                        complex_nodes[original_node] = components
+                # If expand_complexes=False, skip complex nodes (keep original name)
+            else:
+                new_name = str(new_name).strip()
+                if not new_name:
+                    continue
+                if ',' in new_name:
+                    if expand_complexes:
+                        components = [comp.strip() for comp in new_name.split(',') if comp.strip()]
+                        if components:
+                            node_mapping[original_node] = components
+                            complex_nodes[original_node] = components
+                    # If expand_complexes=False, skip complex nodes (keep original name)
+                else:
+                    node_mapping[original_node] = [new_name]
+                    single_node_mapping[original_node] = new_name
+    else:
+        raise TypeError("mapping must be either a file path or a dictionary")
+
+    # Parse original network string into equations, ignore blank lines
+    original_equations = [line.strip() for line in network_string.strip().split('\n') if line.strip()]
+    equation_dict = {}
+
+    for eq in original_equations:
+        if '=' in eq:
+            left, right = eq.split('=', 1)
+            node = left.strip()
+            rule = right.strip()
+            if not node or not rule:
+                continue
+            equation_dict[node] = rule
+
+    new_equations = []
+    
+    if expand_complexes:
+        # Track which component equations have been created to avoid duplicates
+        processed_components = set()
+        
+        # 1 Process complex expansions only
+        for original_node, rule in equation_dict.items():
+            if original_node in node_mapping:
+                # This is a complex node that should be expanded
+                new_rule = rule
+                # Replace complexes with their expanded forms
+                for complex_node, components in complex_nodes.items():
+                    if not complex_node or not components:
+                        continue
+                    pattern = r'\b' + re.escape(complex_node) + r'\b'
+                    replacement = '(' + ' & '.join(components) + ')'
+                    new_rule = re.sub(pattern, replacement, new_rule)
+                
+                # Replace single nodes
+                for old_node, new_node in single_node_mapping.items():
+                    if not old_node or not new_node:
+                        continue
+                    pattern = r'\b' + re.escape(old_node) + r'\b'
+                    new_rule = re.sub(pattern, new_node, new_rule)
+                
+                # Create equations for new components
+                new_nodes = node_mapping[original_node]
+                for new_node in new_nodes:
+                    if not new_node:
+                        continue
+                    # Only create equation if this component hasn't been processed yet
+                    # and doesn't already exist as an original node
+                    if new_node not in processed_components and new_node not in equation_dict:
+                        new_equations.append(f"{new_node} = {new_rule}")
+                        processed_components.add(new_node)
+        
+        # 2 Process remaining nodes (including renamed original nodes)
+        for original_node, rule in equation_dict.items():
+            if original_node not in node_mapping:
+                # This is not a complex node, process normally
+                new_rule = rule
+                # Replace complexes with their expanded forms
+                for complex_node, components in complex_nodes.items():
+                    if not complex_node or not components:
+                        continue
+                    pattern = r'\b' + re.escape(complex_node) + r'\b'
+                    replacement = '(' + ' & '.join(components) + ')'
+                    new_rule = re.sub(pattern, replacement, new_rule)
+                
+                # Replace single nodes
+                for old_node, new_node in single_node_mapping.items():
+                    if not old_node or not new_node:
+                        continue
+                    pattern = r'\b' + re.escape(old_node) + r'\b'
+                    new_rule = re.sub(pattern, new_node, new_rule)
+                
+                # Handle left side
+                if original_node in single_node_mapping:
+                    renamed_node = single_node_mapping[original_node]
+                    new_equations.append(f"{renamed_node} = {new_rule}")
+                else:
+                    new_equations.append(f"{original_node} = {new_rule}")
+    else:
+        # Simple rename - no complex expansion
+        for original_node, rule in equation_dict.items():
+            new_rule = rule
+            # Only replace single nodes (no complex expansion)
+            for old_node, new_node in single_node_mapping.items():
+                if not old_node or not new_node:
+                    continue
+                pattern = r'\b' + re.escape(old_node) + r'\b'
+                new_rule = re.sub(pattern, new_node, new_rule)
+            
+            # Handle left side
+            if original_node in single_node_mapping:
+                renamed_node = single_node_mapping[original_node]
+                new_equations.append(f"{renamed_node} = {new_rule}")
+            else:
+                new_equations.append(f"{original_node} = {new_rule}")
+    
+    # reorder the equations alphabetically
+    new_equations.sort(key=lambda x: x.split('=')[0])
+
+    return '\n'.join(new_equations)
+

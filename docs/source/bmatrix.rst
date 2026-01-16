@@ -1,4 +1,4 @@
-BNMPy.BMatrix
+KGBN.BMatrix
 =================
-.. automodule:: BNMPy.BMatrix
+.. automodule:: KGBN.BMatrix
    :members:

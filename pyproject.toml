@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "BNMPy"
+name = "KGBN"
 version = "0.0.1"
 authors = [
   { name="Boris Aguilar", email="boris.aguilar@isbscience.org" },
@@ -28,8 +28,8 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/IlyaLab/BNMPy"
-"Bug Tracker" = "https://github.com/IlyaLab/BNMPy/issues"
+"Homepage" = "https://github.com/IlyaLab/KGBN"
+"Bug Tracker" = "https://github.com/IlyaLab/KGBN/issues"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

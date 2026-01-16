@@ -12,9 +12,9 @@ sys.path.insert(0, os.path.abspath('../../src'))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-import BNMPy
+import KGBN
 
-project = 'BNMPy'
+project = 'KGBN'
 copyright = '2025, IlyaLab'
 author = 'IlyaLab'
 release = '0.2'

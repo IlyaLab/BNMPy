@@ -1,9 +1,9 @@
-BNMPy.experiment_data
+KGBN.experiment_data
 =====================
 
 The ExperimentData class loads and validates experimental data from CSV files. It handles stimuli, inhibitors, and measured values for model optimization.
 
-.. automodule:: BNMPy.experiment_data
+.. automodule:: KGBN.experiment_data
    :members:
    :undoc-members:
    :show-inheritance:

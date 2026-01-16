@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 1200px;
+                 height: 1000px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "lightgreen", "font": {"color": "black"}, "id": 0, "label": "EGF", "shape": "dot", "size": 40, "title": "EGF"}, {"color": "yellow", "font": {"color": "black"}, "id": 1, "label": "BCL2", "shape": "dot", "size": 40, "title": "BCL2"}, {"color": "lightblue", "font": {"color": "black"}, "id": 2, "label": "PTEN", "shape": "dot", "size": 40, "title": "PTEN"}, {"color": "lightblue", "font": {"color": "black"}, "id": 3, "label": "ERBB2", "shape": "dot", "size": 40, "title": "ERBB2"}, {"color": "yellow", "font": {"color": "black"}, "id": 4, "label": "CCND1", "shape": "dot", "size": 40, "title": "CCND1"}, {"color": "yellow", "font": {"color": "black"}, "id": 5, "label": "FOS", "shape": "dot", "size": 40, "title": "FOS"}, {"color": "lightblue", "font": {"color": "black"}, "id": 6, "label": "PRKAA1", "shape": "dot", "size": 40, "title": "PRKAA1"}, {"color": "lightblue", "font": {"color": "black"}, "id": 7, "label": "ERBB4", "shape": "dot", "size": 40, "title": "ERBB4"}, {"color": "lightgreen", "font": {"color": "black"}, "id": 8, "label": "IGF1", "shape": "dot", "size": 40, "title": "IGF1"}, {"color": "lightblue", "font": {"color": "black"}, "id": 9, "label": "TSC1", "shape": "dot", "size": 40, "title": "TSC1"}, {"color": "lightblue", "font": {"color": "black"}, "id": 10, "label": "IGF1R", "shape": "dot", "size": 40, "title": "IGF1R"}, {"color": "lightblue", "font": {"color": "black"}, "id": 11, "label": "MAP3K1", "shape": "dot", "size": 40, "title": "MAP3K1"}, {"color": "lightblue", "font": {"color": "black"}, "id": 12, "label": "STAT3", "shape": "dot", "size": 40, "title": "STAT3"}, {"color": "lightblue", "font": {"color": "black"}, "id": 13, "label": "PDPK1", "shape": "dot", "size": 40, "title": "PDPK1"}, {"color": "lightblue", "font": {"color": "black"}, "id": 14, "label": "BAD", "shape": "dot", "size": 40, "title": "BAD"}, {"color": "lightblue", "font": {"color": "black"}, "id": 15, "label": "PIK3CA", "shape": "dot", "size": 40, "title": "PIK3CA"}, {"color": "lightblue", "font": {"color": "black"}, "id": 16, "label": "MAPK8", "shape": "dot", "size": 40, "title": "MAPK8"}, {"color": "lightblue", "font": {"color": "black"}, "id": 17, "label": "AKT1", "shape": "dot", "size": 40, "title": "AKT1"}, {"color": "lightgreen", "font": {"color": "black"}, "id": 18, "label": "STK11", "shape": "dot", "size": 40, "title": "STK11"}, {"color": "lightblue", "font": {"color": "black"}, "id": 19, "label": "MAP2K1", "shape": "dot", "size": 40, "title": "MAP2K1"}, {"color": "lightblue", "font": {"color": "black"}, "id": 20, "label": "GRB2", "shape": "dot", "size": 40, "title": "GRB2"}, {"color": "lightgreen", "font": {"color": "black"}, "id": 21, "label": "NRG1", "shape": "dot", "size": 40, "title": "NRG1"}, {"color": "lightblue", "font": {"color": "black"}, "id": 22, "label": "GSK3B", "shape": "dot", "size": 40, "title": "GSK3B"}, {"color": "lightblue", "font": {"color": "black"}, "id": 23, "label": "EGFR", "shape": "dot", "size": 40, "title": "EGFR"}, {"color": "yellow", "font": {"color": "black"}, "id": 24, "label": "ELK4", "shape": "dot", "size": 40, "title": "ELK4"}, {"color": "lightblue", "font": {"color": "black"}, "id": 25, "label": "JAK1", "shape": "dot", "size": 40, "title": "JAK1"}, {"color": "lightblue", "font": {"color": "black"}, "id": 26, "label": "RPS6KB1", "shape": "dot", "size": 40, "title": "RPS6KB1"}, {"color": "lightblue", "font": {"color": "black"}, "id": 27, "label": "RHEB", "shape": "dot", "size": 40, "title": "RHEB"}, {"color": "lightblue", "font": {"color": "black"}, "id": 28, "label": "PIP3", "shape": "dot", "size": 40, "title": "PIP3"}, {"color": "yellow", "font": {"color": "black"}, "id": 29, "label": "ELK1", "shape": "dot", "size": 40, "title": "ELK1"}, {"color": "lightblue", "font": {"color": "black"}, "id": 30, "label": "IRS1", "shape": "dot", "size": 40, "title": "IRS1"}, {"color": "yellow", "font": {"color": "black"}, "id": 31, "label": "SP1", "shape": "dot", "size": 40, "title": "SP1"}, {"color": "lightgreen", "font": {"color": "black"}, "id": 32, "label": "HBEGF", "shape": "dot", "size": 40, "title": "HBEGF"}, {"color": "lightblue", "font": {"color": "black"}, "id": 33, "label": "RAF1", "shape": "dot", "size": 40, "title": "RAF1"}, {"color": "lightblue", "font": {"color": "black"}, "id": 34, "label": "KRAS", "shape": "dot", "size": 40, "title": "KRAS"}, {"color": "lightblue", "font": {"color": "black"}, "id": 35, "label": "MAPK3", "shape": "dot", "size": 40, "title": "MAPK3"}, {"color": "lightblue", "font": {"color": "black"}, "id": 36, "label": "MAP2K4", "shape": "dot", "size": 40, "title": "MAP2K4"}, {"color": "lightblue", "font": {"color": "black"}, "id": 37, "label": "MTOR", "shape": "dot", "size": 40, "title": "MTOR"}, {"color": "lightgreen", "font": {"color": "black"}, "id": "legend_0", "label": "Input", "physics": false, "shape": "dot", "size": 30, "title": "Input nodes", "x": -1500, "y": -800}, {"color": "yellow", "font": {"color": "black"}, "id": "legend_1", "label": "Output", "physics": false, "shape": "dot", "size": 30, "title": "Output nodes", "x": -1500, "y": -680}, {"color": "lightblue", "font": {"color": "black"}, "id": "legend_2", "label": "Intermediate", "physics": false, "shape": "dot", "size": 30, "title": "Intermediate nodes", "x": -1500, "y": -560}, {"color": "orange", "font": {"color": "black"}, "id": "legend_3", "label": "Measured", "physics": false, "shape": "dot", "size": 30, "title": "Measured nodes", "x": -1500, "y": -440}, {"color": "red", "font": {"color": "black"}, "id": "legend_4", "label": "Perturbed", "physics": false, "shape": "dot", "size": 30, "title": "Perturbed nodes", "x": -1500, "y": -320}, {"color": "lightgrey", "font": {"color": "black"}, "id": "legend_5", "label": "Removed", "physics": false, "shape": "dot", "size": 30, "title": "Removed nodes", "x": -1500, "y": -200}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#ff000019", "from": 15, "title": "AKT1 = !PTEN \u0026 ( MTOR | PDPK1 | PIK3CA ), p=0.100", "to": 17, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 2, "title": "AKT1 = !PTEN \u0026 ( MTOR | PDPK1 | PIK3CA ), p=0.100", "to": 17, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 37, "title": "AKT1 = !PTEN \u0026 ( MTOR | PDPK1 | PIK3CA ), p=0.100", "to": 17, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 13, "title": "AKT1 = !PTEN \u0026 ( MTOR | PDPK1 | PIK3CA ), p=0.100", "to": 17, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 28, "title": "AKT1 = PIP3, p=0.900", "to": 17, "width": 3}, {"arrows": "to", "color": "#808080e5", "from": 17, "title": "BAD = ! ( AKT1 | RPS6KB1 ), p=0.900", "to": 14, "width": 3}, {"arrows": "to", "color": "#808080e5", "from": 26, "title": "BAD = ! ( AKT1 | RPS6KB1 ), p=0.900", "to": 14, "width": 3}, {"arrows": "to", "color": "#0000ff19", "from": 17, "title": "BAD = !AKT1 \u0026 !MAPK8 \u0026 !RAF1, p=0.100", "to": 14, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 16, "title": "BAD = !AKT1 \u0026 !MAPK8 \u0026 !RAF1, p=0.100", "to": 14, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 33, "title": "BAD = !AKT1 \u0026 !MAPK8 \u0026 !RAF1, p=0.100", "to": 14, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 16, "title": "BCL2 = !BAD \u0026 MAPK3 \u0026 !MAPK8, p=0.100", "to": 1, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 35, "title": "BCL2 = !BAD \u0026 MAPK3 \u0026 !MAPK8, p=0.100", "to": 1, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 14, "title": "BCL2 = !BAD \u0026 MAPK3 \u0026 !MAPK8, p=0.100", "to": 1, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 12, "title": "BCL2 = !BAD \u0026 STAT3, p=0.900", "to": 1, "width": 3}, {"arrows": "to", "color": "#0000ffe5", "from": 14, "title": "BCL2 = !BAD \u0026 STAT3, p=0.900", "to": 1, "width": 3}, {"arrows": "to", "color": "#0000ff19", "from": 22, "title": "CCND1 = !GSK3B \u0026 STAT3, p=0.100", "to": 4, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 12, "title": "CCND1 = !GSK3B \u0026 STAT3, p=0.100", "to": 4, "width": 1}, {"arrows": "to", "color": "#0000ffe5", "from": 22, "title": "CCND1 = !GSK3B, p=0.900", "to": 4, "width": 3}, {"arrows": "to", "color": "#ff0000ff", "from": 0, "title": "EGF = EGF", "to": 0, "width": 4}, {"arrows": "to", "color": "#ff000019", "from": 32, "title": "EGFR = !MAPK3 \u0026 ( EGF | ERBB2 | HBEGF ), p=0.100", "to": 23, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 0, "title": "EGFR = !MAPK3 \u0026 ( EGF | ERBB2 | HBEGF ), p=0.100", "to": 23, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 35, "title": "EGFR = !MAPK3 \u0026 ( EGF | ERBB2 | HBEGF ), p=0.100", "to": 23, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 3, "title": "EGFR = !MAPK3 \u0026 ( EGF | ERBB2 | HBEGF ), p=0.100", "to": 23, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 0, "title": "EGFR = EGF, p=0.900", "to": 23, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 35, "title": "ELK1 = MAPK3 \u0026 RPS6KB1, p=0.900", "to": 29, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 26, "title": "ELK1 = MAPK3 \u0026 RPS6KB1, p=0.900", "to": 29, "width": 3}, {"arrows": "to", "color": "#ff000019", "from": 16, "title": "ELK1 = MAPK3 | MAPK8, p=0.100", "to": 29, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 35, "title": "ELK1 = MAPK3 | MAPK8, p=0.100", "to": 29, "width": 1}, {"arrows": "to", "color": "#ff0000ff", "from": 35, "title": "ELK4 = MAPK3 \u0026 RPS6KB1", "to": 24, "width": 4}, {"arrows": "to", "color": "#ff0000ff", "from": 26, "title": "ELK4 = MAPK3 \u0026 RPS6KB1", "to": 24, "width": 4}, {"arrows": "to", "color": "#ff000019", "from": 23, "title": "ERBB2 = EGF | EGFR | NRG1, p=0.100", "to": 3, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 0, "title": "ERBB2 = EGF | EGFR | NRG1, p=0.100", "to": 3, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 21, "title": "ERBB2 = EGF | EGFR | NRG1, p=0.100", "to": 3, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 21, "title": "ERBB2 = NRG1, p=0.900", "to": 3, "width": 3}, {"arrows": "to", "color": "#ff000019", "from": 32, "title": "ERBB4 = !MAPK3 \u0026 ( ERBB2 | HBEGF | NRG1 ), p=0.100", "to": 7, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 21, "title": "ERBB4 = !MAPK3 \u0026 ( ERBB2 | HBEGF | NRG1 ), p=0.100", "to": 7, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 35, "title": "ERBB4 = !MAPK3 \u0026 ( ERBB2 | HBEGF | NRG1 ), p=0.100", "to": 7, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 3, "title": "ERBB4 = !MAPK3 \u0026 ( ERBB2 | HBEGF | NRG1 ), p=0.100", "to": 7, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 32, "title": "ERBB4 = EGF | HBEGF, p=0.900", "to": 7, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 0, "title": "ERBB4 = EGF | HBEGF, p=0.900", "to": 7, "width": 3}, {"arrows": "to", "color": "#ff000019", "from": 35, "title": "FOS = MAPK3, p=0.100", "to": 5, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 16, "title": "FOS = MAPK8 \u0026 RPS6KB1, p=0.900", "to": 5, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 26, "title": "FOS = MAPK8 \u0026 RPS6KB1, p=0.900", "to": 5, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 10, "title": "GRB2 = EGFR | ERBB2 | ERBB4 | IGF1R, p=0.900", "to": 20, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 23, "title": "GRB2 = EGFR | ERBB2 | ERBB4 | IGF1R, p=0.900", "to": 20, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 7, "title": "GRB2 = EGFR | ERBB2 | ERBB4 | IGF1R, p=0.900", "to": 20, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 3, "title": "GRB2 = EGFR | ERBB2 | ERBB4 | IGF1R, p=0.900", "to": 20, "width": 3}, {"arrows": "to", "color": "#ff000019", "from": 7, "title": "GRB2 = ERBB2 | ERBB4 | IRS1, p=0.100", "to": 20, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 3, "title": "GRB2 = ERBB2 | ERBB4 | IRS1, p=0.100", "to": 20, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 30, "title": "GRB2 = ERBB2 | ERBB4 | IRS1, p=0.100", "to": 20, "width": 1}, {"arrows": "to", "color": "#0000ffff", "from": 17, "title": "GSK3B = !AKT1", "to": 22, "width": 4}, {"arrows": "to", "color": "#ff0000ff", "from": 32, "title": "HBEGF = HBEGF", "to": 32, "width": 4}, {"arrows": "to", "color": "#ff0000ff", "from": 8, "title": "IGF1 = IGF1", "to": 8, "width": 4}, {"arrows": "to", "color": "#ff0000ff", "from": 8, "title": "IGF1R = IGF1", "to": 10, "width": 4}, {"arrows": "to", "color": "#0000ff19", "from": 16, "title": "IRS1 = !MAPK3 \u0026 !MAPK8 \u0026 !MTOR \u0026 !PIK3CA \u0026 !PTEN \u0026 !RPS6KB1 \u0026 ( IGF1R | JAK1 ), p=0.100", "to": 30, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 10, "title": "IRS1 = !MAPK3 \u0026 !MAPK8 \u0026 !MTOR \u0026 !PIK3CA \u0026 !PTEN \u0026 !RPS6KB1 \u0026 ( IGF1R | JAK1 ), p=0.100", "to": 30, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 26, "title": "IRS1 = !MAPK3 \u0026 !MAPK8 \u0026 !MTOR \u0026 !PIK3CA \u0026 !PTEN \u0026 !RPS6KB1 \u0026 ( IGF1R | JAK1 ), p=0.100", "to": 30, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 2, "title": "IRS1 = !MAPK3 \u0026 !MAPK8 \u0026 !MTOR \u0026 !PIK3CA \u0026 !PTEN \u0026 !RPS6KB1 \u0026 ( IGF1R | JAK1 ), p=0.100", "to": 30, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 35, "title": "IRS1 = !MAPK3 \u0026 !MAPK8 \u0026 !MTOR \u0026 !PIK3CA \u0026 !PTEN \u0026 !RPS6KB1 \u0026 ( IGF1R | JAK1 ), p=0.100", "to": 30, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 15, "title": "IRS1 = !MAPK3 \u0026 !MAPK8 \u0026 !MTOR \u0026 !PIK3CA \u0026 !PTEN \u0026 !RPS6KB1 \u0026 ( IGF1R | JAK1 ), p=0.100", "to": 30, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 37, "title": "IRS1 = !MAPK3 \u0026 !MAPK8 \u0026 !MTOR \u0026 !PIK3CA \u0026 !PTEN \u0026 !RPS6KB1 \u0026 ( IGF1R | JAK1 ), p=0.100", "to": 30, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 25, "title": "IRS1 = !MAPK3 \u0026 !MAPK8 \u0026 !MTOR \u0026 !PIK3CA \u0026 !PTEN \u0026 !RPS6KB1 \u0026 ( IGF1R | JAK1 ), p=0.100", "to": 30, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 10, "title": "IRS1 = IGF1R, p=0.900", "to": 30, "width": 3}, {"arrows": "to", "color": "#ff0000ff", "from": 23, "title": "JAK1 = EGFR", "to": 25, "width": 4}, {"arrows": "to", "color": "#ff0000e5", "from": 20, "title": "KRAS = GRB2, p=0.900", "to": 34, "width": 3}, {"arrows": "to", "color": "#ff000019", "from": 34, "title": "KRAS = KRAS, p=0.100", "to": 34, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 11, "title": "MAP2K1 = MAP3K1 | RAF1, p=0.100", "to": 19, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 33, "title": "MAP2K1 = MAP3K1 | RAF1, p=0.100", "to": 19, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 33, "title": "MAP2K1 = RAF1, p=0.900", "to": 19, "width": 3}, {"arrows": "to", "color": "#0000ff19", "from": 17, "title": "MAP2K4 = !AKT1 \u0026 MAP3K1, p=0.100", "to": 36, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 11, "title": "MAP2K4 = !AKT1 \u0026 MAP3K1, p=0.100", "to": 36, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 11, "title": "MAP2K4 = MAP3K1, p=0.900", "to": 36, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 34, "title": "MAP3K1 = KRAS, p=0.900", "to": 11, "width": 3}, {"arrows": "to", "color": "#ff000019", "from": 11, "title": "MAP3K1 = MAP3K1, p=0.100", "to": 11, "width": 1}, {"arrows": "to", "color": "#ff0000ff", "from": 19, "title": "MAPK3 = MAP2K1", "to": 35, "width": 4}, {"arrows": "to", "color": "#ff0000ff", "from": 36, "title": "MAPK8 = MAP2K4", "to": 16, "width": 4}, {"arrows": "to", "color": "#ff000019", "from": 15, "title": "MTOR = PIK3CA \u0026 !RPS6KB1 \u0026 !TSC1, p=0.100", "to": 37, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 9, "title": "MTOR = PIK3CA \u0026 !RPS6KB1 \u0026 !TSC1, p=0.100", "to": 37, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 26, "title": "MTOR = PIK3CA \u0026 !RPS6KB1 \u0026 !TSC1, p=0.100", "to": 37, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 27, "title": "MTOR = RHEB, p=0.900", "to": 37, "width": 3}, {"arrows": "to", "color": "#ff0000ff", "from": 21, "title": "NRG1 = NRG1", "to": 21, "width": 4}, {"arrows": "to", "color": "#0000ff19", "from": 26, "title": "PDPK1 = !RPS6KB1, p=0.100", "to": 13, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 28, "title": "PDPK1 = PIP3, p=0.900", "to": 13, "width": 3}, {"arrows": "to", "color": "#0000ff19", "from": 2, "title": "PIK3CA = !PTEN \u0026 ( ERBB4 | IRS1 | KRAS ), p=0.100", "to": 15, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 34, "title": "PIK3CA = !PTEN \u0026 ( ERBB4 | IRS1 | KRAS ), p=0.100", "to": 15, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 7, "title": "PIK3CA = !PTEN \u0026 ( ERBB4 | IRS1 | KRAS ), p=0.100", "to": 15, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 30, "title": "PIK3CA = !PTEN \u0026 ( ERBB4 | IRS1 | KRAS ), p=0.100", "to": 15, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 12, "title": "PIK3CA = ERBB2 | IRS1 | KRAS | STAT3, p=0.900", "to": 15, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 34, "title": "PIK3CA = ERBB2 | IRS1 | KRAS | STAT3, p=0.900", "to": 15, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 3, "title": "PIK3CA = ERBB2 | IRS1 | KRAS | STAT3, p=0.900", "to": 15, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 30, "title": "PIK3CA = ERBB2 | IRS1 | KRAS | STAT3, p=0.900", "to": 15, "width": 3}, {"arrows": "to", "color": "#ff0000ff", "from": 15, "title": "PIP3 = PIK3CA | !PTEN", "to": 28, "width": 4}, {"arrows": "to", "color": "#0000ffff", "from": 2, "title": "PIP3 = PIK3CA | !PTEN", "to": 28, "width": 4}, {"arrows": "to", "color": "#ff0000ff", "from": 18, "title": "PRKAA1 = STK11", "to": 6, "width": 4}, {"arrows": "to", "color": "#0000ff19", "from": 18, "title": "PTEN = !STK11, p=0.100", "to": 2, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 2, "title": "PTEN = PTEN, p=0.900", "to": 2, "width": 3}, {"arrows": "to", "color": "#0000ff19", "from": 17, "title": "RAF1 = !AKT1 \u0026 !MAPK3 \u0026 ( KRAS | MAP2K1 ), p=0.100", "to": 33, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 19, "title": "RAF1 = !AKT1 \u0026 !MAPK3 \u0026 ( KRAS | MAP2K1 ), p=0.100", "to": 33, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 34, "title": "RAF1 = !AKT1 \u0026 !MAPK3 \u0026 ( KRAS | MAP2K1 ), p=0.100", "to": 33, "width": 1}, {"arrows": "to", "color": "#0000ff19", "from": 35, "title": "RAF1 = !AKT1 \u0026 !MAPK3 \u0026 ( KRAS | MAP2K1 ), p=0.100", "to": 33, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 34, "title": "RAF1 = KRAS, p=0.900", "to": 33, "width": 3}, {"arrows": "to", "color": "#0000ffff", "from": 9, "title": "RHEB = !TSC1", "to": 27, "width": 4}, {"arrows": "to", "color": "#0000ff19", "from": 2, "title": "RPS6KB1 = !PTEN \u0026 ( MAPK3 | MTOR | PDPK1 ), p=0.100", "to": 26, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 37, "title": "RPS6KB1 = !PTEN \u0026 ( MAPK3 | MTOR | PDPK1 ), p=0.100", "to": 26, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 35, "title": "RPS6KB1 = !PTEN \u0026 ( MAPK3 | MTOR | PDPK1 ), p=0.100", "to": 26, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 13, "title": "RPS6KB1 = !PTEN \u0026 ( MAPK3 | MTOR | PDPK1 ), p=0.100", "to": 26, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 37, "title": "RPS6KB1 = MAPK3 | MTOR | PDPK1, p=0.900", "to": 26, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 35, "title": "RPS6KB1 = MAPK3 | MTOR | PDPK1, p=0.900", "to": 26, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 13, "title": "RPS6KB1 = MAPK3 | MTOR | PDPK1, p=0.900", "to": 26, "width": 3}, {"arrows": "to", "color": "#ff0000ff", "from": 35, "title": "SP1 = MAPK3", "to": 31, "width": 4}, {"arrows": "to", "color": "#ff000019", "from": 16, "title": "STAT3 = EGFR | JAK1 | MAPK3 | MAPK8 | MTOR, p=0.100", "to": 12, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 35, "title": "STAT3 = EGFR | JAK1 | MAPK3 | MAPK8 | MTOR, p=0.100", "to": 12, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 23, "title": "STAT3 = EGFR | JAK1 | MAPK3 | MAPK8 | MTOR, p=0.100", "to": 12, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 37, "title": "STAT3 = EGFR | JAK1 | MAPK3 | MAPK8 | MTOR, p=0.100", "to": 12, "width": 1}, {"arrows": "to", "color": "#ff000019", "from": 25, "title": "STAT3 = EGFR | JAK1 | MAPK3 | MAPK8 | MTOR, p=0.100", "to": 12, "width": 1}, {"arrows": "to", "color": "#ff0000e5", "from": 25, "title": "STAT3 = JAK1, p=0.900", "to": 12, "width": 3}, {"arrows": "to", "color": "#ff0000ff", "from": 18, "title": "STK11 = STK11", "to": 18, "width": 4}, {"arrows": "to", "color": "#0000ffe5", "from": 17, "title": "TSC1 = !AKT1 | PRKAA1, p=0.900", "to": 9, "width": 3}, {"arrows": "to", "color": "#ff0000e5", "from": 6, "title": "TSC1 = !AKT1 | PRKAA1, p=0.900", "to": 9, "width": 3}, {"arrows": "to", "color": "#ff000019", "from": 9, "title": "TSC1 = TSC1, p=0.100", "to": 9, "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"configure": {"enabled": false}, "edges": {"color": {"inherit": true}, "smooth": {"enabled": true, "type": "dynamic"}}, "interaction": {"dragNodes": true, "hideEdgesOnDrag": false, "hideNodesOnDrag": false}, "physics": {"enabled": true, "stabilization": {"enabled": true, "fit": true, "iterations": 1000, "onlyDynamicEdges": false, "updateInterval": 50}}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

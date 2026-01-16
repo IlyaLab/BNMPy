@@ -6,7 +6,7 @@ This guide covers building Boolean Networks from SIGNOR knowledge graphs, extend
 Overview
 --------
 
-BNMPy integrates with the SIGNOR knowledge graph to:
+KGBN integrates with the SIGNOR knowledge graph to:
 
 1. **Build KG-derived BNs**: Create Boolean networks directly from SIGNOR pathways
 2. **Extend existing models**: Add KG-informed rules to curated networks
@@ -18,17 +18,17 @@ The workflow involves selecting genes of interest, fetching a Steiner subgraph f
 Building KG-derived Boolean Networks
 ------------------------------------
 
-Use ``BNMPy.load_signor_network`` to build a Boolean network from SIGNOR:
+Use ``KGBN.load_signor_network`` to build a Boolean network from SIGNOR:
 
 .. code-block:: python
 
-   import BNMPy
+   import KGBN
    
    # Define genes of interest
    genes = ['KRAS', 'GNAS', 'TP53', 'SMAD4', 'CDKN2A', 'RNF43']
    
    # Build BN with different joiner schemes
-   bn_string, relations = BNMPy.load_signor_network(
+   bn_string, relations = KGBN.load_signor_network(
        genes,
        joiner='inhibitor_wins',  # '&', '|', 'inhibitor_wins', 'majority', 'plurality'
        score_cutoff=0.5,        # optional: filter low-confidence edges
@@ -36,7 +36,7 @@ Use ``BNMPy.load_signor_network`` to build a Boolean network from SIGNOR:
    )
    
    # Load the network
-   kg_bn = BNMPy.load_network(bn_string)
+   kg_bn = KGBN.load_network(bn_string)
 
 Joiner Schemes
 ~~~~~~~~~~~~~~
@@ -72,19 +72,19 @@ Extend networks by adding KG-informed rules for selected nodes:
 .. code-block:: python
 
    # Load original model
-   orig_bn = BNMPy.load_network('Vundavilli2020_standardized.txt')
+   orig_bn = KGBN.load_network('Vundavilli2020_standardized.txt')
    
    # Build KG model for same genes
    orig_genes = list(orig_bn.nodeDict.keys())
-   kg_string, _ = BNMPy.load_signor_network(
+   kg_string, _ = KGBN.load_signor_network(
        orig_genes, 
        joiner='inhibitor_wins', 
        score_cutoff=0.5
    )
-   kg_bn = BNMPy.load_network(kg_string)
+   kg_bn = KGBN.load_network(kg_string)
    
    # Extend specific nodes to PBN
-   extended_pbn = BNMPy.extend_networks(
+   extended_pbn = KGBN.extend_networks(
        orig_bn, 
        kg_bn, 
        nodes_to_extend=['AKT1', 'PIK3CA'], 
@@ -105,7 +105,7 @@ Deterministic Merge (Boolean Network)
 .. code-block:: python
 
    # Merge into deterministic BN
-   merged_bn = BNMPy.merge_networks(
+   merged_bn = KGBN.merge_networks(
        [orig_bn, kg_bn], 
        method='Inhibitor Wins',  # 'OR', 'AND', 'Inhibitor Wins'
        descriptive=True
@@ -117,7 +117,7 @@ Probabilistic Merge (PBN)
 .. code-block:: python
 
    # Merge into PBN with specified probabilities
-   merged_pbn = BNMPy.merge_networks(
+   merged_pbn = KGBN.merge_networks(
        [orig_bn, kg_bn], 
        method='PBN', 
        prob=0.9,  # probability for original model rules
@@ -140,7 +140,7 @@ Visualize merged networks:
 .. code-block:: python
 
    # Visualize PBN
-   BNMPy.vis_network(
+   KGBN.vis_network(
        merged_pbn, 
        output_html="merged_network.html", 
        interactive=True
@@ -151,7 +151,7 @@ Simulate the network:
 .. code-block:: python
 
    # Calculate steady states
-   calc = BNMPy.SteadyStateCalculator(merged_pbn)
+   calc = KGBN.SteadyStateCalculator(merged_pbn)
    steady_state = calc.compute_steady_state(n_runs=20, n_steps=10000)
 
 Phenotype Scoring
@@ -162,13 +162,13 @@ Compute phenotype scores using ProxPath-derived effects and simulation results:
 .. code-block:: python
 
    # Get all available phenotypes
-   BNMPy.get_phenotypes()
+   KGBN.get_phenotypes()
 
    # Genes for phenotype scoring
    genes = list(merged_pbn.nodeDict.keys()) # or specify a list of genes
 
    # Get the formula for the phenotype scores without simulation results
-   formulas = BNMPy.phenotype_scores(
+   formulas = KGBN.phenotype_scores(
        genes=genes,
        simulation_results=None,
        phenotypes=['APOPTOSIS', 'PROLIFERATION', 'DIFFERENTIATION']
@@ -176,7 +176,7 @@ Compute phenotype scores using ProxPath-derived effects and simulation results:
    print(formulas)
    
    # Compute phenotype scores with simulation results
-   scores = BNMPy.phenotype_scores(
+   scores = KGBN.phenotype_scores(
        genes=genes,
        simulation_results=steady_state,
        phenotypes=['APOPTOSIS', 'PROLIFERATION', 'DIFFERENTIATION']
@@ -200,39 +200,39 @@ Complete Workflow Example
 
 .. code-block:: python
 
-   import BNMPy
+   import KGBN
    
    # 1. Build KG-derived BN
    genes = ['KRAS', 'TP53', 'SMAD4', 'CDKN2A']
-   kg_string, _ = BNMPy.load_signor_network(
+   kg_string, _ = KGBN.load_signor_network(
        genes, 
        joiner='inhibitor_wins', 
        score_cutoff=0.5
    )
-   kg_bn = BNMPy.load_network(kg_string)
+   kg_bn = KGBN.load_network(kg_string)
    
    # 2. Load curated model
-   orig_bn = BNMPy.load_network('curated_model.txt')
+   orig_bn = KGBN.load_network('curated_model.txt')
    
    # 3. Merge into PBN
-   merged_pbn = BNMPy.merge_networks(
+   merged_pbn = KGBN.merge_networks(
        [orig_bn, kg_bn], 
        method='PBN', 
        prob=0.8
    )
    
    # 4. Simulate
-   calc = BNMPy.SteadyStateCalculator(merged_pbn)
+   calc = KGBN.SteadyStateCalculator(merged_pbn)
    steady_state = calc.compute_steady_state()
    
    # 5. Score phenotypes
-   scores = BNMPy.phenotype_scores(
+   scores = KGBN.phenotype_scores(
        genes=list(merged_pbn.nodeDict.keys()),
        simulation_results=steady_state
    )
    
    # 6. Visualize
-   BNMPy.vis_network(merged_pbn, output_html="result.html")
+   KGBN.vis_network(merged_pbn, output_html="result.html")
 
 
 

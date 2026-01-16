@@ -1,8 +1,8 @@
-# BNMPy: Boolean network modeling and optimization
+# KGBN: Knowledge Graph extended Boolean Network modeling
 
-A Python library for Boolean Network (BN) and Probabilistic Boolean Network (PBN) modeling, simulation, optimization, and analysis with applications in systems biology.
+A Python library for Boolean Network (BN) and Probabilistic Boolean Network (PBN) modeling, extension, optimization, and analysis with applications in systems biology.
 
-See [https://ilyalab.github.io/BNMPy/](https://ilyalab.github.io/BNMPy/) for detailed documentation.
+See [https://ilyalab.github.io/KGBN/](https://ilyalab.github.io/KGBN/) for detailed documentation.
 
 ## Installation
 
@@ -34,7 +34,7 @@ Basic operations are similar to BNs.
 
 ### 3. Knowledge Graph (KG) augmentation
 
-BNMPy can build and extend models using the SIGNOR knowledge graph.
+KGBN can build and extend models using the SIGNOR knowledge graph.
 
 * **Build KG-derived BN**: Build a Boolean Network (BN) directly from a Knowledge Graph (KG)
 * **Merge models**: Merge an original BN with a KG-derived model into either a BN or a PBN
@@ -76,7 +76,7 @@ Other utilities:
 
 ```python
 sys.path.append('./src')
-import BNMPy
+import KGBN
 
 # Load a network (auto-detects BN vs PBN, file vs string)
 network_string = """
@@ -91,16 +91,16 @@ F = !A & B
 x0 = [0, 0, 0, 0, 0, 0]  # array: order matches gene order in string
 # or
 x0 = {'A': 0, 'B': 1, 'C': 0, 'D': 0, 'E': 0, 'F': 0}  # dict: keys are gene names
-network = BNMPy.load_network(network_string, initial_state=x0)
+network = KGBN.load_network(network_string, initial_state=x0)
 
 # Visualize the network
-BNMPy.vis_network(network, output_html="SimpleBN.html", interactive=True)
+KGBN.vis_network(network, output_html="SimpleBN.html", interactive=True)
 
 # Simulate with noise = 0.05 for 10 steps
 network.update_noise(p=0.05, iterations=10)
 
 # Calculate steady states
-calc = BNMPy.SteadyStateCalculator(network)
+calc = KGBN.SteadyStateCalculator(network)
 steady_state = calc.compute_steady_state(n_runs=20,n_steps=10000)
 
 ```
@@ -109,6 +109,6 @@ Note that when assigning initial states or obtaining steady states, gene order m
 
 ## Documentation
 
-- **Functions**: [https://ilyalab.github.io/BNMPy/](https://ilyalab.github.io/BNMPy/) (in development)
+- **Functions**: [https://ilyalab.github.io/KGBN/](https://ilyalab.github.io/KGBN/) (in development)
 - **Tutorials**: Check the [Examples](./Examples/) directory for tutorials
 - **Optimization Guide**: See [Optimizer README](./src/Optimizer_README.md) for advanced optimization features

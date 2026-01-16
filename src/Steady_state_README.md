@@ -1,13 +1,13 @@
-# SteadyStateCalculator for BNMPy
+# SteadyStateCalculator for KGBN
 
 ## Overview
 
-The `SteadyStateCalculator` class provides steady-state calculation capabilities for both Boolean Networks and Probabilistic Boolean Networks in BNMPy.
+The `SteadyStateCalculator` class provides steady-state calculation capabilities for both Boolean Networks and Probabilistic Boolean Networks in KGBN.
 
 ## Quick Start
 
 ```python
-import BNMPy
+import KGBN
 import numpy as np
 
 # Load a PBN
@@ -18,10 +18,10 @@ N3 = N1, 0.6
 N3 = N1 & !N2, 0.4
 """
 x0 = np.array([1, 1, 0])
-network = BNMPy.load_network(network_string, initial_state=x0)
+network = KGBN.load_network(network_string, initial_state=x0)
 
 # Create calculator
-calc = BNMPy.SteadyStateCalculator(network)
+calc = KGBN.SteadyStateCalculator(network)
 
 # Calculate steady state
 steady_state = calc.compute_steady_state(method='monte_carlo', n_runs=20, n_steps=10000, p_noise=0.05)
@@ -191,11 +191,11 @@ steady_state, convergence_info = calc.compute_steady_state(
 **Example**:
 
 ```python
-import BNMPy
+import KGBN
 
 # Load a Boolean network
-network = BNMPy.load_network("network.txt")
-calc = BNMPy.SteadyStateCalculator(network)
+network = KGBN.load_network("network.txt")
+calc = KGBN.SteadyStateCalculator(network)
 
 # Find attractors
 attractors = calc.compute_steady_state(n_runs=100, n_steps=1000, verbose=True)
@@ -235,7 +235,7 @@ You can simulate experimental conditions by setting stimuli (activators) and inh
 ### Example
 
 ```python
-import BNMPy
+import KGBN
 import numpy as np
 
 # Load network
@@ -245,8 +245,8 @@ N2 = N2, 1
 N3 = N1, 0.6
 N3 = N1 & !N2, 0.4
 """
-network = BNMPy.load_pbn_from_string(network_string, initial_state=[1, 1, 0])
-calc = BNMPy.SteadyStateCalculator(network)
+network = KGBN.load_pbn_from_string(network_string, initial_state=[1, 1, 0])
+calc = KGBN.SteadyStateCalculator(network)
 
 # 1. Stimulate N1 (fix to 1)
 calc.set_experimental_conditions(stimuli=['N1'])

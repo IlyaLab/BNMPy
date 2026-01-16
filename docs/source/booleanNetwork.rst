@@ -1,5 +1,5 @@
-BNMPy.booleanNetwork
+KGBN.booleanNetwork
 =================
-.. automodule:: BNMPy.booleanNetwork
+.. automodule:: KGBN.booleanNetwork
    :members:
    :undoc-members:

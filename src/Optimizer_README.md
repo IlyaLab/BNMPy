@@ -1,4 +1,4 @@
-# BNMPy Optimizer
+# KGBN Optimizer
 
 A Python implementation of Probabilistic Boolean Network (PBN) parameter optimization based on the optPBN framework. This module enables parameter estimation for PBNs using experimental data.
 
@@ -7,10 +7,10 @@ A Python implementation of Probabilistic Boolean Network (PBN) parameter optimiz
 ### Basic Usage
 
 ```python
-import BNMPy
+import KGBN
 
 # Load or create your PBN
-pbn = BNMPy.load_network(...)
+pbn = KGBN.load_network(...)
 
 # Initialize optimizer
 optimizer = ParameterOptimizer(pbn, "experiments.csv", nodes_to_optimize=['Cas3'], verbose=False)
@@ -234,7 +234,7 @@ optimizer.plot_optimization_history(
 Evaluate optimization results:
 
 ```python
-from BNMPy import evaluate_optimization_result
+from KGBN import evaluate_optimization_result
 
 evaluator = evaluate_optimization_result(
     result, 

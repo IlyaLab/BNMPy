@@ -1,9 +1,9 @@
-BNMPy.parameter_optimizer
+KGBN.parameter_optimizer
 =========================
 
 The parameter_optimizer module provides PBN parameter optimization based on the optPBN framework.
 
-.. automodule:: BNMPy.parameter_optimizer
+.. automodule:: KGBN.parameter_optimizer
    :members:
    :undoc-members:
    :show-inheritance:
@@ -13,13 +13,13 @@ Basic Usage
 
 .. code-block:: python
 
-   import BNMPy
+   import KGBN
 
    # Load or create your PBN
-   pbn = BNMPy.load_pbn_from_file("network.txt")
+   pbn = KGBN.load_pbn_from_file("network.txt")
 
    # Initialize optimizer
-   optimizer = BNMPy.ParameterOptimizer(
+   optimizer = KGBN.ParameterOptimizer(
        pbn, 
        "experiments.csv", 
        nodes_to_optimize=['Cas3'],
@@ -41,7 +41,7 @@ When experimental measurements span different scales, enable automatic min-max n
 
 .. code-block:: python
 
-   optimizer = BNMPy.ParameterOptimizer(
+   optimizer = KGBN.ParameterOptimizer(
        pbn,
        "experiments.csv",
        nodes_to_optimize=['Cas3'],
@@ -110,7 +110,7 @@ Optimization Methods
        }
    }
 
-   optimizer = BNMPy.ParameterOptimizer(pbn, "experiments.csv", config=config)
+   optimizer = KGBN.ParameterOptimizer(pbn, "experiments.csv", config=config)
 
 Discrete Mode
 ~~~~~~~~~~~~~

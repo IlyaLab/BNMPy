@@ -1,9 +1,9 @@
-BNMPy.result_evaluation
+KGBN.result_evaluation
 =======================
 
 The result_evaluation module provides tools for evaluating optimization results.
 
-.. automodule:: BNMPy.result_evaluation
+.. automodule:: KGBN.result_evaluation
    :members:
    :undoc-members:
    :show-inheritance:
@@ -16,14 +16,14 @@ Evaluating Optimization Results
 
 .. code-block:: python
 
-   import BNMPy
+   import KGBN
 
    # Run optimization
-   optimizer = BNMPy.ParameterOptimizer(pbn, "experiments.csv")
+   optimizer = KGBN.ParameterOptimizer(pbn, "experiments.csv")
    result = optimizer.optimize(method='differential_evolution')
 
    # Evaluate results with plots and report
-   evaluator = BNMPy.evaluate_optimization_result(
+   evaluator = KGBN.evaluate_optimization_result(
        result,
        optimizer,
        output_dir="evaluation_results",
@@ -38,13 +38,13 @@ Evaluating a PBN
 
 .. code-block:: python
 
-   import BNMPy
+   import KGBN
 
    # Evaluate an existing PBN
-   pbn = BNMPy.load_pbn_from_file("network.txt")
-   exp_data = BNMPy.ExperimentData("experiments.csv")
+   pbn = KGBN.load_pbn_from_file("network.txt")
+   exp_data = KGBN.ExperimentData("experiments.csv")
 
-   results = BNMPy.evaluate_pbn(
+   results = KGBN.evaluate_pbn(
        pbn,
        exp_data,
        output_dir="pbn_evaluation",
