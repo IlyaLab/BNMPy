@@ -4,6 +4,8 @@ A Python library for Boolean Network (BN) and Probabilistic Boolean Network (PBN
 
 See [https://ilyalab.github.io/KGBN/](https://ilyalab.github.io/KGBN/) for detailed documentation.
 
+Notebook for reproducing the results in the manuscript: [KGBN_manuscript.ipynb](./AML_simulation/KGBN_manuscript.ipynb)
+
 ## Installation
 
 To install, run `pip install -e .` in this directory.
